@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@media only screen and (max-width: 600px) {
+  
+    ::-webkit-scrollbar{
+        display: none;
+    }
+
+  }
+
+::-webkit-scrollbar{
+    width: 7px;
+    height: 7px;
+  background-color: gray;
+
+}
+::-webkit-scrollbar-thumb{
+    background-color: #47646e;
+    border-radius: 10px;
+}
