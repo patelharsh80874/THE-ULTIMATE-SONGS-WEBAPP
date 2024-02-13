@@ -90,7 +90,7 @@ const Home = () => {
               <Link
                 to={`/albums/details/${t.id}`}
                 key={i}
-                className="hover:scale-110 duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4"
+                className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4"
               >
                 <img
                   className="w-full  rounded-md"
@@ -111,7 +111,7 @@ const Home = () => {
               <Link
                 to={`/playlist/details/${c.id}`}
                 key={i}
-                className="hover:scale-110 duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4"
+                className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4"
               >
                 <img
                   className="w-full  rounded-md"
@@ -130,7 +130,7 @@ const Home = () => {
               <Link
                 to={`/playlist/details/${p.id}`}
                 key={i}
-                className="hover:scale-110 duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4"
+                className="hover:scale-110  sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4"
               >
                 <img
                   className="w-full  rounded-md"
@@ -149,7 +149,7 @@ const Home = () => {
               <Link
                 to={`/albums/details/${a.id}`}
                 key={i}
-                className="hover:scale-110 duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4"
+                className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4"
               >
                 <img
                   className="w-full  rounded-md"

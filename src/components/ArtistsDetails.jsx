@@ -110,7 +110,7 @@ const ArtistsDetails = () => {
           <Link
             key={i}
             onClick={() => audioseter(i)}
-            className="relative hover:scale-110 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh]  "
+            className="relative hover:scale-110 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh]  "
           >
             <img
               className="w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
