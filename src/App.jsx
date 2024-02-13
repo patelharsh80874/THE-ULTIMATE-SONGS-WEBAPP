@@ -10,8 +10,10 @@ import AlbumDetails from "./components/AlbumDetails";
 
 
 
+
 const App = () => {
- 
+  
+
   return (
     <div className="w-full h-screen">
       <Routes>

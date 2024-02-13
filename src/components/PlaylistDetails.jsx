@@ -4,7 +4,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import wavs from "../../public/wavs.gif";
 
+
 const PlaylistDetails = () => {
+  
+
   const navigate = useNavigate();
   let location = useLocation();
   let id = location.pathname;
@@ -86,6 +89,8 @@ const PlaylistDetails = () => {
 
     return () => clearInterval(interval);
   }, [details]);
+
+ 
 
   // useEffect(() => {
   //   Getdetails();
