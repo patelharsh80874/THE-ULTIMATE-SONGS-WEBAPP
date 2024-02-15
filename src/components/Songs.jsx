@@ -26,6 +26,7 @@ const Songs = () => {
 
   function setdata() {
     setsearch([]);
+    setsonglink([]);
     setindex("");
     setpage(1);
   }
@@ -176,7 +177,7 @@ const Songs = () => {
             <div className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
               <img
                 className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e.image[2]?.link}
+                src={e.image[2]?.link  }
                 alt=""
               />
               <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
