@@ -5,18 +5,33 @@ import axios from "axios";
 import Loading from "./Loading";
 import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
-import wavs from '../../public/wavs.gif'
-
+import wavs from "../../public/wavs.gif";
 
 const Home = () => {
   const [home, sethome] = useState(null);
-  const [language, setlanguage] = useState("hindi")
+  const [language, setlanguage] = useState("hindi");
   const [details, setdetails] = useState([]);
   const [songlink, setsonglink] = useState([]);
   var [index, setindex] = useState("");
   var [page, setpage] = useState(1);
-  const options = ["hindi", "english", "punjabi", "tamil", "telugu", "marathi", "gujarati", "bengali", "kannada", "bhojpuri", "malayalam", "urdu", "haryanvi", "rajasthani", "odia", "assamese"];
-  
+  const options = [
+    "hindi",
+    "english",
+    "punjabi",
+    "tamil",
+    "telugu",
+    "marathi",
+    "gujarati",
+    "bengali",
+    "kannada",
+    "bhojpuri",
+    "malayalam",
+    "urdu",
+    "haryanvi",
+    "rajasthani",
+    "odia",
+    "assamese",
+  ];
 
   const Gethome = async () => {
     detailsseter();
@@ -84,13 +99,12 @@ const Home = () => {
       console.log("Error fetching or downloading files", error);
     }
   };
- function detailsseter() {
-  setpage(1);
-  setindex("")
-  setsonglink([])
-  setdetails([])
-  
- }
+  function detailsseter() {
+    setpage(1);
+    setindex("");
+    setsonglink([]);
+    setdetails([]);
+  }
 
   function seccall() {
     const intervalId = setInterval(() => {
@@ -103,8 +117,8 @@ const Home = () => {
   }
   function seccall2() {
     const intervalId2 = setInterval(() => {
-      if (details.length >= 0 && page<10) {
-        setpage(page+1);
+      if (details.length >= 0 && page < 10) {
+        setpage(page + 1);
         Getdetails();
       }
     }, 5000);
@@ -113,32 +127,26 @@ const Home = () => {
 
   useEffect(() => {
     var interval = seccall();
-        //  Gethome();
+    //  Gethome();
     return () => clearInterval(interval);
-  }, [language , home]);
-
+  }, [language, home]);
 
   useEffect(() => {
-    
     Gethome();
-    
-    
   }, [language]);
 
   useEffect(() => {
-   
     var interval2 = seccall2();
 
     return () => clearInterval(interval2);
-  }, [details,page,language]);
+  }, [details, page, language]);
 
- 
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
-// console.log(details);
-// console.log(page);
-// console.log(index)
-  return home && details.length>0 ? (
+  // console.log(details);
+  // console.log(page);
+  // console.log(index)
+  return home && details.length > 0 ? (
     <div className="w-full h-screen bg-slate-800">
       <div className="logo h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 ">
         <div className="flex items-center sm:justify-center sm:pt-2 gap-3">
@@ -148,12 +156,19 @@ const Home = () => {
           </h1>
         </div>
         <div className="sm:flex   sm:justify-center">
+        <h3 className="inline text-xl sm:text-sm" >Search : </h3>
           <Link
+            className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
+            to={"/songs"}
+          >
+             Songs
+          </Link>
+          {/* <Link
             className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
             to={"/download"}
           >
             Download Songs
-          </Link>
+          </Link> */}
           <Link
             className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
             to={"/playlist"}
@@ -166,15 +181,22 @@ const Home = () => {
           >
             Artists
           </Link>
+          <Link
+            className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
+            to={"/album"}
+          >
+            Album
+          </Link>
         </div>
       </div>
       <div className="w-full h-[65vh]  text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
         <div className="w-full   flex justify-end ">
-        <Dropdown className="w-[15%] text-sm sm:w-[50%]"
-          options={options}
-          onChange={(e)=>setlanguage(e.value)}
-          placeholder="Select language"
-        />
+          <Dropdown
+            className="w-[15%] text-sm sm:w-[50%]"
+            options={options}
+            onChange={(e) => setlanguage(e.value)}
+            placeholder="Select language"
+          />
         </div>
 
         <div className="trending songs flex flex-col gap-3 w-full ">
@@ -182,7 +204,7 @@ const Home = () => {
           <div className="songs px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {details?.map((t, i) => (
               <Link
-              onClick={() => audioseter(i)}
+                onClick={() => audioseter(i)}
                 key={i}
                 className="relative hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4"
               >
@@ -191,21 +213,33 @@ const Home = () => {
                   src={t.image[2].link}
                   alt=""
                 />
-                 <img
-              className={`absolute top-4 w-[20%] sm:w-[25%] rounded-md ${
-                i === index ? "block" : "hidden"
-              } `}
-              src={wavs}
-              alt=""
-            />
-                
-                <h3 className={`text-sm sm:text-xs leading-none  font-semibold ${i === index && "text-green-300"}`}>{t.name}</h3>
-              
+                <img
+                  className={`absolute top-4 w-[20%] sm:w-[25%] rounded-md ${
+                    i === index ? "block" : "hidden"
+                  } `}
+                  src={wavs}
+                  alt=""
+                />
+                <div className="flex flex-col">
+                  <h3
+                    className={`text-sm sm:text-xs leading-none  font-bold ${
+                      i === index && "text-green-300"
+                    }`}
+                  >
+                    {t.name}
+                  </h3>
+                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                    {t.album.name}
+                  </h4>
+                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                    {t.primaryArtists}
+                  </h4>
+                </div>
               </Link>
             ))}
           </div>
         </div>
-        
+
         {/* <div className="trending flex flex-col gap-3 w-full ">
           <h3 className="text-xl h-[5vh] font-semibold">Trending Albums</h3>
           <div className="playlistsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">

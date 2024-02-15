@@ -122,7 +122,21 @@ const AlbumDetails = () => {
               alt=""
             />
             <img className={`absolute top-0 w-[20%] sm:w-[10%] rounded-md ${i === index ? "block" : "hidden"} `} src={wavs} alt="" />
-            <h3 className={`text-sm sm:text-xs  font-semibold ${i === index && "text-green-300"} `}>{d.name}</h3>
+            <div className="flex flex-col mt-2">
+                  <h3
+                    className={`text-sm sm:text-xs leading-none  font-bold ${
+                      i === index && "text-green-300"
+                    }`}
+                  >
+                    {d.name}
+                  </h3>
+                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                    {d.album.name}
+                  </h4>
+                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                    {d.primaryArtists}
+                  </h4>
+                </div>
           </Link>
         ))}
         <div className="flex gap-3 text-2xl  ">

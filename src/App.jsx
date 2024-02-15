@@ -7,6 +7,8 @@ import ArtistsDetails from "./components/ArtistsDetails";
 import Download from "./components/Download";
 import Home from "./components/Home";
 import AlbumDetails from "./components/AlbumDetails";
+import Album from "./components/Album";
+import Songs from "./components/Songs";
 
 
 
@@ -18,6 +20,8 @@ const App = () => {
     <div className="w-full h-screen">
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="songs" element={<Songs />} />
+        <Route path="/album" element={<Album />} />
         <Route path="/albums/details/:id" element={<AlbumDetails />} />
         <Route path="/download" element={<Download />} />
         <Route path="/playlist" element={<Playlist />} />

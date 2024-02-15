@@ -1,45 +1,46 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import Loading from "./Loading";
-import InfiniteScroll from "react-infinite-scroll-component";
-import wavs from '../../public/wavs.gif'
+import { Link, useNavigate } from "react-router-dom";
+import wavs from "../../public/wavs.gif";
 
-const ArtistsDetails = () => {
+const Songs = () => {
   const navigate = useNavigate();
-  let location = useLocation();
-  let id = location.pathname;
-  let newid = id.split("/");
-  let finalid = newid[3];
-
-  const [details, setdetails] = useState([]);
-  const [songlink, setsonglink] = useState([]);
+  const [query, setquery] = useState("");
+  const [requery, setrequery] = useState("");
+  const [search, setsearch] = useState([]);
   var [index, setindex] = useState("");
+  const [songlink, setsonglink] = useState([]);
   var [page, setpage] = useState(1);
 
-  const Getdetails = async () => {
+  const Getsearch = async () => {
     try {
       const { data } = await axios.get(
-        `https://saavn.dev/artists/${finalid}/songs?page=${page}`
+        `https://saavn.dev/search/songs?query=${query}&page=${page}&limit=10`
       );
-      setdetails((prevState) => [...prevState, ...data.data.results]);
+
+      setsearch((prevState) => [...prevState, ...data.data.results]);
     } catch (error) {
       console.log("error", error);
     }
   };
 
+  function setdata() {
+    setsearch([]);
+    setindex("");
+    setpage(1);
+  }
   function audioseter(i) {
     setindex(i);
-    setsonglink([details[i]]);
+    setsonglink([search[i]]);
   }
 
   function next() {
-    if (index < details.length - 1) {
+    if (index < search.length - 1) {
       setindex(index++);
       audioseter(index);
     } else {
       setindex(0);
-      setsonglink([details[0]]);
+      setsonglink([search[0]]);
     }
   }
   function pre() {
@@ -47,8 +48,8 @@ const ArtistsDetails = () => {
       setindex(index--);
       audioseter(index);
     } else {
-      setindex(details.length - 1);
-      setsonglink([details[details.length - 1]]);
+      setindex(search.length - 1);
+      setsonglink([search[search.length - 1]]);
     }
   }
 
@@ -75,45 +76,62 @@ const ArtistsDetails = () => {
 
   function seccall() {
     const intervalId = setInterval(() => {
-      if (details.length >= 0 && page<20) {
-        setpage(page+1);
-        Getdetails();
+      if (
+        (search.length >= 0 && page < 20) ||
+        query.length !== requery.length
+      ) {
+        setpage(page + 1);
+        Getsearch();
+        setrequery(query);
       }
-    }, 5000);
+    }, 3000);
     return intervalId;
   }
 
   useEffect(() => {
-    var interval = seccall();
+    if (query.length > 0) {
+      var interval = seccall();
+    }
 
     return () => clearInterval(interval);
-  }, [details,page]);
+  }, [query, search, page]);
 
-
-
+  useEffect(() => {
+    if (query !== "") {
+      setdata();
+    }
+  }, [query]);
   var title = songlink[0]?.name;
-  document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
-  
 
-  return details.length ? (
-    <div className=" w-full  bg-slate-700">
-      <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
+  document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
+
+  return (
+    <div className="w-full h-screen bg-slate-700 ">
+      <div className="search gap-3 w-full sm:w-full sm:h-[5vh] h-[10vh] flex items-center justify-center ">
         <i
           onClick={() => navigate(-1)}
-          className="text-3xl cursor-pointer ml-5 bg-green-500 rounded-full ri-arrow-left-line"
+          className="ml-5 cursor-pointer text-3xl bg-green-500 rounded-full ri-arrow-left-line"
         ></i>
-        <h1 className="text-xl text-zinc-300 font-black">THE ULTIMATE SONGS</h1>
-      </div>
+        <i className=" text-2xl ri-search-2-line"></i>
 
+        <input
+          className=" bg-black rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:w-[70%] sm:h-[5vh] h-[10vh]"
+          onChange={(e) => setquery(e.target.value)}
+          placeholder="Search anything"
+          type="search"
+          name=""
+          id=""
+        />
+      </div>
       <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[70vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
-        {details?.map((d, i) => (
+        {search?.map((d, i) => (
           <Link
             key={i}
             onClick={() => audioseter(i)}
-            className="relative hover:scale-110 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh]  "
+            className=" relative hover:scale-110 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh]  "
           >
             <img
-              className="w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
+              className=" w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
               src={d.image[2].link}
               alt=""
             />
@@ -124,25 +142,21 @@ const ArtistsDetails = () => {
               src={wavs}
               alt=""
             />
-             <div className="flex flex-col mt-2">
-                  <h3
-                    className={`text-sm sm:text-xs leading-none  font-bold ${
-                      i === index && "text-green-300"
-                    }`}
-                  >
-                    {d.name}
-                  </h3>
-                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
-                    {d.album.name}
-                  </h4>
-                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
-                    {d.primaryArtists}
-                  </h4>
-                </div>
+            <div className="flex flex-col">
+            <h3
+              className={`text-sm sm:text-xs  font-bold ${
+                i === index && "text-green-300"
+              }`}
+            >
+              {d.name}
+            </h3>
+            <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">{d.album.name}</h4>
+            <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">{d.primaryArtists}</h4>
+            </div>
+            
           </Link>
         ))}
-
-        <div className="flex gap-3 text-2xl  ">
+        {search.length>0 && <div className="flex gap-3 text-2xl  ">
           <h1>MADE BY ❤️ HARSH PATEL</h1>
           <a
             target="_blank"
@@ -150,7 +164,8 @@ const ArtistsDetails = () => {
           >
             <i className=" ri-instagram-fill"></i>
           </a>
-        </div>
+        </div>}
+        
       </div>
       <div className="flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600  ">
         {songlink?.map((e, i) => (
@@ -179,29 +194,31 @@ const ArtistsDetails = () => {
               ></i>
             </div>
             <div className="w-[55%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
-              <i
+              <button
                 onClick={pre}
-                className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full ri-skip-back-mini-fill"
-              ></i>
+                className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
+              >
+                <i className="ri-skip-back-mini-fill"></i>
+              </button>
               <audio
-                className="w-[80%] "
+                className="w-[80%]"
                 controls
                 autoPlay
                 onEnded={next}
                 src={e.downloadUrl[4]?.link}
               ></audio>
-              <i
+              <button
                 onClick={next}
-                className=" text-3xl text-white bg-zinc-800 cursor-pointer rounded-full ri-skip-right-fill"
-              ></i>
+                className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
+              >
+                <i className="ri-skip-right-fill"></i>
+              </button>
             </div>
           </div>
         ))}
       </div>
     </div>
-  ) : (
-    <Loading />
   );
 };
 
-export default ArtistsDetails;
+export default Songs;
