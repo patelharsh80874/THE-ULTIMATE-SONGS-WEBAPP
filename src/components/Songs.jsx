@@ -169,7 +169,7 @@ const Songs = () => {
         
       </div>
       <div className="flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600  ">
-        {songlink?.map((e, i) => (
+         {songlink?.map((e, i) => (
           <div
             key={i}
             className="flex sm:block w-[70%] sm:w-full sm:h-full items-center justify-center gap-3"
