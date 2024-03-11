@@ -34,7 +34,7 @@ const Album = () => {
 
     return () => clearInterval(interval);
   }, [query, albums]);
-console.log(albums);
+// console.log(albums);
   return (
     <div className="w-full min-h-[100vh] bg-slate-700">
       <div className="w-full min-h-[100vh] ">

@@ -93,7 +93,7 @@ const AlbumDetails = () => {
 
   document.title = `${title ? title :"THE ULTIMATE SONGS"}`;
   // console.log(finalid);
-  console.log(details);
+  // console.log(details);
   // console.log(songscount);
   // console.log();
   // console.log(index);
