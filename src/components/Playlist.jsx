@@ -11,9 +11,9 @@ const Playlist = () => {
   const Getplaylist = async () => {
     try {
       const { data } = await axios.get(
-        `https://saavn.dev/search/playlists?query=${query}&page=1&limit=10`
+        `https://saavn.dev/api/search?query=${query}&page=1&limit=10`
       );
-      setplaylist(data?.data?.results);
+      setplaylist(data?.data?.playlists);
     } catch (error) {
       console.log("error", error);
     }
@@ -35,7 +35,7 @@ const Playlist = () => {
 
     return () => clearInterval(interval);
   }, [query, playlist]);
-
+  // console.log(playlist);
   return (
     <div className="w-full min-h-[100vh] bg-slate-700">
       <div className="w-full min-h-[100vh] ">
@@ -56,7 +56,7 @@ const Playlist = () => {
           />
         </div>
         <div className="w-full min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
-          {playlist?.map((e, i) => (
+          {playlist.results?.map((e, i) => (
             <Link
               key={i}
               to={`/playlist/details/${e.id}`}
@@ -64,7 +64,7 @@ const Playlist = () => {
             >
               <img
                 className="w-full h-full object-fill rounded-md"
-                src={e?.image[2]?.link}
+                src={e?.image[2]?.url}
                 alt=""
               />
               <h3 className="text-white">{e.name}</h3>

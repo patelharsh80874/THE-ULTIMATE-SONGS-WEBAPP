@@ -15,7 +15,7 @@ const Songs = () => {
   const Getsearch = async () => {
     try {
       const { data } = await axios.get(
-        `https://saavn.dev/search/songs?query=${query}&page=${page}&limit=10`
+        `https://saavn.dev/api/search/songs?query=${query}&page=${page}&limit=10`
       );
 
       setsearch((prevState) => [...prevState, ...data.data.results]);
@@ -54,7 +54,7 @@ const Songs = () => {
     }
   }
 
-  const handleDownloadSong = async (url, name, img) => {
+  const handleDownloadSong = async (url, name) => {
     try {
       const res = await fetch(url);
       const blob = await res.blob();
@@ -62,9 +62,6 @@ const Songs = () => {
       link.href = URL.createObjectURL(blob);
       link.download = `${name}.mp3`;
 
-      const image = document.createElement("img");
-      image.src = `${img}`;
-      link.appendChild(image);
 
       document.body.appendChild(link);
       link.click();
@@ -105,7 +102,7 @@ const Songs = () => {
   var title = songlink[0]?.name;
 
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
-
+// console.log(search);
   return (
     <div className="w-full h-screen bg-slate-700 ">
       <div className="search gap-3 w-full sm:w-full sm:h-[5vh] h-[10vh] flex items-center justify-center ">
@@ -133,7 +130,7 @@ const Songs = () => {
           >
             <img
               className=" w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
-              src={d.image[2].link}
+              src={d.image[2].url}
               alt=""
             />
             <img
@@ -152,7 +149,6 @@ const Songs = () => {
               {d.name}
             </h3>
             <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">{d.album.name}</h4>
-            <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">{d.primaryArtists}</h4>
             </div>
             
           </Link>
@@ -177,7 +173,7 @@ const Songs = () => {
             <div className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
               <img
                 className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e.image[2]?.link  }
+                src={e.image[2]?.url}
                 alt=""
               />
               <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
@@ -186,9 +182,8 @@ const Songs = () => {
               <i
                 onClick={() =>
                   handleDownloadSong(
-                    e.downloadUrl[4].link,
+                    e.downloadUrl[4].url,
                     e.name,
-                    e.image[2].link
                   )
                 }
                 className=" flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
@@ -206,7 +201,7 @@ const Songs = () => {
                 controls
                 autoPlay
                 onEnded={next}
-                src={e.downloadUrl[4]?.link}
+                src={e.downloadUrl[4]?.url}
               ></audio>
               <button
                 onClick={next}

@@ -33,21 +33,16 @@ const Home = () => {
     "assamese",
   ];
 
-  const Gethome = async () => {
-    detailsseter();
-    try {
-      const { data } = await axios.get(
-        `https://saavn.dev/modules?language=${language}`
-      );
-      sethome(data.data);
-    } catch (error) {
-      console.log("error", error);
-    }
-  };
+  // const Getartists = async () => {
+  //   detailsseter();
+  // };
   const Getdetails = async () => {
     try {
+      // const { data } = await axios.get(
+      //   `https://saavn.dev/search/songs?query=${language}&page=${page}&limit=20`
+      // );
       const { data } = await axios.get(
-        `https://saavn.dev/search/songs?query=${language}&page=${page}&limit=20`
+        `https://saavn.dev/api/search/songs?query=${language}&page=${page}&limit=20`
       );
       setdetails((prevState) => [...prevState, ...data.data.results]);
     } catch (error) {
@@ -79,17 +74,13 @@ const Home = () => {
     }
   }
 
-  const handleDownloadSong = async (url, name, img) => {
+  const handleDownloadSong = async (url, name,) => {
     try {
       const res = await fetch(url);
       const blob = await res.blob();
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = `${name}.mp3`;
-
-      const image = document.createElement("img");
-      image.src = `${img}`;
-      link.appendChild(image);
 
       document.body.appendChild(link);
       link.click();
@@ -106,18 +97,18 @@ const Home = () => {
     setdetails([]);
   }
 
-  function seccall() {
-    const intervalId = setInterval(() => {
-      if (home === null) {
-        // sethome([])
-        Gethome();
-      }
-    }, 1000);
-    return intervalId;
-  }
+  // function seccall() {
+  //   const intervalId = setInterval(() => {
+  //     if (home === null) {
+  //       // sethome([])
+  //       Getartists();
+  //     }
+  //   }, 1000);
+  //   return intervalId;
+  // }
   function seccall2() {
     const intervalId2 = setInterval(() => {
-      if (details.length >= 0 && page < 10) {
+      if (details.length >= 0 && page < 4) {
         setpage(page + 1);
         Getdetails();
       }
@@ -126,14 +117,12 @@ const Home = () => {
   }
 
   useEffect(() => {
-    var interval = seccall();
-    //  Gethome();
-    return () => clearInterval(interval);
-  }, [language, home]);
-
-  useEffect(() => {
-    Gethome();
+   detailsseter();
   }, [language]);
+
+  // useEffect(() => {
+  //   Getdetails();
+  // }, [language]);
 
   useEffect(() => {
     var interval2 = seccall2();
@@ -144,9 +133,10 @@ const Home = () => {
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
   // console.log(details);
+  // console.log(home);
   // console.log(page);
   // console.log(index)
-  return home && details.length > 0 ? (
+  return  details.length > 0 ? (
     <div className="w-full h-screen bg-slate-800">
       <div className="logo h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 ">
         <div className="flex items-center sm:justify-center sm:pt-2 gap-3">
@@ -171,7 +161,7 @@ const Home = () => {
           </Link> */}
           <Link
             className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
-            to={"/playlist"}
+            // to={"/playlist"}
           >
             PlayLists
           </Link>
@@ -210,7 +200,7 @@ const Home = () => {
               >
                 <img
                   className="relative w-full  rounded-md"
-                  src={t.image[2].link}
+                  src={t.image[2].url}
                   alt=""
                 />
                 <img
@@ -230,9 +220,6 @@ const Home = () => {
                   </h3>
                   <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
                     {t.album.name}
-                  </h4>
-                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
-                    {t.primaryArtists}
                   </h4>
                 </div>
               </Link>
@@ -261,7 +248,7 @@ const Home = () => {
             ))}
           </div>
         </div> */}
-        <div className="charts w-full flex flex-col gap-3   ">
+        {/* <div className="charts w-full flex flex-col gap-3   ">
           <h3 className="text-xl h-[5vh] font-semibold">Charts</h3>
           <div className="chartsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {home?.charts?.map((c, i) => (
@@ -317,7 +304,7 @@ const Home = () => {
               </Link>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
       <div className="flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600  ">
         {songlink?.map((e, i) => (
@@ -328,7 +315,7 @@ const Home = () => {
             <div className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
               <img
                 className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e.image[2]?.link}
+                src={e.image[2]?.url}
                 alt=""
               />
               <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
@@ -337,9 +324,8 @@ const Home = () => {
               <i
                 onClick={() =>
                   handleDownloadSong(
-                    e.downloadUrl[4].link,
+                    e.downloadUrl[4].url,
                     e.name,
-                    e.image[2].link
                   )
                 }
                 className=" flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
@@ -357,7 +343,7 @@ const Home = () => {
                 controls
                 autoPlay
                 onEnded={next}
-                src={e.downloadUrl[4]?.link}
+                src={e.downloadUrl[4]?.url}
               ></audio>
               <button
                 onClick={next}

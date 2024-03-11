@@ -10,7 +10,7 @@ const Album = () => {
   const Getalbums = async () => {
     try {
       const { data } = await axios.get(
-        `https://saavn.dev/search/albums?query=${query}&page=1&limit=10`
+        `https://saavn.dev/api/search/albums?query=${query}&page=1&limit=10`
       );
       setalbums(data?.data?.results);
     } catch (error) {
@@ -34,7 +34,7 @@ const Album = () => {
 
     return () => clearInterval(interval);
   }, [query, albums]);
-
+console.log(albums);
   return (
     <div className="w-full min-h-[100vh] bg-slate-700">
       <div className="w-full min-h-[100vh] ">
@@ -63,7 +63,7 @@ const Album = () => {
             >
               <img
                 className="w-full h-full object-fill rounded-md"
-                src={e?.image[2]?.link}
+                src={e?.image[2]?.url}
                 alt=""
               />
               <h3 className="text-white">{e.name}</h3>

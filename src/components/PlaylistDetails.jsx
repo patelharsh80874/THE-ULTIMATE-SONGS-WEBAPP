@@ -21,10 +21,12 @@ const PlaylistDetails = () => {
 
   const Getdetails = async () => {
     try {
-      const { data } = await axios.get(
-        `https://saavn.dev/playlists?id=${finalid}`
+      const  data  = await axios.get(
+        // `https://saavn.dev/playlists?id=${finalid}`
+        // `https://saavn.dev/api/playlist/id=${finalid}`
+        `https://saavn.dev/api/playlists/${finalid}/songs`
       );
-      setdetails(data.data.songs);
+      setdetails(data);
     } catch (error) {
       console.log("error", error);
     }
@@ -100,7 +102,7 @@ const PlaylistDetails = () => {
 
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
   // console.log(finalid);
-  // console.log(details);
+  console.log(details);
   // console.log(songscount);
   // console.log();
   // console.log(index);
