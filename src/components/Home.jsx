@@ -6,6 +6,7 @@ import Loading from "./Loading";
 import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
 import wavs from "../../public/wavs.gif";
+import wait from "../../public/wait.gif";
 
 const Home = () => {
   const [home, sethome] = useState(null);
@@ -14,6 +15,7 @@ const Home = () => {
   const [songlink, setsonglink] = useState([]);
   var [index, setindex] = useState("");
   var [page, setpage] = useState(1);
+  var [page2, setpage2] = useState(Math.floor(Math.random() * 50));
   const options = [
     "hindi",
     "english",
@@ -42,7 +44,7 @@ const Home = () => {
       //   `https://saavn.dev/search/songs?query=${language}&page=${page}&limit=20`
       // );
       const { data } = await axios.get(
-        `https://saavn.dev/api/search/songs?query=${language}&page=${page}&limit=20`
+        `https://saavn.dev/api/search/songs?query=${language}&page=${page2}&limit=20`
       );
       setdetails((prevState) => [...prevState, ...data.data.results]);
     } catch (error) {
@@ -74,7 +76,7 @@ const Home = () => {
     }
   }
 
-  const handleDownloadSong = async (url, name,) => {
+  const handleDownloadSong = async (url, name) => {
     try {
       const res = await fetch(url);
       const blob = await res.blob();
@@ -108,7 +110,8 @@ const Home = () => {
   // }
   function seccall2() {
     const intervalId2 = setInterval(() => {
-      if (details.length >= 0 && page < 4) {
+      if (details.length >= 0 && page < 10) {
+        setpage2(Math.floor(Math.random() * 50));
         setpage(page + 1);
         Getdetails();
       }
@@ -117,7 +120,7 @@ const Home = () => {
   }
 
   useEffect(() => {
-   detailsseter();
+    detailsseter();
   }, [language]);
 
   // useEffect(() => {
@@ -135,10 +138,12 @@ const Home = () => {
   // console.log(details);
   // console.log(home);
   // console.log(page);
+  // console.log(page2);
+
   // console.log(index)
-  return  details.length > 0 ? (
-    <div className="w-full h-screen bg-slate-800">
-      <div className="logo h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 ">
+  return details.length > 0 ? (
+    <div className="w-full h-screen  bg-slate-800">
+      <div className="logo duration-700 rounded-b-full h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 ">
         <div className="flex items-center sm:justify-center sm:pt-2 gap-3">
           <img className="w-[5vw] sm:w-[10vw] rounded-full" src={logo} alt="" />
           <h1 className="text-2xl sm:text-xl  font-black">
@@ -146,12 +151,12 @@ const Home = () => {
           </h1>
         </div>
         <div className="sm:flex   sm:justify-center">
-        <h3 className="inline text-xl sm:text-sm" >Search : </h3>
+          <h3 className="inline text-xl sm:text-sm">Search : </h3>
           <Link
             className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
             to={"/songs"}
           >
-             Songs
+            Songs
           </Link>
           {/* <Link
             className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
@@ -179,13 +184,13 @@ const Home = () => {
           </Link>
         </div>
       </div>
-      <div className="w-full h-[65vh]  text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
+      <div className="w-full h-[63vh]  text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
         <div className="w-full   flex justify-end ">
           <Dropdown
             className="w-[15%] text-sm sm:w-[50%]"
             options={options}
             onChange={(e) => setlanguage(e.value)}
-            placeholder="Select language"
+            placeholder={ language ?` ${language}  ` : "Select language"}
           />
         </div>
 
@@ -199,6 +204,7 @@ const Home = () => {
                 className="relative hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4"
               >
                 <img
+                  loading="lazy"
                   className="relative w-full  rounded-md"
                   src={t.image[2].url}
                   alt=""
@@ -224,6 +230,11 @@ const Home = () => {
                 </div>
               </Link>
             ))}
+
+            <img
+              className={page === 3 ?  "hidden" : "w-[20%] h-[20%]"}
+              src={wait}
+            />
           </div>
         </div>
 
@@ -306,15 +317,21 @@ const Home = () => {
           </div>
         </div> */}
       </div>
-      <div className="flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600  ">
+      <div
+        className={
+          songlink.length > 0
+            ? `duration-700 rounded-full  sm:rounded-none sm:rounded-t-[30%]  flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[27vh] bg-gray-700  `
+            : "block"
+        }
+      >
         {songlink?.map((e, i) => (
           <div
             key={i}
-            className="flex sm:block w-[70%] sm:w-full sm:h-full items-center justify-center gap-3"
+            className=" flex sm:block w-[70%] sm:w-full sm:h-full items-center justify-center gap-3"
           >
             <div className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
               <img
-                className="rounded-md h-[7vw] sm:h-[25vw]"
+                className={`rounded-md h-[7vw] sm:h-[25vw]`}
                 src={e.image[2]?.url}
                 alt=""
               />
@@ -322,12 +339,7 @@ const Home = () => {
                 {e.name}
               </h3>
               <i
-                onClick={() =>
-                  handleDownloadSong(
-                    e.downloadUrl[4].url,
-                    e.name,
-                  )
-                }
+                onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
                 className=" flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
             </div>

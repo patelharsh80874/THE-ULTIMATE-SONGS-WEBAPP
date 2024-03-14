@@ -98,7 +98,7 @@ const ArtistsDetails = () => {
   // console.log(page)
 
   return details.length ? (
-    <div className=" w-full  bg-slate-700">
+    <div className=" w-full h-screen  bg-slate-700">
       <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
@@ -107,7 +107,7 @@ const ArtistsDetails = () => {
         <h1 className="text-xl text-zinc-300 font-black">THE ULTIMATE SONGS</h1>
       </div>
 
-      <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[70vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
+      <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[67vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
         {details?.map((d, i) => (
           <Link
             key={i}
@@ -152,7 +152,7 @@ const ArtistsDetails = () => {
           </a>
         </div>
       </div>
-      <div className="flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600  ">
+      <div className={songlink.length>0 ? `duration-700 flex  rounded-full sm:rounded-none sm:rounded-t-[30%] gap-3 items-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600  `:'block'}>
         {songlink?.map((e, i) => (
           <div
             key={i}

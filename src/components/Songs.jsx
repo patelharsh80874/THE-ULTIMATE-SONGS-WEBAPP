@@ -164,7 +164,7 @@ const Songs = () => {
         </div>}
         
       </div>
-      <div className="flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600  ">
+      <div className={songlink.length > 0 ? ` duration-700 flex rounded-full sm:rounded-none sm:rounded-t-[30%]  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600 `: 'block'}>
          {songlink?.map((e, i) => (
           <div
             key={i}
