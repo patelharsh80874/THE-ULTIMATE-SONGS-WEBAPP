@@ -17,34 +17,64 @@ const Home = () => {
   var [page, setpage] = useState(1);
   var [page2, setpage2] = useState(Math.floor(Math.random() * 50));
   const options = [
+    // "hindi",
+    // "english",
+    // "punjabi",
+    // "tamil",
+    // "telugu",
+    // "marathi",
+    // "gujarati",
+    // "bengali",
+    // "kannada",
+    // "bhojpuri",
+    // "malayalam",
+    // "urdu",
+    // "haryanvi",
+    // "rajasthani",
+    // "odia",
+    // "assamese",
+
     "hindi",
     "english",
     "punjabi",
-    "tamil",
-    "telugu",
-    "marathi",
+    // "tamil",
+    // "telugu",
+    // "marathi",
     "gujarati",
-    "bengali",
-    "kannada",
-    "bhojpuri",
-    "malayalam",
-    "urdu",
-    "haryanvi",
+    // "bengali",
+    // "kannada",
+    // "bhojpuri",
+    // "malayalam",
+    // "urdu",
+    // "haryanvi",
     "rajasthani",
-    "odia",
-    "assamese",
+    // "odia",
+    // "assamese",
   ];
 
-  // const Getartists = async () => {
-  //   detailsseter();
-  // };
+  const Gethome = async () => {
+    detailsseter();
+    try {
+      const { data } = await axios.get(
+        `https://jiosaavan-harsh-patel.vercel.app/modules?language=${language}`
+      );
+      sethome(data.data);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
   const Getdetails = async () => {
     try {
       // const { data } = await axios.get(
       //   `https://saavn.dev/search/songs?query=${language}&page=${page}&limit=20`
       // );
       const { data } = await axios.get(
-        `https://saavn.dev/api/search/songs?query=${language}&page=${page2}&limit=20`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${language}&page=${language === "english" ? page : page2}&limit=20`
+        // `https://saavn.dev/api/search/songs?query=${language}&page=${page2}&limit=20`
+        // `https://jiosaavan-harsh-patel.vercel.app/search/songs?query=${language}&page=${
+        //   language === "hindi" || "punjabi" ? page2 : page
+        // }&limit=10`
+        // `https://jiosaavan-harsh-patel.vercel.app/search/songs?query=${language}&page=${page2}&limit=10`
       );
       setdetails((prevState) => [...prevState, ...data.data.results]);
     } catch (error) {
@@ -99,15 +129,15 @@ const Home = () => {
     setdetails([]);
   }
 
-  // function seccall() {
-  //   const intervalId = setInterval(() => {
-  //     if (home === null) {
-  //       // sethome([])
-  //       Getartists();
-  //     }
-  //   }, 1000);
-  //   return intervalId;
-  // }
+  function seccall() {
+    const intervalId = setInterval(() => {
+      if (home === null) {
+        // sethome([])
+        Getartists();
+      }
+    }, 1000);
+    return intervalId;
+  }
   function seccall2() {
     const intervalId2 = setInterval(() => {
       if (details.length >= 0 && page < 10) {
@@ -120,18 +150,38 @@ const Home = () => {
   }
 
   useEffect(() => {
-    detailsseter();
-  }, [language]);
+    var interval = seccall();
+    //  Gethome();
+    //  Gethome();
+    return () => clearInterval(interval);
+  }, [language, home]);
 
-  // useEffect(() => {
-  //   Getdetails();
-  // }, [language]);
+  useEffect(() => {
+    Gethome();
+  }, [language]);
 
   useEffect(() => {
     var interval2 = seccall2();
 
     return () => clearInterval(interval2);
   }, [details, page, language]);
+
+  // useEffect(() => {
+  //   Getdetails();
+  //   Getartists();
+  // }, [language]);
+
+  // useEffect(() => {
+  //   var interval = seccall();
+
+  //   return () => clearInterval(interval);
+  // }, [details, page, language]);
+
+  // useEffect(() => {
+  //   var interval2 = seccall2();
+
+  //   return () => clearInterval(interval2);
+  // }, [details, page, language]);
 
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
@@ -143,7 +193,7 @@ const Home = () => {
   // console.log(index)
   return details.length > 0 ? (
     <div className="w-full h-screen  bg-slate-800">
-      <div className="logo duration-700 rounded-b-full h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 ">
+      <div className="logo duration-700 rounded-b-full sm:rounded-b-[30%] h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 ">
         <div className="flex items-center sm:justify-center sm:pt-2 gap-3">
           <img className="w-[5vw] sm:w-[10vw] rounded-full" src={logo} alt="" />
           <h1 className="text-2xl sm:text-xl  font-black">
@@ -166,7 +216,7 @@ const Home = () => {
           </Link> */}
           <Link
             className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
-            // to={"/playlist"}
+            to={"/playlist"}
           >
             PlayLists
           </Link>
@@ -190,7 +240,7 @@ const Home = () => {
             className="w-[15%] text-sm sm:w-[50%]"
             options={options}
             onChange={(e) => setlanguage(e.value)}
-            placeholder={ language ?` ${language}  ` : "Select language"}
+            placeholder={language ? ` ${language}  ` : "Select language"}
           />
         </div>
 
@@ -206,6 +256,7 @@ const Home = () => {
                 <img
                   loading="lazy"
                   className="relative w-full  rounded-md"
+                  // src={t.image[2].link}
                   src={t.image[2].url}
                   alt=""
                 />
@@ -232,7 +283,7 @@ const Home = () => {
             ))}
 
             <img
-              className={page === 3 ?  "hidden" : "w-[20%] h-[20%]"}
+              className={page === 3 ? "hidden" : "w-[20%] h-[20%]"}
               src={wait}
             />
           </div>
@@ -258,8 +309,8 @@ const Home = () => {
               </Link>
             ))}
           </div>
-        </div> */}
-        {/* <div className="charts w-full flex flex-col gap-3   ">
+        </div>  */}
+        <div className="charts w-full flex flex-col gap-3   ">
           <h3 className="text-xl h-[5vh] font-semibold">Charts</h3>
           <div className="chartsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {home?.charts?.map((c, i) => (
@@ -315,7 +366,7 @@ const Home = () => {
               </Link>
             ))}
           </div>
-        </div> */}
+        </div>
       </div>
       <div
         className={

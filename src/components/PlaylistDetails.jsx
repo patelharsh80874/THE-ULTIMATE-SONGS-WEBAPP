@@ -21,12 +21,13 @@ const PlaylistDetails = () => {
 
   const Getdetails = async () => {
     try {
-      const  data  = await axios.get(
+      const  {data}  = await axios.get(
         // `https://saavn.dev/playlists?id=${finalid}`
         // `https://saavn.dev/api/playlist/id=${finalid}`
-        `https://saavn.dev/api/playlists/${finalid}/songs`
+        // `https://saavn.dev/api/playlists/${finalid}/songs`
+        `https://jiosaavan-harsh-patel.vercel.app/playlists?id=${finalid}`
       );
-      setdetails(data);
+      setdetails(data.data.songs);
     } catch (error) {
       console.log("error", error);
     }
@@ -56,7 +57,7 @@ const PlaylistDetails = () => {
     }
   }
 
-  const handleDownloadSong = async (url, name, img) => {
+  const handleDownloadSong = async (url, name) => {
     try {
       const res = await fetch(url);
       const blob = await res.blob();
@@ -64,9 +65,6 @@ const PlaylistDetails = () => {
       link.href = URL.createObjectURL(blob);
       link.download = `${name}.mp3`;
 
-      const image = document.createElement("img");
-      image.src = `${img}`;
-      link.appendChild(image);
 
       document.body.appendChild(link);
       link.click();
@@ -146,9 +144,7 @@ const PlaylistDetails = () => {
                   <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
                     {d.album.name}
                   </h4>
-                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
-                    {d.primaryArtists}
-                  </h4>
+               
                 </div>
           </Link>
         ))}
@@ -182,7 +178,6 @@ const PlaylistDetails = () => {
                   handleDownloadSong(
                     e.downloadUrl[4].link,
                     e.name,
-                    e.image[2].link
                   )
                 }
                 className=" flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"

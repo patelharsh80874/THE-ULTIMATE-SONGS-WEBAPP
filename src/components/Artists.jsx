@@ -11,7 +11,8 @@ const Artists = () => {
   const Getartists = async () => {
     try {
       const { data } = await axios.get(
-        `https://saavn.dev/api/search/artists?query=${query}&limit=10`
+        // `https://saavn.dev/api/search/artists?query=${query}&limit=10`
+        `https://jiosaavan-harsh-patel.vercel.app/search/artists?query=${query}&limit=10`
       );
       setartists(data?.data?.results);
     } catch (error) {
@@ -37,7 +38,7 @@ const Artists = () => {
     return () => clearInterval(interval);
   }, [query, artists]);
 
-  // console.log(artists);
+  // console.log(artists); 
   return (
     <div className="w-full   bg-slate-700">
       <div className="w-full h-[100vh]  ">
@@ -66,7 +67,7 @@ const Artists = () => {
             >
               <img
                 className="w-full h-full object-fill rounded-md"
-                src={e?.image[2]?.url}
+                src={e?.image[2]?.link}
                 alt=""
               />
               <h3 className="text-white text-sm">{e.name}</h3>

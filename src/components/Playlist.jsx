@@ -11,9 +11,12 @@ const Playlist = () => {
   const Getplaylist = async () => {
     try {
       const { data } = await axios.get(
-        `https://saavn.dev/api/search?query=${query}&page=1&limit=10`
+        // `https://saavn.dev/api/search?query=${query}&page=1&limit=10`
+        `https://jiosaavan-harsh-patel.vercel.app/search/playlists?query=${query}`
       );
-      setplaylist(data?.data?.playlists);
+
+      setplaylist(data?.data?.results);
+      // setplaylist(data);
     } catch (error) {
       console.log("error", error);
     }
@@ -56,7 +59,7 @@ const Playlist = () => {
           />
         </div>
         <div className="w-full min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
-          {playlist.results?.map((e, i) => (
+          {playlist?.map((e, i) => (
             <Link
               key={i}
               to={`/playlist/details/${e.id}`}
@@ -64,7 +67,7 @@ const Playlist = () => {
             >
               <img
                 className="w-full h-full object-fill rounded-md"
-                src={e?.image[2]?.url}
+                src={e?.image[2]?.link}
                 alt=""
               />
               <h3 className="text-white">{e.name}</h3>

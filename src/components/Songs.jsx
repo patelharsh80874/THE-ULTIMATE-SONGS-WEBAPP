@@ -15,7 +15,8 @@ const Songs = () => {
   const Getsearch = async () => {
     try {
       const { data } = await axios.get(
-        `https://saavn.dev/api/search/songs?query=${query}&page=${page}&limit=10`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${query}&page=${page}&limit=10`
+        // `https://jiosaavan-harsh-patel.vercel.app/search/songs?query=${query}&page=${page}&limit=10`
       );
 
       setsearch((prevState) => [...prevState, ...data.data.results]);

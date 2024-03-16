@@ -10,7 +10,8 @@ const Album = () => {
   const Getalbums = async () => {
     try {
       const { data } = await axios.get(
-        `https://saavn.dev/api/search/albums?query=${query}&page=1&limit=10`
+        // `https://saavn.dev/api/search/albums?query=${query}&page=1&limit=10`
+        `https://jiosaavan-harsh-patel.vercel.app/search/albums?query=${query}`
       );
       setalbums(data?.data?.results);
     } catch (error) {
@@ -63,7 +64,7 @@ const Album = () => {
             >
               <img
                 className="w-full h-full object-fill rounded-md"
-                src={e?.image[2]?.url}
+                src={e?.image[2]?.link}
                 alt=""
               />
               <h3 className="text-white">{e.name}</h3>

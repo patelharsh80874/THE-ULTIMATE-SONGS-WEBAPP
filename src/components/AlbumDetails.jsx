@@ -19,7 +19,8 @@ const AlbumDetails = () => {
   const Getdetails = async () => {
     try {
       const { data } = await axios.get(
-        `https://saavn.dev/api/albums?id=${finalid}`
+        // `https://saavn.dev/api/albums?id=${finalid}`
+        `https://jiosaavan-harsh-patel.vercel.app/albums?id=${finalid}`
       );
       setdetails(data.data.songs);
     } catch (error) {
@@ -116,7 +117,7 @@ const AlbumDetails = () => {
           >
             <img
               className="w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
-              src={d.image[2].url}
+              src={d.image[2].link}
               alt=""
             />
             <img className={`absolute top-0 w-[20%] sm:w-[10%] rounded-md ${i === index ? "block" : "hidden"} `} src={wavs} alt="" />
@@ -153,7 +154,7 @@ const AlbumDetails = () => {
             <div className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
               <img
                 className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e.image[2]?.url}
+                src={e.image[2]?.link}
                 alt=""
               />
               <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
@@ -162,7 +163,7 @@ const AlbumDetails = () => {
               <i
                 onClick={() =>
                   handleDownloadSong(
-                    e.downloadUrl[4].url,
+                    e.downloadUrl[4].link,
                     e.name,
                     
                   )
@@ -180,7 +181,7 @@ const AlbumDetails = () => {
                 controls
                 autoPlay
                 onEnded={next}
-                src={e.downloadUrl[4]?.url}
+                src={e.downloadUrl[4]?.link}
               ></audio>
               <i
                 onClick={next}
