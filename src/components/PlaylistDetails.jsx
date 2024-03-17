@@ -22,12 +22,10 @@ const PlaylistDetails = () => {
   const Getdetails = async () => {
     try {
       const  {data}  = await axios.get(
-        // `https://saavn.dev/playlists?id=${finalid}`
-        // `https://saavn.dev/api/playlist/id=${finalid}`
-        // `https://saavn.dev/api/playlists/${finalid}/songs`
-        `https://jiosaavan-harsh-patel.vercel.app/playlists?id=${finalid}`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/playlists?id=${finalid}`
       );
-      setdetails(data.data.songs);
+      // setdetails(data.data.songs);
+      setdetails(data?.data?.songs);
     } catch (error) {
       console.log("error", error);
     }
@@ -104,6 +102,7 @@ const PlaylistDetails = () => {
   // console.log(songscount);
   // console.log();
   // console.log(index);
+
   return details.length ? (
     <div className=" w-full  bg-slate-700">
       <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
@@ -123,7 +122,7 @@ const PlaylistDetails = () => {
           >
             <img
               className=" w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
-              src={d.image[2].link}
+              src={d.image[2].url}
               alt=""
             />
             <img
@@ -167,7 +166,7 @@ const PlaylistDetails = () => {
             <div className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
               <img
                 className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e.image[2]?.link}
+                src={e.image[2]?.url}
                 alt=""
               />
               <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
@@ -176,7 +175,7 @@ const PlaylistDetails = () => {
               <i
                 onClick={() =>
                   handleDownloadSong(
-                    e.downloadUrl[4].link,
+                    e.downloadUrl[4].url,
                     e.name,
                   )
                 }
@@ -195,7 +194,7 @@ const PlaylistDetails = () => {
                 controls
                 autoPlay
                 onEnded={next}
-                src={e.downloadUrl[4]?.link}
+                src={e.downloadUrl[4]?.url}
               ></audio>
               <button
                 onClick={next}

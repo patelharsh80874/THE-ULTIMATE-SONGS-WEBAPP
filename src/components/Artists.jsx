@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Artists = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [query, setquery] = useState("");
   const [requery, setrequery] = useState("");
   const [artists, setartists] = useState([]);
@@ -12,7 +12,8 @@ const Artists = () => {
     try {
       const { data } = await axios.get(
         // `https://saavn.dev/api/search/artists?query=${query}&limit=10`
-        `https://jiosaavan-harsh-patel.vercel.app/search/artists?query=${query}&limit=10`
+        // `https://jiosaavan-harsh-patel.vercel.app/search/artists?query=${query}&limit=10`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/artists?query=${query}`
       );
       setartists(data?.data?.results);
     } catch (error) {
@@ -38,7 +39,7 @@ const Artists = () => {
     return () => clearInterval(interval);
   }, [query, artists]);
 
-  // console.log(artists); 
+  // console.log(artists);
   return (
     <div className="w-full   bg-slate-700">
       <div className="w-full h-[100vh]  ">
@@ -67,19 +68,16 @@ const Artists = () => {
             >
               <img
                 className="w-full h-full object-fill rounded-md"
-                src={e?.image[2]?.link}
+                src={e?.image[2]?.url}
                 alt=""
               />
               <h3 className="text-white text-sm">{e.name}</h3>
             </Link>
           ))}
-          
         </div>
       </div>
     </div>
   );
 };
 
-
-
-export default Artists
+export default Artists;

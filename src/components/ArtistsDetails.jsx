@@ -19,12 +19,13 @@ const ArtistsDetails = () => {
 
   const Getdetails = async () => {
     try {
-      const { data } = await axios.get(
+      const  {data}  = await axios.get(
         // `https://saavn.dev/api/artists/${finalid}/songs?page=${page}`
-        `https://jiosaavan-harsh-patel.vercel.app/artists/${finalid}/songs?page=${page}`
+        // `https://jiosaavan-harsh-patel.vercel.app/artists/${finalid}/songs?page=${page}`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/artists/${finalid}/songs?page=${page}`
       );
-      // setdetails(data.data.results);
-      setdetails((prevState) => [...prevState, ...data.data.results]);
+      // setdetails(data?.data?.songs);
+      setdetails((prevState) => [...prevState, ...data.data.songs]);
     } catch (error) {
       console.log("error", error);
     }
@@ -113,7 +114,7 @@ const ArtistsDetails = () => {
           >
             <img
               className="w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
-              src={d.image[2].link}
+              src={d.image[2].url}
               alt=""
             />
             <img
@@ -163,14 +164,14 @@ const ArtistsDetails = () => {
             <div className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
               <img
                 className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e.image[2]?.link}
+                src={e.image[2]?.url}
                 alt=""
               />
               <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
                 {e.name}
               </h3>
               <i
-                onClick={() => handleDownloadSong(e.downloadUrl[4].link, e.name)}
+                onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
                 className=" flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
             </div>
@@ -184,7 +185,7 @@ const ArtistsDetails = () => {
                 controls
                 autoPlay
                 onEnded={next}
-                src={e.downloadUrl[4]?.link}
+                src={e.downloadUrl[4]?.url}
               ></audio>
               <i
                 onClick={next}
