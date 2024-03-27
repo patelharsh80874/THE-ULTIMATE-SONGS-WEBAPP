@@ -283,7 +283,7 @@ const Home = () => {
             ))}
 
             <img
-              className={page === 3 ? "hidden" : "w-[20%] h-[20%]"}
+              className={page >= 9 ? "hidden" : "w-[20%] h-[20%]"}
               src={wait}
             />
           </div>
