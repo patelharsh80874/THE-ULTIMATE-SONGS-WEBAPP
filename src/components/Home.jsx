@@ -340,11 +340,11 @@ const Home = () => {
           <h3 className="text-xl h-[5vh] font-semibold">Charts</h3>
           <div className="chartsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {home?.charts?.map((c, i) => (
-              <motion.div
+              <motion.a
               initial={{ y: -100,  scale:0.5}}
               whileInView={{ y: 0,  scale:1 }}
               transition={{ease:Circ.easeIn,duration:0.05}}
-                to={`/playlist/details/${c.id}`}
+                href={`/playlist/details/${c.id}`}
                 key={i}
                 className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
               >
@@ -358,7 +358,7 @@ const Home = () => {
                 // whileInView={{ y: 0, opacity: 1 }}
                 // transition={{ease:Circ.easeIn,duration:0.05}}
                  className="leading-none">{c.title}</motion.h3>
-              </motion.div>
+              </motion.a>
             ))}
           </div>
         </div>
