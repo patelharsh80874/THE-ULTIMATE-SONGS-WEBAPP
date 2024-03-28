@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import logo from "./../../public/logo3.jpg";
 import axios from "axios";
 import Loading from "./Loading";
@@ -14,6 +14,7 @@ import { Circ } from "gsap/all";
 
 
 const Home = () => {
+  let navigate = useNavigate(); 
   const [home, sethome] = useState(null);
   const [language, setlanguage] = useState("hindi");
   const [details, setdetails] = useState([]);
@@ -135,7 +136,7 @@ const Home = () => {
     setsonglink([]);
     setdetails([]);
   }
-
+  
   function seccall() {
     const intervalId = setInterval(() => {
       if (home === null) {
@@ -172,6 +173,7 @@ const Home = () => {
 
     return () => clearInterval(interval2);
   }, [details, page, language]);
+
 
   // useEffect(() => {
   //   Getdetails();
@@ -340,11 +342,12 @@ const Home = () => {
           <h3 className="text-xl h-[5vh] font-semibold">Charts</h3>
           <div className="chartsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {home?.charts?.map((c, i) => (
-              <motion.a
+              <motion.div
               initial={{ y: -100,  scale:0.5}}
               whileInView={{ y: 0,  scale:1 }}
               transition={{ease:Circ.easeIn,duration:0.05}}
-                href={`/playlist/details/${c.id}`}
+                // onClick={`/playlist/details/${c.id}`}
+                onClick={()=>navigate(`/playlist/details/${c.id}`)}
                 key={i}
                 className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
               >
@@ -358,7 +361,7 @@ const Home = () => {
                 // whileInView={{ y: 0, opacity: 1 }}
                 // transition={{ease:Circ.easeIn,duration:0.05}}
                  className="leading-none">{c.title}</motion.h3>
-              </motion.a>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -370,7 +373,8 @@ const Home = () => {
               initial={{ y: -100,  scale:0.5}}
               whileInView={{ y: 0,  scale:1 }}
               transition={{ease:Circ.easeIn,duration:0.05}}
-                to={`/playlist/details/${p.id}`}
+                // to={`/playlist/details/${p.id}`}
+                onClick={()=>navigate(`/playlist/details/${p.id}`)}
                 key={i}
                 className="hover:scale-110  sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4 cursor-pointer"
               >
@@ -397,7 +401,8 @@ const Home = () => {
               initial={{ y: -100,  scale:0.5}}
               whileInView={{ y: 0,  scale:1 }}
               transition={{ease:Circ.easeIn,duration:0.05}}
-                to={`/albums/details/${a.id}`}
+                // to={`/albums/details/${a.id}`}
+                onClick={()=>navigate(`/albums/details/${a.id}`)}
                 key={i}
                 className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4 cursor-pointer"
               >
