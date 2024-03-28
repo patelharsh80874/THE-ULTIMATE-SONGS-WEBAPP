@@ -2,6 +2,10 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import wavs from "../../public/wavs.gif";
+import { animate, circIn, circInOut, circOut, easeIn, easeInOut, easeOut, motion } from "framer-motion";
+import { useAnimate, stagger } from "framer-motion";
+import { Bounce, Expo, Power4, Sine } from "gsap/all";
+import { Circ } from "gsap/all";
 
 const Songs = () => {
   const navigate = useNavigate();
@@ -124,10 +128,13 @@ const Songs = () => {
       </div>
       <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[70vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
         {search?.map((d, i) => (
-          <Link
+          <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          transition={{ease:Circ.easeIn,duration:0.05}}
             key={i}
             onClick={() => audioseter(i)}
-            className=" relative hover:scale-110 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh]  "
+            className=" relative hover:scale-110 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh] cursor-pointer  "
           >
             <img
               className=" w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
@@ -152,7 +159,7 @@ const Songs = () => {
             <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">{d.album.name}</h4>
             </div>
             
-          </Link>
+          </motion.div>
         ))}
         {search.length>0 && <div className="flex gap-3 text-2xl  ">
           <h1>MADE BY ❤️ HARSH PATEL</h1>
@@ -165,14 +172,21 @@ const Songs = () => {
         </div>}
         
       </div>
-      <div className={songlink.length > 0 ? ` duration-700 flex rounded-full sm:rounded-none sm:rounded-t-[30%]  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600 `: 'block'}>
+      <motion.div className={songlink.length > 0 ? ` duration-700 flex rounded-full sm:rounded-none sm:rounded-t-[30%]  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600 `: 'block'}>
          {songlink?.map((e, i) => (
-          <div
+          <motion.div
+          initial={{ y: 50, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
             key={i}
             className="flex sm:block w-[70%] sm:w-full sm:h-full items-center justify-center gap-3"
           >
-            <div className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
-              <img
+            <motion.div 
+            initial={{ x: -50, opacity: 0 }}
+            whileInView={{ x: 0, opacity: 1 }}
+            className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
+              <motion.img
+              initial={{ x: -50, opacity: 0 }}
+              whileInView={{ x: 0, opacity: 1 }}
                 className="rounded-md h-[7vw] sm:h-[25vw]"
                 src={e.image[2]?.url}
                 alt=""
@@ -189,8 +203,11 @@ const Songs = () => {
                 }
                 className=" flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
-            </div>
-            <div className="w-[55%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
+            </motion.div>
+            <motion.div 
+             initial={{ y: 50, opacity: 0 }}
+             whileInView={{ y: 0, opacity: 1 }}
+            className="w-[55%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
               <button
                 onClick={pre}
                 className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
@@ -210,10 +227,10 @@ const Songs = () => {
               >
                 <i className="ri-skip-right-fill"></i>
               </button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 };
