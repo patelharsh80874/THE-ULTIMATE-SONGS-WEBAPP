@@ -129,8 +129,8 @@ const Songs = () => {
       <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[70vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
         {search?.map((d, i) => (
           <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
+          initial={{  scale: 0 }}
+          whileInView={{  scale: 1 }}
           transition={{ease:Circ.easeIn,duration:0.05}}
             key={i}
             onClick={() => audioseter(i)}
@@ -175,18 +175,18 @@ const Songs = () => {
       <motion.div className={songlink.length > 0 ? ` duration-700 flex rounded-full sm:rounded-none sm:rounded-t-[30%]  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600 `: 'block'}>
          {songlink?.map((e, i) => (
           <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
+          initial={{ y: 50, opacity: 0,scale:0}}
+          animate={{ y: 0, opacity: 1,scale:1 }}
             key={i}
             className="flex sm:block w-[70%] sm:w-full sm:h-full items-center justify-center gap-3"
           >
             <motion.div 
-            initial={{ x: -50, opacity: 0 }}
-            whileInView={{ x: 0, opacity: 1 }}
+            initial={{ x: -50, opacity: 0,scale:0 }}
+            animate={{ x: 0, opacity: 1,scale:1 }}
             className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
               <motion.img
-              initial={{ x: -50, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
+              initial={{ x: -50, opacity: 0,scale:0 }}
+              animate={{ x: 0, opacity: 1,scale:1 }}
                 className="rounded-md h-[7vw] sm:h-[25vw]"
                 src={e.image[2]?.url}
                 alt=""
@@ -205,8 +205,8 @@ const Songs = () => {
               ></i>
             </motion.div>
             <motion.div 
-             initial={{ y: 50, opacity: 0 }}
-             whileInView={{ y: 0, opacity: 1 }}
+             initial={{ y: 50, opacity: 0,scale:0 }}
+             animate={{ y: 0, opacity: 1,scale:1 }}
             className="w-[55%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
               <button
                 onClick={pre}
