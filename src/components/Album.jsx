@@ -1,6 +1,19 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  animate,
+  circIn,
+  circInOut,
+  circOut,
+  easeIn,
+  easeInOut,
+  easeOut,
+  motion,
+} from "framer-motion";
+import { useAnimate, stagger } from "framer-motion";
+import { Bounce, Expo, Power4, Sine } from "gsap/all";
+import { Circ } from "gsap/all";
 
 const Album = () => {
   const navigate = useNavigate();
@@ -38,9 +51,17 @@ const Album = () => {
   }, [query, albums]);
 // console.log(albums);
   return (
-    <div className="w-full min-h-[100vh] bg-slate-700">
-      <div className="w-full min-h-[100vh] ">
-        <div className="search gap-3 w-full   sm:w-full h-[15vh] flex items-center justify-center ">
+    <motion.div
+    initial={{ opacity: 0, scale: 0 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.7 }}
+     className="w-full min-h-[100vh] bg-slate-700">
+      <motion.div className="w-full min-h-[100vh] ">
+        <motion.div
+         initial={{ y: -50, scale: 0 }}
+         animate={{ y: 0, scale: 1 }}
+         transition={{ ease: Circ.easeIn, duration: 0.7, delay: 1 }}
+         className="search gap-3 w-full   sm:w-full h-[15vh] flex items-center justify-center ">
           <i
             onClick={() => navigate(-1)}
             className="ml-5 cursor-pointer text-3xl bg-green-500 rounded-full ri-arrow-left-line"
@@ -55,13 +76,17 @@ const Album = () => {
             name=""
             id=""
           />
-        </div>
-        <div className="w-full min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
+        </motion.div>
+        <motion.div className="w-full min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
           {albums?.map((e, i) => (
-            <Link
+            <motion.div
+            initial={{  scale: 0 }}
+            animate={{  scale: 1 }}
+            transition={{delay:i*0.1 }}
+            viewport={{ once: true }}
               key={i}
-              to={`/albums/details/${e.id}`}
-              className="w-[15vw] h-[30vh] sm:w-[40vw] mb-8 sm:h-[20vh] sm:mb-12 rounded-md bg-red-200"
+              onClick={()=>navigate(`/albums/details/${e.id}`)}
+              className="w-[15vw] h-[30vh] sm:w-[40vw] mb-8 sm:h-[20vh] sm:mb-12 rounded-md bg-red-200 cursor-pointer"
             >
               <img
                 className="w-full h-full object-fill rounded-md"
@@ -69,11 +94,11 @@ const Album = () => {
                 alt=""
               />
               <h3 className="text-white">{e.name}</h3>
-            </Link>
+            </motion.div>
           ))}
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
 

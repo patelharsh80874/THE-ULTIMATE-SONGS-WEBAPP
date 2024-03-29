@@ -136,6 +136,7 @@ const Home = () => {
     setsonglink([]);
     setdetails([]);
   }
+
   
   function seccall() {
     const intervalId = setInterval(() => {
@@ -276,9 +277,9 @@ const Home = () => {
                 transition={{ease:Circ.easeIn,duration:0.05}}
                 onClick={() => audioseter(i)}
                 key={i}
-                className="relative hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
+                className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
               >
-                <img
+                <motion.img
                   className="relative w-full  rounded-md"
                   // src={t.image[2].link}
                   src={t.image[2].url}
@@ -430,9 +431,10 @@ const Home = () => {
       >
         {songlink?.map((e, i) => (
           <motion.div
-            initial={{ y: 100, opacity: 0 , scale:0}}
-            animate={{ y: 0, opacity: 1,scale:1 }}
-            // transition={{ease:Circ.easeIn,duration:1}}
+          initial={{ y: 100, opacity: 0 , scale:0}}
+          animate={{ y: 0, opacity: 1,scale:1 }}
+          transition={{ease:Circ.easeIn,duration:0.7}}
+           
            
             key={i}
             className=" flex sm:block w-[70%] sm:w-full sm:h-full items-center justify-center gap-3"

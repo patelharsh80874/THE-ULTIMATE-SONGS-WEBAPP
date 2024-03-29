@@ -3,6 +3,11 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import wavs from "../../public/wavs.gif";
+import { animate, circIn, circInOut, circOut, easeIn, easeInOut, easeOut, motion } from "framer-motion";
+import { useAnimate, stagger } from "framer-motion";
+import { Bounce, Expo, Power4, Sine } from "gsap/all";
+import { Circ } from "gsap/all";
+
 
 
 const PlaylistDetails = () => {
@@ -104,7 +109,7 @@ const PlaylistDetails = () => {
   // console.log(index);
 
   return details.length ? (
-    <div className=" w-full  bg-slate-700">
+    <div className=" w-full h-screen  bg-slate-700">
       <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
@@ -113,14 +118,21 @@ const PlaylistDetails = () => {
         <h1 className="text-xl text-zinc-300 font-black">THE ULTIMATE SONGS</h1>
       </div>
 
-      <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[70vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
+      <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[67vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
         {details?.map((d, i) => (
           <Link
+          initial={{  scale: 0 }}
+          whileInView={{  scale: 1 }}
+          transition={{ease:Circ.easeIn,duration:0.05}}
             key={i}
             onClick={() => audioseter(i)}
-            className=" relative hover:scale-110 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh]  "
+            className=" relative hover:scale-90 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh] cursor-pointer "
           >
-            <img
+            <motion.img
+             initial={{  scale: 0 }}
+             animate={{  scale: 1 }}
+             transition={{delay:i*0.1}}
+             viewport={{ once: true }}
               className=" w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
               src={d.image[2].url}
               alt=""
@@ -132,7 +144,12 @@ const PlaylistDetails = () => {
               src={wavs}
               alt=""
             />
-             <div className="flex flex-col mt-2">
+             <motion.div
+              initial={{  scale: 0 }}
+              animate={{  scale: 1 }}
+              transition={{delay:i*0.1}}
+              viewport={{ once: true }}
+              className="flex flex-col mt-2">
                   <h3
                     className={`text-sm sm:text-xs leading-none  font-bold ${
                       i === index && "text-green-300"
@@ -144,7 +161,7 @@ const PlaylistDetails = () => {
                     {d.album.name}
                   </h4>
                
-                </div>
+                </motion.div>
           </Link>
         ))}
         <div className="flex gap-3 text-2xl  ">
@@ -157,14 +174,21 @@ const PlaylistDetails = () => {
           </a>
         </div>
       </div>
-      <div className="flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[25vh] bg-slate-600  ">
+      <motion.div className={songlink.length > 0 ? ` duration-700 flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600 rounded-full sm:rounded-none sm:rounded-t-[30%] `: 'block'}>
         {songlink?.map((e, i) => (
-          <div
+          <motion.div
+          initial={{ y: 50, opacity: 0,scale:0}}
+          animate={{ y: 0, opacity: 1,scale:1 }}
             key={i}
             className="flex sm:block w-[70%] sm:w-full sm:h-full items-center justify-center gap-3"
           >
-            <div className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
-              <img
+            <motion.div 
+            initial={{ x: -50, opacity: 0,scale:0 }}
+            animate={{ x: 0, opacity: 1,scale:1 }}
+            className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
+              <motion.img
+              initial={{ x: -50, opacity: 0,scale:0 }}
+              animate={{ x: 0, opacity: 1,scale:1 }}
                 className="rounded-md h-[7vw] sm:h-[25vw]"
                 src={e.image[2]?.url}
                 alt=""
@@ -181,8 +205,11 @@ const PlaylistDetails = () => {
                 }
                 className=" flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
-            </div>
-            <div className="w-[55%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
+            </motion.div>
+            <motion.div 
+             initial={{ y: 50, opacity: 0,scale:0 }}
+             animate={{ y: 0, opacity: 1,scale:1 }}
+            className="w-[55%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
               <button
                 onClick={pre}
                 className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
@@ -202,10 +229,10 @@ const PlaylistDetails = () => {
               >
                 <i className="ri-skip-right-fill"></i>
               </button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   ) : (
     <Loading />
