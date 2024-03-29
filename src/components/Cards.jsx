@@ -72,7 +72,7 @@ const Cards = ({ searches , query,requery }) => {
               </div>
             </div>
           ))}
-          <div className="flex gap-3 text-2xl  ">
+          {/* <div className="flex gap-3 text-2xl  ">
             <h1>MADE BY ❤️ HARSH PATEL</h1>
             <a
               target="_blank"
@@ -80,7 +80,7 @@ const Cards = ({ searches , query,requery }) => {
             >
               <i className=" ri-instagram-fill"></i>
             </a>
-          </div>
+          </div> */}
       </div>
     ):<h1 className={`${query==requery? "hidden" : "block"}`}>Loading</h1>
   );

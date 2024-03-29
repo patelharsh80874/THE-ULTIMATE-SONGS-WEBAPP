@@ -186,7 +186,7 @@ const Songs = () => {
             </motion.div>
           </div>
         ))}
-        {search.length > 0 && (
+        {/* {search.length > 0 && (
           <div className="flex gap-3 text-2xl  ">
             <h1>MADE BY ❤️ HARSH PATEL</h1>
             <a
@@ -196,7 +196,7 @@ const Songs = () => {
               <i className=" ri-instagram-fill"></i>
             </a>
           </div>
-        )}
+        )} */}
       </div>
       <motion.div
         className={

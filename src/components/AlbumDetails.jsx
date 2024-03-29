@@ -153,7 +153,7 @@ const AlbumDetails = () => {
                 </motion.div>
           </Link>
         ))}
-        <div className="flex gap-3 text-2xl  ">
+        {/* <div className="flex gap-3 text-2xl  ">
             <h1>MADE BY ❤️ HARSH PATEL</h1>
             <a
               target="_blank"
@@ -161,7 +161,7 @@ const AlbumDetails = () => {
             >
               <i className=" ri-instagram-fill"></i>
             </a>
-          </div>
+          </div> */}
       </div>
       <motion.div className={songlink.length > 0 ? ` duration-700 flex  rounded-full sm:rounded-none sm:rounded-t-[30%]  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600  `:'block'}>
         {songlink?.map((e, i) => (

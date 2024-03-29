@@ -151,7 +151,7 @@ const ArtistsDetails = () => {
           </div>
         ))}
 
-        <div className="flex gap-3 text-2xl  ">
+        {/* <div className="flex gap-3 text-2xl  ">
           <h1>MADE BY ❤️ HARSH PATEL</h1>
           <a
             target="_blank"
@@ -159,7 +159,7 @@ const ArtistsDetails = () => {
           >
             <i className=" ri-instagram-fill"></i>
           </a>
-        </div>
+        </div> */}
       </div>
       <motion.div
         className={
