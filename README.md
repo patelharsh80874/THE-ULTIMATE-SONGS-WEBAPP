@@ -1,8 +1,25 @@
-# React + Vite
+ Project Summary : Songs Webapp
+ Developed a React.js web app with Tailwind CSS and
+ Integrated JioSaavn API to fetch and display songs,
+ playlists, albums, and artist information.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ 
+ Key Features:
+ 
+ 1. Multi-language Support: 
+Implemented a language dropdown on the
+ homepage allowing users to switch between
+ different languages for a diverse music selection.
 
-Currently, two official plugins are available:
+ 3. Search Functionality: 
+Implemented a search page enabling users to
+ find specific songs, playlists, or artists efficiently.
+ Provided options for downloading songs directly.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+ 5. Playlist,Artist,Album Details: 
+Created a detailed page for playlist , artist , album
+ showcasing its songs and allowing users to play
+ them seamlessly with an integrated song player.
+
+ vercel link :
+ https://the-ultimate-songs-webapp-harsh-patel.vercel.app
