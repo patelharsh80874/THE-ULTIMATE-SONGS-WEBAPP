@@ -20,6 +20,7 @@ const Playlist = () => {
   const [query, setquery] = useState("");
   const [requery, setrequery] = useState("");
   const [playlist, setplaylist] = useState([]);
+  const [search, setsearch] = useState(false)
 
   const Getplaylist = async () => {
     try {
@@ -36,6 +37,13 @@ const Playlist = () => {
     }
   };
 
+function searchClick() {
+  if (query !== requery){
+    setsearch(!search)
+    setplaylist([])
+  }
+}
+
   function seccall() {
     const intervalId = setInterval(() => {
       if (playlist.length === 0 || query.length !== requery.length) {
@@ -51,8 +59,9 @@ const Playlist = () => {
     }
 
     return () => clearInterval(interval);
-  }, [query, playlist]);
+  }, [search, playlist]);
   // console.log(playlist);
+  // console.log(search);
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0 }}
@@ -71,19 +80,20 @@ const Playlist = () => {
             onClick={() => navigate(-1)}
             className="ml-5 cursor-pointer text-3xl bg-green-500 rounded-full ri-arrow-left-line"
           ></i>
-          <i className=" text-2xl ri-search-2-line"></i>
-
           <input
-            className=" bg-black rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:w-[70%] h-[10vh]"
+            className=" bg-black rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:w-[50%] sm:h-[7vh] h-[10vh]"
             onChange={(e) => setquery(e.target.value)}
             placeholder="Search anything like 2023 hindi  "
             type="search"
             name=""
             id=""
           />
+          <h3 onClick={()=>searchClick()} className="duration-300 cursor-pointer hover:text-slate-400 text-xl  bg-slate-400 p-2 rounded-md hover:bg-slate-600 hover:scale-90">Search <i  
+          className="  ri-search-2-line"></i></h3>
+          
         </motion.div>
         <motion.div className="w-full min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
-          {playlist?.map((e, i) => (
+          {playlist?.map ((e, i) => (
             <motion.div
               initial={{  scale: 0 }}
               whileInView={{  scale: 1 }}

@@ -20,6 +20,7 @@ const Album = () => {
   const [query, setquery] = useState("");
   const [requery, setrequery] = useState("");
   const [albums, setalbums] = useState([]);
+  const [search, setsearch] = useState(false)
   const Getalbums = async () => {
     try {
       const { data } = await axios.get(
@@ -32,6 +33,13 @@ const Album = () => {
       console.log("error", error);
     }
   };
+
+  function searchClick() {
+    if (query !== requery){
+      setsearch(!search)
+      setalbums([])
+    }
+  }
 
   function seccall() {
     const intervalId = setInterval(() => {
@@ -48,7 +56,7 @@ const Album = () => {
     }
 
     return () => clearInterval(interval);
-  }, [query, albums]);
+  }, [search, albums]);
 // console.log(albums);
   return (
     <motion.div
@@ -66,16 +74,18 @@ const Album = () => {
             onClick={() => navigate(-1)}
             className="ml-5 cursor-pointer text-3xl bg-green-500 rounded-full ri-arrow-left-line"
           ></i>
-          <i className=" text-2xl ri-search-2-line"></i>
+          {/* <i className=" text-2xl ri-search-2-line"></i> */}
 
           <input
-            className=" bg-black rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:w-[70%] h-[10vh]"
+            className=" bg-black rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:h-[7vh] sm:w-[50%] h-[10vh]"
             onChange={(e) => setquery(e.target.value)}
             placeholder="Search Albums  "
             type="search"
             name=""
             id=""
           />
+           <h3 onClick={()=>searchClick()} className="duration-300 cursor-pointer hover:text-slate-400 text-xl  bg-slate-400 p-2 rounded-md hover:bg-slate-600 hover:scale-90">Search <i  
+          className="  ri-search-2-line"></i></h3>
         </motion.div>
         <motion.div className="w-full min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
           {albums?.map((e, i) => (

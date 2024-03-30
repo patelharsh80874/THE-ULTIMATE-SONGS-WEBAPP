@@ -24,6 +24,7 @@ const Songs = () => {
   var [index, setindex] = useState("");
   const [songlink, setsonglink] = useState([]);
   var [page, setpage] = useState(1);
+  const [searchclick, setsearchclick] = useState(false)
 
   const Getsearch = async () => {
     try {
@@ -38,11 +39,20 @@ const Songs = () => {
     }
   };
 
-  function setdata() {
-    setsearch([]);
-    setsonglink([]);
-    setindex("");
-    setpage(1);
+  // function setdata() {
+  //   setsearch([]);
+  //   setsonglink([]);
+  //   setindex("");
+  //   setpage(1);
+  // }
+  function searchClick() {
+    if (query !== requery){
+      setsearchclick(!searchclick)
+      setsearch([]);
+      setsonglink([]);
+      setindex("");
+      setpage(1);
+    }
   }
   function audioseter(i) {
     setindex(i);
@@ -105,17 +115,18 @@ const Songs = () => {
     }
 
     return () => clearInterval(interval);
-  }, [query, search, page]);
+  }, [searchclick, search, page]);
 
-  useEffect(() => {
-    if (query !== "") {
-      setdata();
-    }
-  }, [query]);
+  // useEffect(() => {
+  //   if (query !== "") {
+  //     setdata();
+  //   }
+  // }, [query]);
   var title = songlink[0]?.name;
 
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
   // console.log(search);
+  // console.log(searchclick);
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0 }}
@@ -133,16 +144,18 @@ const Songs = () => {
           onClick={() => navigate(-1)}
           className="ml-5 cursor-pointer text-3xl bg-green-500 rounded-full ri-arrow-left-line"
         ></i>
-        <i className=" text-2xl ri-search-2-line"></i>
+        {/* <i className=" text-2xl ri-search-2-line"></i> */}
 
         <input
-          className=" bg-black rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:w-[70%] sm:h-[5vh] h-[10vh]"
+          className=" bg-black rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:w-[50%] sm:h-[5vh] h-[10vh]"
           onChange={(e) => setquery(e.target.value)}
           placeholder="Search Songs"
           type="search"
           name=""
           id=""
         />
+         <h3 onClick={()=>searchClick()} className="duration-300 cursor-pointer hover:text-slate-400 text-xl  bg-slate-400 p-2 rounded-md hover:bg-slate-600 hover:scale-90">Search <i  
+          className="  ri-search-2-line"></i></h3>
       </motion.div>
       <div className="w-full text-white mt-[3vh] p-10 sm:p-3 sm:gap-3 h-[64vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
         {search?.map((d, i) => (
