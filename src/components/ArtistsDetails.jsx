@@ -173,7 +173,7 @@ const ArtistsDetails = () => {
           initial={{ y: 50, opacity: 0,scale:0}}
           animate={{ y: 0, opacity: 1,scale:1 }}
             key={i}
-            className="flex sm:block w-[70%] sm:w-full sm:h-full items-center justify-center gap-3"
+            className="flex sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3"
           >
             <motion.div
             initial={{ x: -50, opacity: 0,scale:0 }}
@@ -191,13 +191,13 @@ const ArtistsDetails = () => {
               </h3>
               <i
                 onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
-                className=" flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
+                className="hidden sm:flex  cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
             </motion.div>
             <motion.div 
             initial={{ y: 50, opacity: 0,scale:0 }}
             animate={{ y: 0, opacity: 1,scale:1 }}
-            className="w-[55%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
+            className="w-[35%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
               <i
                 onClick={pre}
                 className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full ri-skip-back-mini-fill"
@@ -214,6 +214,33 @@ const ArtistsDetails = () => {
                 className=" text-3xl text-white bg-zinc-800 cursor-pointer rounded-full ri-skip-right-fill"
               ></i>
             </motion.div>
+            <div className="sm:hidden flex flex-col text-[1vw] items-center  gap-2">
+              <div>
+                <h3 className="font-bold text-sm text-slate-400">Download Options</h3>
+              </div>
+              <div className="flex flex-row-reverse gap-2 ">
+                <p onClick={() => handleDownloadSong(e.downloadUrl[0].url, e.name+" (12kbps)")} className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  12kbps <br />
+                  <p className="text-xs">Very low quality</p>
+                </p>
+                <p onClick={() => handleDownloadSong(e.downloadUrl[1].url, e.name+" (48kbps)")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  48kbps <br />
+                  <p className="text-xs">Low quality</p>
+                </p>
+                <p onClick={() => handleDownloadSong(e.downloadUrl[2].url, e.name+" (96kbps)")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  96kbps <br />
+                  <p className="text-xs">Fair quality</p>
+                </p>
+                <p onClick={() => handleDownloadSong(e.downloadUrl[3].url, e.name+" (160kbps)")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  160kbps <br />
+                  <p className="text-xs">Good quality</p>
+                </p>
+                <p onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name+" (320kbps)")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  320kbps <br />
+                  <p className="text-xs"> High quality</p>
+                </p>
+              </div>
+            </div>
           </motion.div>
         ))}
       </motion.div>

@@ -7,14 +7,22 @@ import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
 import wavs from "../../public/wavs.gif";
 import wait from "../../public/wait.gif";
-import { animate, circIn, circInOut, circOut, easeIn, easeInOut, easeOut, motion } from "framer-motion";
+import {
+  animate,
+  circIn,
+  circInOut,
+  circOut,
+  easeIn,
+  easeInOut,
+  easeOut,
+  motion,
+} from "framer-motion";
 import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 
-
 const Home = () => {
-  let navigate = useNavigate(); 
+  let navigate = useNavigate();
   const [home, sethome] = useState(null);
   const [language, setlanguage] = useState("hindi");
   const [details, setdetails] = useState([]);
@@ -137,7 +145,6 @@ const Home = () => {
     setdetails([]);
   }
 
-  
   function seccall() {
     const intervalId = setInterval(() => {
       if (home === null) {
@@ -175,7 +182,6 @@ const Home = () => {
     return () => clearInterval(interval2);
   }, [details, page, language]);
 
-
   // useEffect(() => {
   //   Getdetails();
   //   Getartists();
@@ -199,14 +205,14 @@ const Home = () => {
   // console.log(home);
   // console.log(page);
   // console.log(page2);
-
+  // console.log(songlink);
   // console.log(index)
   return details.length > 0 ? (
     <div className="w-full h-screen  bg-slate-800">
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ease:Circ.easeIn,duration:0.5}}
+        transition={{ ease: Circ.easeIn, duration: 0.5 }}
         className="logo duration-700 rounded-b-full sm:rounded-b-[30%] h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 "
       >
         <div className="flex items-center sm:justify-center sm:pt-2 gap-3">
@@ -218,7 +224,7 @@ const Home = () => {
         <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ease:Circ.easeIn,duration:1}}
+          transition={{ ease: Circ.easeIn, duration: 1 }}
           className="sm:flex   sm:justify-center"
         >
           <h3 className="inline text-xl sm:text-sm">Search : </h3>
@@ -266,15 +272,14 @@ const Home = () => {
 
         <div className="trending songs flex flex-col gap-3 w-full ">
           <h3 className="text-xl h-[5vh] font-semibold">{language} Songs</h3>
-          <motion.div
-           className="songs px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
+          <motion.div className="songs px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {details?.map((t, i) => (
               <motion.div
                 //  whileHover={{ scale: 1.2 }}
                 //  viewport={{ once: true }}
-                initial={{ y: -100,  scale:0.5}}
-                whileInView={{ y: 0,  scale:1 }}
-                transition={{ease:Circ.easeIn,duration:0.05}}
+                initial={{ y: -100, scale: 0.5 }}
+                whileInView={{ y: 0, scale: 1 }}
+                transition={{ ease: Circ.easeIn, duration: 0.05 }}
                 onClick={() => audioseter(i)}
                 key={i}
                 className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
@@ -292,11 +297,12 @@ const Home = () => {
                   src={wavs}
                   alt=""
                 />
-                <motion.div 
-                //  initial={{ y: 50, scale:0}}
-                //  whileInView={{ y: 0,scale: 1 }} 
-                //  transition={{ease:Circ.easeIn,duration:0.05}}
-                className="flex flex-col">
+                <motion.div
+                  //  initial={{ y: 50, scale:0}}
+                  //  whileInView={{ y: 0,scale: 1 }}
+                  //  transition={{ease:Circ.easeIn,duration:0.05}}
+                  className="flex flex-col"
+                >
                   <h3
                     className={`text-sm sm:text-xs leading-none  font-bold ${
                       i === index && "text-green-300"
@@ -344,11 +350,11 @@ const Home = () => {
           <div className="chartsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {home?.charts?.map((c, i) => (
               <motion.div
-              initial={{ y: -100,  scale:0.5}}
-              whileInView={{ y: 0,  scale:1 }}
-              transition={{ease:Circ.easeIn,duration:0.05}}
+                initial={{ y: -100, scale: 0.5 }}
+                whileInView={{ y: 0, scale: 1 }}
+                transition={{ ease: Circ.easeIn, duration: 0.05 }}
                 // onClick={`/playlist/details/${c.id}`}
-                onClick={()=>navigate(`/playlist/details/${c.id}`)}
+                onClick={() => navigate(`/playlist/details/${c.id}`)}
                 key={i}
                 className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
               >
@@ -358,10 +364,13 @@ const Home = () => {
                   alt=""
                 />
                 <motion.h3
-                // initial={{ y: 50, opacity: 0 }}
-                // whileInView={{ y: 0, opacity: 1 }}
-                // transition={{ease:Circ.easeIn,duration:0.05}}
-                 className="leading-none">{c.title}</motion.h3>
+                  // initial={{ y: 50, opacity: 0 }}
+                  // whileInView={{ y: 0, opacity: 1 }}
+                  // transition={{ease:Circ.easeIn,duration:0.05}}
+                  className="leading-none"
+                >
+                  {c.title}
+                </motion.h3>
               </motion.div>
             ))}
           </div>
@@ -371,11 +380,11 @@ const Home = () => {
           <div className="playlistsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {home?.playlists?.map((p, i) => (
               <motion.div
-              initial={{ y: -100,  scale:0.5}}
-              whileInView={{ y: 0,  scale:1 }}
-              transition={{ease:Circ.easeIn,duration:0.05}}
+                initial={{ y: -100, scale: 0.5 }}
+                whileInView={{ y: 0, scale: 1 }}
+                transition={{ ease: Circ.easeIn, duration: 0.05 }}
                 // to={`/playlist/details/${p.id}`}
-                onClick={()=>navigate(`/playlist/details/${p.id}`)}
+                onClick={() => navigate(`/playlist/details/${p.id}`)}
                 key={i}
                 className="hover:scale-110  sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4 cursor-pointer"
               >
@@ -385,11 +394,13 @@ const Home = () => {
                   alt=""
                 />
                 <motion.h3
-                // initial={{ y: 50, opacity: 0 }}
-                // whileInView={{ y: 0, opacity: 1 }} 
-                // transition={{ease:Circ.easeIn,duration:0.05}}
-                 className="leading-none">{p.title}
-                 </motion.h3>
+                  // initial={{ y: 50, opacity: 0 }}
+                  // whileInView={{ y: 0, opacity: 1 }}
+                  // transition={{ease:Circ.easeIn,duration:0.05}}
+                  className="leading-none"
+                >
+                  {p.title}
+                </motion.h3>
               </motion.div>
             ))}
           </div>
@@ -399,11 +410,11 @@ const Home = () => {
           <div className="albumsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {home?.albums?.map((a, i) => (
               <motion.div
-              initial={{ y: -100,  scale:0.5}}
-              whileInView={{ y: 0,  scale:1 }}
-              transition={{ease:Circ.easeIn,duration:0.05}}
+                initial={{ y: -100, scale: 0.5 }}
+                whileInView={{ y: 0, scale: 1 }}
+                transition={{ ease: Circ.easeIn, duration: 0.05 }}
                 // to={`/albums/details/${a.id}`}
-                onClick={()=>navigate(`/albums/details/${a.id}`)}
+                onClick={() => navigate(`/albums/details/${a.id}`)}
                 key={i}
                 className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4 cursor-pointer"
               >
@@ -412,11 +423,14 @@ const Home = () => {
                   src={a.image[2].link}
                   alt=""
                 />
-                <motion.h3 
-                // initial={{ y: 50, opacity: 0 }}
-                // whileInView={{ y: 0, opacity: 1 }}
-                // transition={{ease:Circ.easeIn,duration:0.05}}
-                className="leading-none">{a.name}</motion.h3>
+                <motion.h3
+                  // initial={{ y: 50, opacity: 0 }}
+                  // whileInView={{ y: 0, opacity: 1 }}
+                  // transition={{ease:Circ.easeIn,duration:0.05}}
+                  className="leading-none"
+                >
+                  {a.name}
+                </motion.h3>
               </motion.div>
             ))}
           </div>
@@ -431,25 +445,24 @@ const Home = () => {
       >
         {songlink?.map((e, i) => (
           <motion.div
-          initial={{ y: 100, opacity: 0 , scale:0}}
-          animate={{ y: 0, opacity: 1,scale:1 }}
-          transition={{ease:Circ.easeIn,duration:0.7}}
-           
-           
+            initial={{ y: 100, opacity: 0, scale: 0 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ ease: Circ.easeIn, duration: 0.7 }}
             key={i}
-            className=" flex sm:block w-[70%] sm:w-full sm:h-full items-center justify-center gap-3"
+            className=" flex sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3"
           >
-            <motion.div 
-            initial={{ x: -100, opacity: 0 ,scale:0 }}
-            animate={{ x: 0, opacity: 1 ,scale:1}}
-            // transition={{ease:Circ.easeIn,duration:1}}
-            
-             className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
-              <motion.img
-              initial={{ x: -100, opacity: 0,scale:0 }}
-              animate={{ x: 0, opacity: 1 ,scale:1}}
+            <motion.div
+              initial={{ x: -100, opacity: 0, scale: 0 }}
+              animate={{ x: 0, opacity: 1, scale: 1 }}
               // transition={{ease:Circ.easeIn,duration:1}}
-             
+
+              className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]"
+            >
+              <motion.img
+                initial={{ x: -100, opacity: 0, scale: 0 }}
+                animate={{ x: 0, opacity: 1, scale: 1 }}
+                // transition={{ease:Circ.easeIn,duration:1}}
+
                 className={`rounded-md h-[7vw] sm:h-[25vw]`}
                 src={e.image[2]?.url}
                 alt=""
@@ -459,15 +472,15 @@ const Home = () => {
               </h3>
               <i
                 onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
-                className=" flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
+                className="hidden sm:visible sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
             </motion.div>
             <motion.div
-             initial={{ y: 100, opacity: 0 ,scale:0}}
-            animate={{ y: 0, opacity: 1,scale:1 }}
-            // transition={{ease:Circ.easeIn,duration:1}}
-             className="w-[55%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
-            
+              initial={{ y: 100, opacity: 0, scale: 0 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              // transition={{ease:Circ.easeIn,duration:1}}
+              className="w-[35%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center"
+            >
               <button
                 onClick={pre}
                 className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
@@ -488,6 +501,33 @@ const Home = () => {
                 <i className="ri-skip-right-fill"></i>
               </button>
             </motion.div>
+            <div className="sm:hidden flex flex-col text-[1vw] items-center  gap-2">
+              <div>
+                <h3 className="font-bold text-sm text-slate-400">Download Options</h3>
+              </div>
+              <div className="flex flex-row-reverse gap-2 ">
+                <p onClick={() => handleDownloadSong(e.downloadUrl[0].url, e.name+" 12kbps")} className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  12kbps <br />
+                  <p className="text-xs">Very low quality</p>
+                </p>
+                <p onClick={() => handleDownloadSong(e.downloadUrl[1].url, e.name+" 48kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  48kbps <br />
+                  <p className="text-xs">Low quality</p>
+                </p>
+                <p onClick={() => handleDownloadSong(e.downloadUrl[2].url, e.name+" 96kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  96kbps <br />
+                  <p className="text-xs">Fair quality</p>
+                </p>
+                <p onClick={() => handleDownloadSong(e.downloadUrl[3].url, e.name+" 160kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  160kbps <br />
+                  <p className="text-xs">Good quality</p>
+                </p>
+                <p onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name+" 320kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                  320kbps <br />
+                  <p className="text-xs"> High quality</p>
+                </p>
+              </div>
+            </div>
           </motion.div>
         ))}
       </motion.div>
