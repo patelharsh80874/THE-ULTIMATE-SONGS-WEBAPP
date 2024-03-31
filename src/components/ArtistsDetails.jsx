@@ -46,18 +46,14 @@ const ArtistsDetails = () => {
     }
   };
 
-  function audioseter(i,d) {
+
+
+  function audioseter(i) {
     setindex(i);
     setsonglink([details[i]]);
-    const isLiked =
-    localStorage.getItem("likeData") &&
-    JSON.parse(localStorage.getItem("likeData")).some(
-      (item) => item.id === d.id
-    );
-  setlike(isLiked);
   }
 
-    
+
   function likehandle(i) {
     // Retrieve existing data from localStorage
     let existingData = localStorage.getItem("likeData");
@@ -81,10 +77,47 @@ const ArtistsDetails = () => {
       setlike(true);
       toast.success("Song added to Likes section ");
     } else {
-      setlike(true);
+      // setlike(true);
       // Otherwise, inform the user that the song is already liked
       // console.log("You've already liked this song.");
-      toast.error("You've already liked this song.")
+      // toast.error("You've already liked this song.");
+
+      setlike(false);
+      let existingData = localStorage.getItem("likeData");
+
+      // If no data exists, there's nothing to remove
+      if (!existingData) {
+        console.log("No data found in localStorage.");
+        return;
+      }
+      // Parse the existing data from JSON
+      let updatedData = JSON.parse(existingData);
+
+      // Find the index of the song with the given ID in the existing data
+      const indexToRemove = updatedData.findIndex((item) => item.id === i.id);
+
+      // If the song is found, remove it from the array
+      if (indexToRemove !== -1) {
+        updatedData.splice(indexToRemove, 1);
+
+        // Store the updated data back into localStorage
+        localStorage.setItem("likeData", JSON.stringify(updatedData));
+        //   console.log("Song removed successfully.");
+        toast.success("Song removed successfully.");
+
+        // if (index>0 && details.length>=0) {
+        //     setrerender(!rerender)
+        //     var index2 = index-1
+        //     setindex(index2);
+        //     setsonglink([details[index2]]);
+        // }
+        // else{
+        //     setrerender(!rerender)
+        // }
+      } else {
+        toast.error("Song not found in localStorage.");
+        //   console.log("Song not found in localStorage.");
+      }
     }
   }
 
@@ -92,18 +125,22 @@ const ArtistsDetails = () => {
     if (index < details.length - 1) {
       setindex(index++);
       audioseter(index);
+      
     } else {
       setindex(0);
       setsonglink([details[0]]);
+      
     }
   }
   function pre() {
     if (index > 0) {
       setindex(index--);
       audioseter(index);
+      
     } else {
       setindex(details.length - 1);
       setsonglink([details[details.length - 1]]);
+      
     }
   }
 
@@ -167,7 +204,7 @@ const ArtistsDetails = () => {
         {details?.map((d, i) => (
           <div
             key={i}
-            onClick={() => audioseter(i,d)}
+            onClick={() => audioseter(i)}
             className="relative hover:scale-90 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh] cursor-pointer  "
           >
             <motion.img
@@ -180,17 +217,15 @@ const ArtistsDetails = () => {
               alt=""
             />
             <img
-              className={`absolute top-0 w-[20%] sm:w-[10%] rounded-md ${
-                i === index ? "block" : "hidden"
-              } `}
+              className={`absolute top-0 w-[20%] sm:w-[10%] rounded-md ${i === index ? "block" : "hidden"
+                } `}
               src={wavs}
               alt=""
             />
             <div className="flex flex-col mt-2">
               <h3
-                className={`text-sm sm:text-xs leading-none  font-bold ${
-                  i === index && "text-green-300"
-                }`}
+                className={`text-sm sm:text-xs leading-none  font-bold ${i === index && "text-green-300"
+                  }`}
               >
                 {d.name}
               </h3>
@@ -245,7 +280,18 @@ const ArtistsDetails = () => {
                 className="hidden sm:flex  cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
 
-              {like ? (
+
+              {localStorage.getItem("likeData") &&
+                JSON.parse(localStorage.getItem("likeData")).some(
+                  (item) => item.id === e.id) ? <i
+                    onClick={() => likehandle(e)}
+                    className={`text-xl cursor-pointer text-red-500 ri-heart-3-fill`}
+                  ></i> :  <i
+                  onClick={() => likehandle(e)}
+                  className={`text-xl cursor-pointer text-zinc-300 ri-heart-3-fill`}
+                ></i> }
+
+              {/* {like ? (
                 <i
                   onClick={() => likehandle(e)}
                   className="text-xl cursor-pointer text-red-500 ri-heart-3-fill"
@@ -255,7 +301,7 @@ const ArtistsDetails = () => {
                   onClick={() => likehandle(e)}
                   className="text-xl cursor-pointer text-zinc-300  ri-heart-3-fill"
                 ></i>
-              )}
+              )} */}
             </motion.div>
             <motion.div
               initial={{ y: 50, opacity: 0, scale: 0 }}
@@ -263,18 +309,18 @@ const ArtistsDetails = () => {
               className="w-[35%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center"
             >
               <i
-                onClick={pre}
+                onClick={() => pre()}
                 className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full ri-skip-back-mini-fill"
               ></i>
               <audio
                 className="w-[80%] "
                 controls
                 autoPlay
-                onEnded={next}
+                onEnded={() => next()}
                 src={e.downloadUrl[4]?.url}
               ></audio>
               <i
-                onClick={next}
+                onClick={() => next()}
                 className=" text-3xl text-white bg-zinc-800 cursor-pointer rounded-full ri-skip-right-fill"
               ></i>
             </motion.div>
