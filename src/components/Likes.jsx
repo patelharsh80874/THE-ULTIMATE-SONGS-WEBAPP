@@ -2,7 +2,6 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
-import InfiniteScroll from "react-infinite-scroll-component";
 import wavs from "../../public/wavs.gif";
 import {
   animate,
@@ -19,45 +18,27 @@ import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
 
-const ArtistsDetails = () => {
+function Likes() {
   const navigate = useNavigate();
   let location = useLocation();
-  let id = location.pathname;
-  let newid = id.split("/");
-  let finalid = newid[3];
 
   const [details, setdetails] = useState([]);
   const [songlink, setsonglink] = useState([]);
   var [index, setindex] = useState("");
-  var [page, setpage] = useState(1);
+  var [rerender, setrerender] = useState(false);
   const [like, setlike] = useState(false);
 
-  const Getdetails = async () => {
-    try {
-      const { data } = await axios.get(
-        // `https://saavn.dev/api/artists/${finalid}/songs?page=${page}`
-        // `https://jiosaavan-harsh-patel.vercel.app/artists/${finalid}/songs?page=${page}`
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/artists/${finalid}/songs?page=${page}`
-      );
-      // setdetails(data?.data?.songs);
-      setdetails((prevState) => [...prevState, ...data.data.songs]);
-    } catch (error) {
-      console.log("error", error);
-    }
-  };
-
-  function audioseter(i,d) {
+  function audioseter(i, d) {
     setindex(i);
     setsonglink([details[i]]);
     const isLiked =
-    localStorage.getItem("likeData") &&
-    JSON.parse(localStorage.getItem("likeData")).some(
-      (item) => item.id === d.id
-    );
-  setlike(isLiked);
+      localStorage.getItem("likeData") &&
+      JSON.parse(localStorage.getItem("likeData")).some(
+        (item) => item.id === d.id
+      );
+    setlike(isLiked);
   }
 
-    
   function likehandle(i) {
     // Retrieve existing data from localStorage
     let existingData = localStorage.getItem("likeData");
@@ -83,8 +64,51 @@ const ArtistsDetails = () => {
     } else {
       setlike(true);
       // Otherwise, inform the user that the song is already liked
-      // console.log("You've already liked this song.");
+    //   console.log("You've already liked this song.");
       toast.error("You've already liked this song.")
+    }
+  }
+
+  function removehandle(id) {
+    // Retrieve existing data from localStorage
+    let existingData = localStorage.getItem("likeData");
+
+    // If no data exists, there's nothing to remove
+    if (!existingData) {
+      console.log("No data found in localStorage.");
+      return;
+    }
+    // Parse the existing data from JSON
+    let updatedData = JSON.parse(existingData);
+
+    // Find the index of the song with the given ID in the existing data
+    const indexToRemove = updatedData.findIndex((item) => item.id === id);
+
+    // If the song is found, remove it from the array
+    if (indexToRemove !== -1) {
+      updatedData.splice(indexToRemove, 1);
+
+      // Store the updated data back into localStorage
+      localStorage.setItem("likeData", JSON.stringify(updatedData));
+    //   console.log("Song removed successfully.");
+      toast.success("Song removed successfully.");
+        setrerender(!rerender);
+        setsonglink([]);
+
+      // if (index>0 && details.length>=0) {
+      //     setrerender(!rerender)
+      //     var index2 = index-1
+      //     setindex(index2);
+      //     setsonglink([details[index2]]);
+      // }
+      // else{
+      //     setrerender(!rerender)
+      // }
+    } else {
+        toast.error("Song not found in localStorage.")
+    //   console.log("Song not found in localStorage.");
+      setsonglink([]);
+     setrerender(!rerender);
     }
   }
 
@@ -124,37 +148,30 @@ const ArtistsDetails = () => {
     }
   };
 
-  function seccall() {
-    const intervalId = setInterval(() => {
-      if (details.length >= 0 && page < 20) {
-        setpage(page + 1);
-        Getdetails();
-      }
-    }, 5000);
-    return intervalId;
-  }
-
   useEffect(() => {
-    var interval = seccall();
+    // Retrieve all data from localStorage
+    const allData = localStorage.getItem("likeData");
 
-    return () => clearInterval(interval);
-  }, [details, page]);
+    // Check if data exists in localStorage
+    if (allData) {
+      // Parse the JSON string to convert it into a JavaScript object
+      const parsedData = JSON.parse(allData);
+
+      // Now you can use the parsedData object
+      setdetails(parsedData);
+    } else {
+      console.log("No data found in localStorage.");
+    }
+  }, [rerender]);
 
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
-  // console.log(details);
-  // console.log(details.songs);
-
-  // console.log(page)
-
-  return details.length ? (
-    <motion.div
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.7 }}
-      className=" w-full h-screen  bg-slate-700"
-    >
-      <Toaster position="top-center" reverseOrder={false} />
+//   console.log(details);
+//   console.log(rerender);
+//   console.log(index);
+  return (
+    <div className="w-full h-screen bg-slate-700">
+        <Toaster position="top-center" reverseOrder={false} />
       <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
@@ -162,46 +179,46 @@ const ArtistsDetails = () => {
         ></i>
         <h1 className="text-xl text-zinc-300 font-black">THE ULTIMATE SONGS</h1>
       </div>
-
-      <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[67vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
-        {details?.map((d, i) => (
-          <div
-            key={i}
-            onClick={() => audioseter(i,d)}
-            className="relative hover:scale-90 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh] cursor-pointer  "
-          >
-            <motion.img
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.7 }}
-              viewport={{ once: true }}
-              className="w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
-              src={d.image[2].url}
-              alt=""
-            />
-            <img
-              className={`absolute top-0 w-[20%] sm:w-[10%] rounded-md ${
-                i === index ? "block" : "hidden"
-              } `}
-              src={wavs}
-              alt=""
-            />
-            <div className="flex flex-col mt-2">
-              <h3
-                className={`text-sm sm:text-xs leading-none  font-bold ${
-                  i === index && "text-green-300"
-                }`}
-              >
-                {d.name}
-              </h3>
-              <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
-                {d.album.name}
-              </h4>
+      {details.length > 0 ? (
+        <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[67vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
+          {details?.map((d, i) => (
+            <div
+              key={i}
+              onClick={() => audioseter(i, d)}
+              className="relative hover:scale-90 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh] cursor-pointer  "
+            >
+              <motion.img
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.7 }}
+                viewport={{ once: true }}
+                className="w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
+                src={d.image[2].url}
+                alt=""
+              />
+              <img
+                className={`absolute top-0 w-[20%] sm:w-[10%] rounded-md ${
+                  d.id === songlink[0]?.id ? "block" : "hidden"
+                } `}
+                src={wavs}
+                alt=""
+              />
+              <div className="flex flex-col mt-2">
+                <h3
+                  className={`text-sm sm:text-xs leading-none  font-bold ${
+                    d.id === songlink[0]?.id && "text-green-300"
+                  }`}
+                >
+                  {d.name}
+                </h3>
+                <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                  {d.album.name}
+                </h4>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* <div className="flex gap-3 text-2xl  ">
+          {/* <div className="flex gap-3 text-2xl  ">
           <h1>MADE BY ❤️ HARSH PATEL</h1>
           <a
             target="_blank"
@@ -210,8 +227,13 @@ const ArtistsDetails = () => {
             <i className=" ri-instagram-fill"></i>
           </a>
         </div> */}
-      </div>
-      <motion.div
+        </div>
+      ) : (
+      
+         <p>it's empty</p>
+       
+      )}
+     {songlink !== null ?  <motion.div
         className={
           songlink.length > 0
             ? `duration-700 flex  rounded-full sm:rounded-none sm:rounded-t-[30%] gap-3 items-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600  `
@@ -247,15 +269,22 @@ const ArtistsDetails = () => {
 
               {like ? (
                 <i
+                  title="You Liked This Song"
                   onClick={() => likehandle(e)}
                   className="text-xl cursor-pointer text-red-500 ri-heart-3-fill"
                 ></i>
               ) : (
                 <i
+                  title="Like Song"
                   onClick={() => likehandle(e)}
                   className="text-xl cursor-pointer text-zinc-300  ri-heart-3-fill"
                 ></i>
               )}
+              <i
+                title="Remove Song "
+                onClick={() => removehandle(e.id)}
+                className="text-xl cursor-pointer text-zinc-300 ri-dislike-fill"
+              ></i>
             </motion.div>
             <motion.div
               initial={{ y: 50, opacity: 0, scale: 0 }}
@@ -349,11 +378,10 @@ const ArtistsDetails = () => {
             </div>
           </motion.div>
         ))}
-      </motion.div>
-    </motion.div>
-  ) : (
-    <Loading />
+      </motion.div> : <h1>NO DATA</h1>}
+     
+    </div>
   );
-};
+}
 
-export default ArtistsDetails;
+export default Likes;

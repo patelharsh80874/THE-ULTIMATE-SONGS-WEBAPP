@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, json, useNavigate } from "react-router-dom";
 import logo from "./../../public/logo3.jpg";
 import axios from "axios";
 import Loading from "./Loading";
@@ -20,6 +20,7 @@ import {
 import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
+import toast, { Toaster } from "react-hot-toast";
 
 const Home = () => {
   let navigate = useNavigate();
@@ -27,6 +28,7 @@ const Home = () => {
   const [language, setlanguage] = useState("hindi");
   const [details, setdetails] = useState([]);
   const [songlink, setsonglink] = useState([]);
+  const [like, setlike] = useState(false);
   var [index, setindex] = useState("");
   var [page, setpage] = useState(1);
   var [page2, setpage2] = useState(Math.floor(Math.random() * 50));
@@ -98,10 +100,53 @@ const Home = () => {
     }
   };
 
-  function audioseter(i) {
+  function audioseter(i, t) {
     setindex(i);
     setsonglink([details[i]]);
+    const isLiked =
+      localStorage.getItem("likeData") &&
+      JSON.parse(localStorage.getItem("likeData")).some(
+        (item) => item.id === t.id
+      );
+    setlike(isLiked);
   }
+
+  function likehandle(i) {
+    // Retrieve existing data from localStorage
+    let existingData = localStorage.getItem("likeData");
+
+    // Initialize an array to hold the updated data
+    let updatedData = [];
+
+    // If existing data is found, parse it from JSON
+    if (existingData) {
+      updatedData = JSON.parse(existingData);
+    }
+
+    // Check if the new data already exists in the existing data
+    let exists = updatedData.some((item) => item.id === i.id);
+
+    if (!exists) {
+      // If not, add the new data
+      updatedData.push(i);
+      // Store the updated data back into localStorage
+      localStorage.setItem("likeData", JSON.stringify(updatedData));
+      setlike(true);
+      toast.success("Song added to Likes section ");
+    } else {
+      setlike(true);
+      // Otherwise, inform the user that the song is already liked
+      // console.log("You've already liked this song.");
+      toast.error("You've already liked this song.")
+    }
+  }
+
+  // function SongLike(e) {
+  //   // Check if the song is already liked (exists in localStorage)
+  //   const isLiked = localStorage.getItem('likeData') && JSON.parse(localStorage.getItem('likeData')).some(item => item.id === e.id);
+
+  //   console.log(isLiked);
+  // }
 
   function next() {
     if (index < details.length - 1) {
@@ -209,11 +254,12 @@ const Home = () => {
   // console.log(index)
   return details.length > 0 ? (
     <div className="w-full h-screen  bg-slate-800">
+      <Toaster position="top-center" reverseOrder={false} />
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ease: Circ.easeIn, duration: 0.5 }}
-        className="logo duration-700 rounded-b-full sm:rounded-b-[30%] h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 "
+        className="logo duration-700 rounded-b-full sm:rounded-b-[10%] h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 "
       >
         <div className="flex items-center sm:justify-center sm:pt-2 gap-3">
           <img className="w-[5vw] sm:w-[10vw] rounded-full" src={logo} alt="" />
@@ -258,6 +304,12 @@ const Home = () => {
           >
             Album
           </Link>
+          <Link
+            className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
+            to={"likes"}
+          >
+            Likes
+          </Link>
         </motion.div>
       </motion.div>
       <div className="w-full h-[63vh]  text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
@@ -280,7 +332,7 @@ const Home = () => {
                 initial={{ y: -100, scale: 0.5 }}
                 whileInView={{ y: 0, scale: 1 }}
                 transition={{ ease: Circ.easeIn, duration: 0.05 }}
-                onClick={() => audioseter(i)}
+                onClick={() => audioseter(i, t)}
                 key={i}
                 className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
               >
@@ -474,6 +526,17 @@ const Home = () => {
                 onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
                 className="hidden sm:visible sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
+              {like ? (
+                <i
+                  onClick={() => likehandle(e)}
+                  className="text-xl cursor-pointer text-red-500 ri-heart-3-fill"
+                ></i>
+              ) : (
+                <i
+                  onClick={() => likehandle(e)}
+                  className="text-xl cursor-pointer text-zinc-300  ri-heart-3-fill"
+                ></i>
+              )}
             </motion.div>
             <motion.div
               initial={{ y: 100, opacity: 0, scale: 0 }}
@@ -503,26 +566,59 @@ const Home = () => {
             </motion.div>
             <div className="sm:hidden flex flex-col text-[1vw] items-center  gap-2">
               <div>
-                <h3 className="font-bold text-sm text-slate-400">Download Options</h3>
+                <h3 className="font-bold text-sm text-slate-400">
+                  Download Options
+                </h3>
               </div>
               <div className="flex flex-row-reverse gap-2 ">
-                <p onClick={() => handleDownloadSong(e.downloadUrl[0].url, e.name+" 12kbps")} className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(e.downloadUrl[0].url, e.name + " 12kbps")
+                  }
+                  className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   12kbps <br />
                   <p className="text-xs">Very low quality</p>
                 </p>
-                <p onClick={() => handleDownloadSong(e.downloadUrl[1].url, e.name+" 48kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(e.downloadUrl[1].url, e.name + " 48kbps")
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   48kbps <br />
                   <p className="text-xs">Low quality</p>
                 </p>
-                <p onClick={() => handleDownloadSong(e.downloadUrl[2].url, e.name+" 96kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(e.downloadUrl[2].url, e.name + " 96kbps")
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   96kbps <br />
                   <p className="text-xs">Fair quality</p>
                 </p>
-                <p onClick={() => handleDownloadSong(e.downloadUrl[3].url, e.name+" 160kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(
+                      e.downloadUrl[3].url,
+                      e.name + " 160kbps"
+                    )
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   160kbps <br />
                   <p className="text-xs">Good quality</p>
                 </p>
-                <p onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name+" 320kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(
+                      e.downloadUrl[4].url,
+                      e.name + " 320kbps"
+                    )
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   320kbps <br />
                   <p className="text-xs"> High quality</p>
                 </p>

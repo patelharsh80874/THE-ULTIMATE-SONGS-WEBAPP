@@ -3,16 +3,22 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import wavs from "../../public/wavs.gif";
-import { animate, circIn, circInOut, circOut, easeIn, easeInOut, easeOut, motion } from "framer-motion";
+import {
+  animate,
+  circIn,
+  circInOut,
+  circOut,
+  easeIn,
+  easeInOut,
+  easeOut,
+  motion,
+} from "framer-motion";
 import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
-
-
+import toast, { Toaster } from "react-hot-toast";
 
 const PlaylistDetails = () => {
-  
-
   const navigate = useNavigate();
   let location = useLocation();
   let id = location.pathname;
@@ -22,11 +28,12 @@ const PlaylistDetails = () => {
   const [details, setdetails] = useState([]);
   const [songlink, setsonglink] = useState([]);
   var [index, setindex] = useState("");
+  const [like, setlike] = useState(false);
   // settitle(songlink.name);
 
   const Getdetails = async () => {
     try {
-      const  {data}  = await axios.get(
+      const { data } = await axios.get(
         `https://jiosaavan-api-2-harsh-patel.vercel.app/api/playlists?id=${finalid}`
       );
       // setdetails(data.data.songs);
@@ -36,9 +43,45 @@ const PlaylistDetails = () => {
     }
   };
 
-  function audioseter(i) {
+  function audioseter(i,d) {
     setindex(i);
     setsonglink([details[i]]);
+    const isLiked =
+    localStorage.getItem("likeData") &&
+    JSON.parse(localStorage.getItem("likeData")).some(
+      (item) => item.id === d.id
+    );
+  setlike(isLiked);
+  }
+
+  function likehandle(i) {
+    // Retrieve existing data from localStorage
+    let existingData = localStorage.getItem("likeData");
+
+    // Initialize an array to hold the updated data
+    let updatedData = [];
+
+    // If existing data is found, parse it from JSON
+    if (existingData) {
+      updatedData = JSON.parse(existingData);
+    }
+
+    // Check if the new data already exists in the existing data
+    let exists = updatedData.some((item) => item.id === i.id);
+
+    if (!exists) {
+      // If not, add the new data
+      updatedData.push(i);
+      // Store the updated data back into localStorage
+      localStorage.setItem("likeData", JSON.stringify(updatedData));
+      setlike(true);
+      toast.success("Song added to Likes section ");
+    } else {
+      setlike(true);
+      // Otherwise, inform the user that the song is already liked
+      // console.log("You've already liked this song.");
+      toast.error("You've already liked this song.")
+    }
   }
 
   function next() {
@@ -68,7 +111,6 @@ const PlaylistDetails = () => {
       link.href = URL.createObjectURL(blob);
       link.download = `${name}.mp3`;
 
-
       document.body.appendChild(link);
       link.click();
 
@@ -93,8 +135,6 @@ const PlaylistDetails = () => {
     return () => clearInterval(interval);
   }, [details]);
 
- 
-
   // useEffect(() => {
   //   Getdetails();
   // }, []);
@@ -110,6 +150,7 @@ const PlaylistDetails = () => {
 
   return details.length ? (
     <div className=" w-full h-screen  bg-slate-700">
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
@@ -121,18 +162,18 @@ const PlaylistDetails = () => {
       <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[67vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
         {details?.map((d, i) => (
           <Link
-          initial={{  scale: 0 }}
-          whileInView={{  scale: 1 }}
-          transition={{ease:Circ.easeIn,duration:0.05}}
+            initial={{ scale: 0 }}
+            whileInView={{ scale: 1 }}
+            transition={{ ease: Circ.easeIn, duration: 0.05 }}
             key={i}
-            onClick={() => audioseter(i)}
+            onClick={() => audioseter(i,d)}
             className=" relative hover:scale-90 sm:hover:scale-100 duration-150 w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh] cursor-pointer "
           >
             <motion.img
-             initial={{  scale: 0 }}
-             animate={{  scale: 1 }}
-             transition={{delay:i*0.1}}
-             viewport={{ once: true }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: i * 0.1 }}
+              viewport={{ once: true }}
               className=" w-full h-[15vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
               src={d.image[2].url}
               alt=""
@@ -144,24 +185,24 @@ const PlaylistDetails = () => {
               src={wavs}
               alt=""
             />
-             <motion.div
-              initial={{  scale: 0 }}
-              animate={{  scale: 1 }}
-              transition={{delay:i*0.1}}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: i * 0.1 }}
               viewport={{ once: true }}
-              className="flex flex-col mt-2">
-                  <h3
-                    className={`text-sm sm:text-xs leading-none  font-bold ${
-                      i === index && "text-green-300"
-                    }`}
-                  >
-                    {d.name}
-                  </h3>
-                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
-                    {d.album.name}
-                  </h4>
-               
-                </motion.div>
+              className="flex flex-col mt-2"
+            >
+              <h3
+                className={`text-sm sm:text-xs leading-none  font-bold ${
+                  i === index && "text-green-300"
+                }`}
+              >
+                {d.name}
+              </h3>
+              <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                {d.album.name}
+              </h4>
+            </motion.div>
           </Link>
         ))}
         {/* <div className="flex gap-3 text-2xl  ">
@@ -174,21 +215,28 @@ const PlaylistDetails = () => {
           </a>
         </div> */}
       </div>
-      <motion.div className={songlink.length > 0 ? ` duration-700 flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600 rounded-full sm:rounded-none sm:rounded-t-[30%] `: 'block'}>
+      <motion.div
+        className={
+          songlink.length > 0
+            ? ` duration-700 flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600 rounded-full sm:rounded-none sm:rounded-t-[30%] `
+            : "block"
+        }
+      >
         {songlink?.map((e, i) => (
           <motion.div
-          initial={{ y: 50, opacity: 0,scale:0}}
-          animate={{ y: 0, opacity: 1,scale:1 }}
+            initial={{ y: 50, opacity: 0, scale: 0 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
             key={i}
             className="flex sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3"
           >
-            <motion.div 
-            initial={{ x: -50, opacity: 0,scale:0 }}
-            animate={{ x: 0, opacity: 1,scale:1 }}
-            className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]">
+            <motion.div
+              initial={{ x: -50, opacity: 0, scale: 0 }}
+              animate={{ x: 0, opacity: 1, scale: 1 }}
+              className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]"
+            >
               <motion.img
-              initial={{ x: -50, opacity: 0,scale:0 }}
-              animate={{ x: 0, opacity: 1,scale:1 }}
+                initial={{ x: -50, opacity: 0, scale: 0 }}
+                animate={{ x: 0, opacity: 1, scale: 1 }}
                 className="rounded-md h-[7vw] sm:h-[25vw]"
                 src={e.image[2]?.url}
                 alt=""
@@ -197,19 +245,26 @@ const PlaylistDetails = () => {
                 {e.name}
               </h3>
               <i
-                onClick={() =>
-                  handleDownloadSong(
-                    e.downloadUrl[4].url,
-                    e.name,
-                  )
-                }
+                onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
                 className="hidden sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
+              {like ? (
+                <i
+                  onClick={() => likehandle(e)}
+                  className="text-xl cursor-pointer text-red-500 ri-heart-3-fill"
+                ></i>
+              ) : (
+                <i
+                  onClick={() => likehandle(e)}
+                  className="text-xl cursor-pointer text-zinc-300  ri-heart-3-fill"
+                ></i>
+              )}
             </motion.div>
-            <motion.div 
-             initial={{ y: 50, opacity: 0,scale:0 }}
-             animate={{ y: 0, opacity: 1,scale:1 }}
-            className="w-[35%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center">
+            <motion.div
+              initial={{ y: 50, opacity: 0, scale: 0 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              className="w-[35%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center"
+            >
               <button
                 onClick={pre}
                 className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
@@ -232,26 +287,59 @@ const PlaylistDetails = () => {
             </motion.div>
             <div className="sm:hidden flex flex-col text-[1vw] items-center  gap-2">
               <div>
-                <h3 className="font-bold text-sm text-slate-400">Download Options</h3>
+                <h3 className="font-bold text-sm text-slate-400">
+                  Download Options
+                </h3>
               </div>
               <div className="flex flex-row-reverse gap-2 ">
-                <p onClick={() => handleDownloadSong(e.downloadUrl[0].url, e.name+" 12kbps")} className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(e.downloadUrl[0].url, e.name + " 12kbps")
+                  }
+                  className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   12kbps <br />
                   <p className="text-xs">Very low quality</p>
                 </p>
-                <p onClick={() => handleDownloadSong(e.downloadUrl[1].url, e.name+" 48kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(e.downloadUrl[1].url, e.name + " 48kbps")
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   48kbps <br />
                   <p className="text-xs">Low quality</p>
                 </p>
-                <p onClick={() => handleDownloadSong(e.downloadUrl[2].url, e.name+" 96kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(e.downloadUrl[2].url, e.name + " 96kbps")
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   96kbps <br />
                   <p className="text-xs">Fair quality</p>
                 </p>
-                <p onClick={() => handleDownloadSong(e.downloadUrl[3].url, e.name+" 160kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(
+                      e.downloadUrl[3].url,
+                      e.name + " 160kbps"
+                    )
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   160kbps <br />
                   <p className="text-xs">Good quality</p>
                 </p>
-                <p onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name+" 320kbps")} className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(
+                      e.downloadUrl[4].url,
+                      e.name + " 320kbps"
+                    )
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
                   320kbps <br />
                   <p className="text-xs"> High quality</p>
                 </p>

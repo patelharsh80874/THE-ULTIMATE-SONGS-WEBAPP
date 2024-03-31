@@ -7,6 +7,7 @@ import { animate, circIn, circInOut, circOut, easeIn, easeInOut, easeOut, motion
 import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
+import toast, { Toaster } from "react-hot-toast";
 
 
 const AlbumDetails = () => {
@@ -19,6 +20,7 @@ const AlbumDetails = () => {
   const [details, setdetails] = useState([]);
   const [songlink, setsonglink] = useState([]);
   var [index, setindex] = useState("");
+  const [like, setlike] = useState(false);
 
   const Getdetails = async () => {
     try {
@@ -33,9 +35,45 @@ const AlbumDetails = () => {
     }
   };
 
-  function audioseter(i) {
+  function audioseter(i,d) {
     setindex(i);
     setsonglink([details[i]]);
+    const isLiked =
+    localStorage.getItem("likeData") &&
+    JSON.parse(localStorage.getItem("likeData")).some(
+      (item) => item.id === d.id
+    );
+  setlike(isLiked);
+  }
+
+  function likehandle(i) {
+    // Retrieve existing data from localStorage
+    let existingData = localStorage.getItem("likeData");
+
+    // Initialize an array to hold the updated data
+    let updatedData = [];
+
+    // If existing data is found, parse it from JSON
+    if (existingData) {
+      updatedData = JSON.parse(existingData);
+    }
+
+    // Check if the new data already exists in the existing data
+    let exists = updatedData.some((item) => item.id === i.id);
+
+    if (!exists) {
+      // If not, add the new data
+      updatedData.push(i);
+      // Store the updated data back into localStorage
+      localStorage.setItem("likeData", JSON.stringify(updatedData));
+      setlike(true);
+      toast.success("Song added to Likes section ");
+    } else {
+      setlike(true);
+      // Otherwise, inform the user that the song is already liked
+      // console.log("You've already liked this song.");
+      toast.error("You've already liked this song.")
+    }
   }
 
   function next() {
@@ -103,12 +141,14 @@ const AlbumDetails = () => {
   // console.log(songscount);
   // console.log();
   // console.log(index);
+  // console.log(like);
   return details.length ? (
     <motion.div 
     initial={{ opacity: 0, scale: 0 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.7 }}
     className=" w-full h-screen  bg-slate-700">
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
@@ -121,7 +161,7 @@ const AlbumDetails = () => {
         {details?.map((d, i) => (
           <Link
             key={i}
-            onClick={() => audioseter(i)}
+            onClick={() => audioseter(i,d)}
             className="relative hover:scale-90 sm:hover:scale-100 duration-150  w-[15vw] sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[20vw] sm:h-[15vh]  "
           >
             <motion.img
@@ -195,6 +235,17 @@ const AlbumDetails = () => {
                 }
                 className="hidden sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
+              {like ? (
+                <i
+                  onClick={() => likehandle(e)}
+                  className="text-xl cursor-pointer text-red-500 ri-heart-3-fill"
+                ></i>
+              ) : (
+                <i
+                  onClick={() => likehandle(e)}
+                  className="text-xl cursor-pointer text-zinc-300  ri-heart-3-fill"
+                ></i>
+              )}
             </motion.div>
             <motion.div
              initial={{ y: 50, opacity: 0,scale:0 }}
