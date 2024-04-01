@@ -105,72 +105,7 @@ const Home = () => {
     setsonglink([details[i]]);
   }
 
-  // function likehandle(i) {
-  //   // Retrieve existing data from localStorage
-  //   let existingData = localStorage.getItem("likeData");
-
-  //   // Initialize an array to hold the updated data
-  //   let updatedData = [];
-
-  //   // If existing data is found, parse it from JSON
-  //   if (existingData) {
-  //     updatedData = JSON.parse(existingData);
-  //   }
-
-  //   // Check if the new data already exists in the existing data
-  //   let exists = updatedData.some((item) => item.id === i.id);
-
-  //   if (!exists) {
-  //     // If not, add the new data
-  //     updatedData.push(i);
-  //     // Store the updated data back into localStorage
-  //     localStorage.setItem("likeData", JSON.stringify(updatedData));
-  //     // setlike(true);
-  //     toast.success("Song added to Likes section ");
-  //   } else {
-  //     // setlike(true);
-  //     // Otherwise, inform the user that the song is already liked
-  //     // console.log("You've already liked this song.");
-  //     // toast.error("You've already liked this song.");
-
-  //     // setlike(false);
-  //     let existingData = localStorage.getItem("likeData");
-
-  //     // If no data exists, there's nothing to remove
-  //     if (!existingData) {
-  //       console.log("No data found in localStorage.");
-  //       return;
-  //     }
-  //     // Parse the existing data from JSON
-  //     let updatedData = JSON.parse(existingData);
-
-  //     // Find the index of the song with the given ID in the existing data
-  //     const indexToRemove = updatedData.findIndex((item) => item.id === i.id);
-
-  //     // If the song is found, remove it from the array
-  //     if (indexToRemove !== -1) {
-  //       updatedData.splice(indexToRemove, 1);
-
-  //       // Store the updated data back into localStorage
-  //       localStorage.setItem("likeData", JSON.stringify(updatedData));
-  //       //   console.log("Song removed successfully.");
-  //       toast.success("Song removed successfully.");
-
-  //       // if (index>0 && details.length>=0) {
-  //       //     setrerender(!rerender)
-  //       //     var index2 = index-1
-  //       //     setindex(index2);
-  //       //     setsonglink([details[index2]]);
-  //       // }
-  //       // else{
-  //       //     setrerender(!rerender)
-  //       // }
-  //     } else {
-  //       toast.error("Song not found in localStorage.");
-  //       //   console.log("Song not found in localStorage.");
-  //     }
-  //   }
-  // }
+  
 
   function likeset(e) {
     // console.log(e);
@@ -322,7 +257,7 @@ const Home = () => {
         setpage(page + 1);
         Getdetails();
       }
-    }, 5000);
+    }, 1500);
     return intervalId2;
   }
 
