@@ -27,6 +27,8 @@ const Songs = () => {
   var [page, setpage] = useState(1);
   const [searchclick, setsearchclick] = useState(false);
   const [like, setlike] = useState(false);
+  const [like2, setlike2] = useState(false);
+  const [existingData, setexistingData] = useState(null);
 
   const Getsearch = async () => {
     try {
@@ -56,7 +58,7 @@ const Songs = () => {
       setpage(1);
     }
   }
-  
+
   function audioseter(i) {
     setindex(i);
     setsonglink([search[i]]);
@@ -104,6 +106,73 @@ const Songs = () => {
       // toast.error("You've already liked this song.");
 
       setlike(false);
+      let existingData = localStorage.getItem("likeData");
+
+      // If no data exists, there's nothing to remove
+      if (!existingData) {
+        console.log("No data found in localStorage.");
+        return;
+      }
+      // Parse the existing data from JSON
+      let updatedData = JSON.parse(existingData);
+
+      // Find the index of the song with the given ID in the existing data
+      const indexToRemove = updatedData.findIndex((item) => item.id === i.id);
+
+      // If the song is found, remove it from the array
+      if (indexToRemove !== -1) {
+        updatedData.splice(indexToRemove, 1);
+
+        // Store the updated data back into localStorage
+        localStorage.setItem("likeData", JSON.stringify(updatedData));
+        //   console.log("Song removed successfully.");
+        toast.success("Song removed successfully. 🚮");
+
+        // if (index>0 && details.length>=0) {
+        //     setrerender(!rerender)
+        //     var index2 = index-1
+        //     setindex(index2);
+        //     setsonglink([details[index2]]);
+        // }
+        // else{
+        //     setrerender(!rerender)
+        // }
+      } else {
+        toast.error("Song not found in localStorage.");
+        //   console.log("Song not found in localStorage.");
+      }
+    }
+  }
+
+  function likehandle2(i) {
+    // Retrieve existing data from localStorage
+    let existingData = localStorage.getItem("likeData");
+
+    // Initialize an array to hold the updated data
+    let updatedData = [];
+
+    // If existing data is found, parse it from JSON
+    if (existingData) {
+      updatedData = JSON.parse(existingData);
+    }
+
+    // Check if the new data already exists in the existing data
+    let exists = updatedData.some((item) => item.id === i.id);
+
+    if (!exists) {
+      // If not, add the new data
+      updatedData.push(i);
+      // Store the updated data back into localStorage
+      localStorage.setItem("likeData", JSON.stringify(updatedData));
+      setlike2(!like2);
+      toast.success("Song added to Likes section. ✅");
+    } else {
+      // setlike(true);
+      // Otherwise, inform the user that the song is already liked
+      // console.log("You've already liked this song.");
+      // toast.error("You've already liked this song.");
+
+      setlike2(!like2);
       let existingData = localStorage.getItem("likeData");
 
       // If no data exists, there's nothing to remove
@@ -202,7 +271,23 @@ const Songs = () => {
 
   useEffect(() => {
     likeset(songlink[0]);
-  }, [songlink]);
+  }, [search, like, songlink, like2, existingData]);
+
+  useEffect(() => {
+    // Retrieve all data from localStorage
+    const allData = localStorage.getItem("likeData");
+
+    // Check if data exists in localStorage
+    if (allData) {
+      // Parse the JSON string to convert it into a JavaScript object
+      const parsedData = JSON.parse(allData);
+
+      // Now you can use the parsedData object
+      setexistingData(parsedData);
+    } else {
+      console.log("No data found in localStorage.");
+    }
+  }, [search, like, songlink, like2]);
 
   // useEffect(() => {
   //   if (query !== "") {
@@ -249,7 +334,7 @@ const Songs = () => {
           Search <i className="  ri-search-2-line"></i>
         </h3>
       </motion.div>
-      <div className="w-full text-white mt-[3vh] p-10 sm:p-3 sm:gap-3 h-[64vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
+      {/* <div className="w-full text-white mt-[3vh] p-10 sm:p-3 sm:gap-3 h-[64vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
         {search?.map((d, i) => (
           <div
             key={i}
@@ -292,7 +377,7 @@ const Songs = () => {
             </motion.div>
           </div>
         ))}
-        {/* {search.length > 0 && (
+        {search.length > 0 && (
           <div className="flex gap-3 text-2xl  ">
             <h1>MADE BY ❤️ HARSH PATEL</h1>
             <a
@@ -302,7 +387,88 @@ const Songs = () => {
               <i className=" ri-instagram-fill"></i>
             </a>
           </div>
-        )} */}
+        )}
+      </div> */}
+
+      <div className="flex w-full mt-[3vh]  text-white p-10 sm:p-3 sm:gap-3 h-[64vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
+        {search?.map((d, i) => (
+          <div
+            title="click on song image or name to play the song"
+            key={i}
+            className="items-center justify-center relative hover:scale-95 sm:hover:scale-100 duration-150 w-[40%] flex mb-3 sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[10vw] sm:h-[15vh] cursor-pointer bg-slate-600  "
+          >
+            <div
+              onClick={() => audioseter(i)}
+              className="flex w-[80%] items-center"
+            >
+              <motion.img
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.7 }}
+                viewport={{ once: true }}
+                className="w-[10vw] h-[10vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
+                src={d.image[2].url}
+                alt=""
+              />
+              <img
+                className={`absolute top-0 w-[8%] sm:w-[10%] rounded-md ${
+                  d.id === songlink[0]?.id ? "block" : "hidden"
+                } `}
+                src={wavs}
+                alt=""
+              />
+              <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
+                <div className="flex flex-col">
+                  <h3
+                    className={`text-sm sm:text-xs leading-none  font-bold ${
+                      d.id === songlink[0]?.id && "text-green-300"
+                    }`}
+                  >
+                    {d.name}
+                  </h3>
+                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                    {d.album.name}
+                  </h4>
+                </div>
+              </div>
+            </div>
+
+            {existingData.find((element) => element.id == d.id) ? (
+              <i
+                onClick={() => likehandle2(d)}
+                className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]    duration-300 cursor-pointer text-red-500  ri-heart-3-fill`}
+              ></i>
+            ) : (
+              <i
+                onClick={() => likehandle2(d)}
+                className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]   duration-300 cursor-pointer text-zinc-300  ri-heart-3-fill`}
+              ></i>
+            )}
+
+            {/* <i
+                onClick={() => likehandle(d)}
+                className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]  bg-red-500   text-zinc-300 hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
+                  like ? "text-red-500" : "text-zinc-300"
+                }  ri-heart-3-fill`}
+              ></i> */}
+
+            {/* <i
+              title="Remove Song "
+              onClick={() => removehandle(d.id)}
+              className="m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw] text-xl bg-red-500  duration-300 cursor-pointer text-zinc-300 ri-dislike-fill"
+            ></i> */}
+          </div>
+        ))}
+
+        {/* <div className="flex gap-3 text-2xl  ">
+          <h1>MADE BY ❤️ HARSH PATEL</h1>
+          <a
+            target="_blank"
+            href="https://www.instagram.com/harsh_patel_80874/"
+          >
+            <i className=" ri-instagram-fill"></i>
+          </a>
+        </div> */}
       </div>
       <motion.div
         className={
@@ -334,7 +500,9 @@ const Songs = () => {
                 {e?.name}
               </h3>
               <i
-                onClick={() => handleDownloadSong(e?.downloadUrl[4].url, e.name)}
+                onClick={() =>
+                  handleDownloadSong(e?.downloadUrl[4].url, e.name)
+                }
                 className="hidden sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
 
@@ -344,7 +512,7 @@ const Songs = () => {
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
               ></i>
-{/*               
+              {/*               
               {localStorage.getItem("likeData") &&
                 JSON.parse(localStorage.getItem("likeData")).some(
                   (item) => item.id === e.id) ? <i
