@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import wavs from "../../public/wavs.gif";
+import empty from '../../public/empty.gif';
 import {
   animate,
   circIn,
@@ -60,12 +61,12 @@ function Likes() {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike(true);
-      toast.success("Song added to Likes section ");
+      toast.success("Song added to Likes section ✅ ");
     } else {
       setlike(true);
       // Otherwise, inform the user that the song is already liked
     //   console.log("You've already liked this song.");
-      toast.error("You've already liked this song.")
+      toast.error("You've already liked this song. ❌")
     }
   }
 
@@ -91,7 +92,7 @@ function Likes() {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
     //   console.log("Song removed successfully.");
-      toast.success("Song removed successfully.");
+      toast.success("Song removed successfully.🚮");
         setrerender(!rerender);
         setsonglink([]);
 
@@ -110,6 +111,10 @@ function Likes() {
       setsonglink([]);
      setrerender(!rerender);
     }
+  }
+
+  function emptyfile() {
+    toast.error("it's empty, liked songs will be shown in this page 👇")
   }
 
   function next() {
@@ -158,7 +163,7 @@ function Likes() {
       const parsedData = JSON.parse(allData);
 
       // Now you can use the parsedData object
-      setdetails(parsedData);
+      setdetails(parsedData.reverse());
     } else {
       console.log("No data found in localStorage.");
     }
@@ -172,7 +177,7 @@ function Likes() {
   return (
     <div className="w-full h-screen bg-slate-700">
         <Toaster position="top-center" reverseOrder={false} />
-      <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
+      <div className="w-full flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
           className="text-3xl cursor-pointer ml-5 bg-green-500 rounded-full ri-arrow-left-line"
@@ -180,7 +185,7 @@ function Likes() {
         <h1 className="text-xl text-zinc-300 font-black">THE ULTIMATE SONGS</h1>
       </div>
       {details.length > 0 ? (
-        <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[67vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
+        <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[65vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
           {details?.map((d, i) => (
             <div
               key={i}
@@ -229,8 +234,7 @@ function Likes() {
         </div> */}
         </div>
       ) : (
-      
-         <p>it's empty</p>
+         <img onClick={()=>emptyfile()} className="w-[20%] cursor-pointer rounded-md sm:w-[80%] h-[50%] sm:h-[40%] ml-10 sm:m-10 mt-5" src={empty}/>
        
       )}
      {songlink !== null ?  <motion.div
@@ -259,7 +263,7 @@ function Likes() {
                 src={e.image[2]?.url}
                 alt=""
               />
-              <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
+              <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
                 {e.name}
               </h3>
               <i
@@ -271,19 +275,19 @@ function Likes() {
                 <i
                   title="You Liked This Song"
                   onClick={() => likehandle(e)}
-                  className="text-xl cursor-pointer text-red-500 ri-heart-3-fill"
+                  className="text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer text-red-500 ri-heart-3-fill"
                 ></i>
               ) : (
                 <i
                   title="Like Song"
                   onClick={() => likehandle(e)}
-                  className="text-xl cursor-pointer text-zinc-300  ri-heart-3-fill"
+                  className="text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer text-zinc-300  ri-heart-3-fill"
                 ></i>
               )}
               <i
                 title="Remove Song "
                 onClick={() => removehandle(e.id)}
-                className="text-xl cursor-pointer text-zinc-300 ri-dislike-fill"
+                className="text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer text-zinc-300 ri-dislike-fill"
               ></i>
             </motion.div>
             <motion.div

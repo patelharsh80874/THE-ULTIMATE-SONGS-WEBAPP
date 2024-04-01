@@ -46,13 +46,23 @@ const ArtistsDetails = () => {
     }
   };
 
-
-
   function audioseter(i) {
     setindex(i);
     setsonglink([details[i]]);
   }
 
+  function likeset(e) {
+    // console.log(e);
+    var tf =
+      localStorage.getItem("likeData") &&
+      JSON.parse(localStorage.getItem("likeData")).some(
+        (item) => item.id == e?.id
+      );
+    // console.log(tf);
+    // console.log(e?.id);
+    setlike(tf);
+    // console.log(like);
+  }
 
   function likehandle(i) {
     // Retrieve existing data from localStorage
@@ -75,7 +85,7 @@ const ArtistsDetails = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike(true);
-      toast.success("Song added to Likes section ");
+      toast.success("Song added to Likes section. ✅");
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -103,7 +113,7 @@ const ArtistsDetails = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success("Song removed successfully.");
+        toast.success("Song removed successfully. 🚮");
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
@@ -125,22 +135,18 @@ const ArtistsDetails = () => {
     if (index < details.length - 1) {
       setindex(index++);
       audioseter(index);
-      
     } else {
       setindex(0);
       setsonglink([details[0]]);
-      
     }
   }
   function pre() {
     if (index > 0) {
       setindex(index--);
       audioseter(index);
-      
     } else {
       setindex(details.length - 1);
       setsonglink([details[details.length - 1]]);
-      
     }
   }
 
@@ -177,6 +183,10 @@ const ArtistsDetails = () => {
     return () => clearInterval(interval);
   }, [details, page]);
 
+  useEffect(() => {
+    likeset(songlink[0]);
+  }, [songlink]);
+
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
   // console.log(details);
@@ -192,7 +202,7 @@ const ArtistsDetails = () => {
       className=" w-full h-screen  bg-slate-700"
     >
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
+      <div className="w-full flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
           className="text-3xl cursor-pointer ml-5 bg-green-500 rounded-full ri-arrow-left-line"
@@ -200,7 +210,7 @@ const ArtistsDetails = () => {
         <h1 className="text-xl text-zinc-300 font-black">THE ULTIMATE SONGS</h1>
       </div>
 
-      <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[67vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
+      <div className="w-full text-white p-10 sm:p-3 sm:gap-3 h-[65vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
         {details?.map((d, i) => (
           <div
             key={i}
@@ -217,15 +227,17 @@ const ArtistsDetails = () => {
               alt=""
             />
             <img
-              className={`absolute top-0 w-[20%] sm:w-[10%] rounded-md ${i === index ? "block" : "hidden"
-                } `}
+              className={`absolute top-0 w-[20%] sm:w-[10%] rounded-md ${
+                i === index ? "block" : "hidden"
+              } `}
               src={wavs}
               alt=""
             />
             <div className="flex flex-col mt-2">
               <h3
-                className={`text-sm sm:text-xs leading-none  font-bold ${i === index && "text-green-300"
-                  }`}
+                className={`text-sm sm:text-xs leading-none  font-bold ${
+                  i === index && "text-green-300"
+                }`}
               >
                 {d.name}
               </h3>
@@ -268,20 +280,26 @@ const ArtistsDetails = () => {
               <motion.img
                 initial={{ x: -50, opacity: 0, scale: 0 }}
                 animate={{ x: 0, opacity: 1, scale: 1 }}
-                className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e.image[2]?.url}
+                className="rounded-md  h-[7vw] sm:h-[25vw]"
+                src={e?.image[2]?.url}
                 alt=""
               />
-              <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
-                {e.name}
+              <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
+                {e?.name}
               </h3>
               <i
-                onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
+                onClick={() => handleDownloadSong(e?.downloadUrl[4].url, e.name)}
                 className="hidden sm:flex  cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
 
+              <i
+                onClick={() => likehandle(e)}
+                className={`text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
+                  like ? "text-red-500" : "text-zinc-300"
+                }  ri-heart-3-fill`}
+              ></i>
 
-              {localStorage.getItem("likeData") &&
+              {/* {localStorage.getItem("likeData") &&
                 JSON.parse(localStorage.getItem("likeData")).some(
                   (item) => item.id === e.id) ? <i
                     onClick={() => likehandle(e)}
@@ -289,7 +307,7 @@ const ArtistsDetails = () => {
                   ></i> :  <i
                   onClick={() => likehandle(e)}
                   className={`text-xl cursor-pointer text-zinc-300 ri-heart-3-fill`}
-                ></i> }
+                ></i> } */}
 
               {/* {like ? (
                 <i
@@ -317,7 +335,7 @@ const ArtistsDetails = () => {
                 controls
                 autoPlay
                 onEnded={() => next()}
-                src={e.downloadUrl[4]?.url}
+                src={e?.downloadUrl[4]?.url}
               ></audio>
               <i
                 onClick={() => next()}

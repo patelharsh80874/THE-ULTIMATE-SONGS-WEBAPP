@@ -62,6 +62,19 @@ const Songs = () => {
     setsonglink([search[i]]);
   }
 
+  function likeset(e) {
+    // console.log(e);
+    var tf =
+      localStorage.getItem("likeData") &&
+      JSON.parse(localStorage.getItem("likeData")).some(
+        (item) => item.id == e?.id
+      );
+    // console.log(tf);
+    // console.log(e?.id);
+    setlike(tf);
+    // console.log(like);
+  }
+
   function likehandle(i) {
     // Retrieve existing data from localStorage
     let existingData = localStorage.getItem("likeData");
@@ -83,7 +96,7 @@ const Songs = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike(true);
-      toast.success("Song added to Likes section ");
+      toast.success("Song added to Likes section ✅");
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -111,7 +124,7 @@ const Songs = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success("Song removed successfully.");
+        toast.success("Song removed successfully. 🚮");
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
@@ -186,6 +199,10 @@ const Songs = () => {
 
     return () => clearInterval(interval);
   }, [searchclick, search, page]);
+
+  useEffect(() => {
+    likeset(songlink[0]);
+  }, [songlink]);
 
   // useEffect(() => {
   //   if (query !== "") {
@@ -310,23 +327,24 @@ const Songs = () => {
                 initial={{ x: -50, opacity: 0, scale: 0 }}
                 animate={{ x: 0, opacity: 1, scale: 1 }}
                 className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e.image[2]?.url}
+                src={e?.image[2]?.url}
                 alt=""
               />
-              <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
-                {e.name}
+              <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
+                {e?.name}
               </h3>
               <i
-                onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
+                onClick={() => handleDownloadSong(e?.downloadUrl[4].url, e.name)}
                 className="hidden sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
-              {/* <i
+
+              <i
                 onClick={() => likehandle(e)}
-                className={`text-xl cursor-pointer ${
+                className={`text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
-              ></i> */}
-              
+              ></i>
+{/*               
               {localStorage.getItem("likeData") &&
                 JSON.parse(localStorage.getItem("likeData")).some(
                   (item) => item.id === e.id) ? <i
@@ -335,7 +353,7 @@ const Songs = () => {
                   ></i> :  <i
                   onClick={() => likehandle(e)}
                   className={`text-xl cursor-pointer text-zinc-300 ri-heart-3-fill`}
-                ></i> }
+                ></i> } */}
 
               {/* {like ? (
                 <i
@@ -365,7 +383,7 @@ const Songs = () => {
                 controls
                 autoPlay
                 onEnded={next}
-                src={e.downloadUrl[4]?.url}
+                src={e?.downloadUrl[4]?.url}
               ></audio>
               <button
                 onClick={next}

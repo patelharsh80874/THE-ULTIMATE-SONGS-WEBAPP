@@ -43,9 +43,22 @@ const AlbumDetails = () => {
     }
   };
 
-  function audioseter(i,) {
+  function audioseter(i) {
     setindex(i);
     setsonglink([details[i]]);
+  }
+
+  function likeset(e) {
+    // console.log(e);
+    var tf =
+      localStorage.getItem("likeData") &&
+      JSON.parse(localStorage.getItem("likeData")).some(
+        (item) => item.id == e?.id
+      );
+    // console.log(tf);
+    // console.log(e?.id);
+    setlike(tf);
+    // console.log(like);
   }
 
   function likehandle(i) {
@@ -69,7 +82,7 @@ const AlbumDetails = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike(true);
-      toast.success("Song added to Likes section ");
+      toast.success("Song added to Likes section. ✅");
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -97,7 +110,7 @@ const AlbumDetails = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success("Song removed successfully.");
+        toast.success("Song removed successfully. 🚮");
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
@@ -131,7 +144,6 @@ const AlbumDetails = () => {
     } else {
       setindex(details.length - 1);
       setsonglink([details[details.length - 1]]);
-    
     }
   }
 
@@ -167,6 +179,10 @@ const AlbumDetails = () => {
     return () => clearInterval(interval);
   }, [details]);
 
+  useEffect(() => {
+    likeset(songlink[0]);
+  }, [songlink]);
+
   // useEffect(() => {
   //   Getdetails();
   // }, []);
@@ -188,7 +204,7 @@ const AlbumDetails = () => {
       className=" w-full h-screen  bg-slate-700"
     >
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="w-full flex items-center gap-3 sm:h-[5vh]  h-[10vh]">
+      <div className="w-full flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
           className="text-3xl cursor-pointer ml-5 bg-green-500 rounded-full ri-arrow-left-line"
@@ -196,7 +212,7 @@ const AlbumDetails = () => {
         <h1 className="text-xl text-zinc-300 font-black">THE ULTIMATE SONGS</h1>
       </div>
 
-      <div className="w-full relative text-white p-10 sm:p-3 sm:gap-3 h-[67vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
+      <div className="w-full relative text-white p-10 sm:p-3 sm:gap-3 h-[65vh] overflow-y-auto flex sm:block flex-wrap gap-7 justify-center ">
         {details?.map((d, i) => (
           <Link
             key={i}
@@ -272,18 +288,25 @@ const AlbumDetails = () => {
                 initial={{ x: -50, opacity: 0, scale: 0 }}
                 animate={{ x: 0, opacity: 1, scale: 1 }}
                 className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e.image[2]?.url}
+                src={e?.image[2]?.url}
                 alt=""
               />
-              <h3 className=" sm:w-[30%] text-white text-sm font-semibold">
-                {e.name}
+              <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
+                {e?.name}
               </h3>
               <i
-                onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
+                onClick={() => handleDownloadSong(e?.downloadUrl[4].url, e.name)}
                 className="hidden sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
 
-              {localStorage.getItem("likeData") &&
+              <i
+                onClick={() => likehandle(e)}
+                className={`text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
+                  like ? "text-red-500" : "text-zinc-300"
+                }  ri-heart-3-fill`}
+              ></i>
+
+              {/* {localStorage.getItem("likeData") &&
               JSON.parse(localStorage.getItem("likeData")).some(
                 (item) => item.id === e.id
               ) ? (
@@ -296,7 +319,7 @@ const AlbumDetails = () => {
                   onClick={() => likehandle(e)}
                   className={`text-xl cursor-pointer text-zinc-300 ri-heart-3-fill`}
                 ></i>
-              )}
+              )} */}
 
               {/* {like ? (
                 <i
@@ -316,18 +339,18 @@ const AlbumDetails = () => {
               className="w-[35%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center"
             >
               <i
-                onClick={()=>pre()}
+                onClick={() => pre()}
                 className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full ri-skip-back-mini-fill"
               ></i>
               <audio
                 className="w-[80%] "
                 controls
                 autoPlay
-                onEnded={()=>next()}
-                src={e.downloadUrl[4]?.url}
+                onEnded={() => next()}
+                src={e?.downloadUrl[4]?.url}
               ></audio>
               <i
-                onClick={()=>next()}
+                onClick={() => next()}
                 className=" text-3xl text-white bg-zinc-800 cursor-pointer rounded-full ri-skip-right-fill"
               ></i>
             </motion.div>
