@@ -29,6 +29,7 @@ const Album = () => {
         `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${query}`
       );
       setalbums(data?.data?.results);
+      localStorage.setItem("albums", JSON.stringify(data?.data?.results));
     } catch (error) {
       console.log("error", error);
     }
@@ -57,6 +58,22 @@ const Album = () => {
 
     return () => clearInterval(interval);
   }, [search, albums]);
+
+  useEffect(() => {
+    const allData = localStorage.getItem("albums");
+
+    // Check if data exists in localStorage
+    if (allData) {
+      // Parse the JSON string to convert it into a JavaScript object
+      const parsedData = JSON.parse(allData);
+
+      // Now you can use the parsedData object
+      setalbums(parsedData);
+    } else {
+      console.log("No data found in localStorage.");
+    }
+  }, []);
+
 // console.log(albums);
   return (
     <motion.div

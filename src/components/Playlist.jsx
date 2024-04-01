@@ -20,7 +20,8 @@ const Playlist = () => {
   const [query, setquery] = useState("");
   const [requery, setrequery] = useState("");
   const [playlist, setplaylist] = useState([]);
-  const [search, setsearch] = useState(false)
+  const [search, setsearch] = useState(false);
+  // const [existingData, setexistingData] = useState(null)
 
   const Getplaylist = async () => {
     try {
@@ -31,18 +32,19 @@ const Playlist = () => {
       );
 
       setplaylist(data?.data?.results);
+      localStorage.setItem("playlist", JSON.stringify(data?.data?.results));
       // setplaylist(data);
     } catch (error) {
       console.log("error", error);
     }
   };
 
-function searchClick() {
-  if (query !== requery){
-    setsearch(!search)
-    setplaylist([])
+  function searchClick() {
+    if (query !== requery) {
+      setsearch(!search);
+      setplaylist([]);
+    }
   }
-}
 
   function seccall() {
     const intervalId = setInterval(() => {
@@ -60,6 +62,22 @@ function searchClick() {
 
     return () => clearInterval(interval);
   }, [search, playlist]);
+
+  useEffect(() => {
+    const allData = localStorage.getItem("playlist");
+
+    // Check if data exists in localStorage
+    if (allData) {
+      // Parse the JSON string to convert it into a JavaScript object
+      const parsedData = JSON.parse(allData);
+
+      // Now you can use the parsedData object
+      setplaylist(parsedData);
+    } else {
+      console.log("No data found in localStorage.");
+    }
+  }, []);
+
   // console.log(playlist);
   // console.log(search);
   return (
@@ -88,19 +106,22 @@ function searchClick() {
             name=""
             id=""
           />
-          <h3 onClick={()=>searchClick()} className="duration-300 cursor-pointer hover:text-slate-400 text-xl  bg-slate-400 p-2 rounded-md hover:bg-slate-600 hover:scale-90">Search <i  
-          className="  ri-search-2-line"></i></h3>
-          
+          <h3
+            onClick={() => searchClick()}
+            className="duration-300 cursor-pointer hover:text-slate-400 text-xl  bg-slate-400 p-2 rounded-md hover:bg-slate-600 hover:scale-90"
+          >
+            Search <i className="  ri-search-2-line"></i>
+          </h3>
         </motion.div>
         <motion.div className="w-full min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
-          {playlist?.map ((e, i) => (
+          {playlist?.map((e, i) => (
             <motion.div
-              initial={{  scale: 0 }}
-              whileInView={{  scale: 1 }}
-              transition={{delay:i*0.1 }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: i * 0.1 }}
               viewport={{ once: true }}
               key={i}
-              onClick={()=>navigate(`/playlist/details/${e.id}`)}
+              onClick={() => navigate(`/playlist/details/${e.id}`)}
               className="w-[15vw] h-[30vh] sm:w-[40vw] mb-8 sm:h-[20vh] sm:mb-12 rounded-md bg-red-200 cursor-pointer"
             >
               <img
