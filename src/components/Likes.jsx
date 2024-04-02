@@ -18,16 +18,25 @@ import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
+import JSZip from "jszip";
+// import { saveAs } from 'file-saver';
+// import { ID3Writer } from 'browser-id3-writer';
+// import AdmZip from 'adm-zip';
+// import fs from 'fs';
+// import mm from 'music-metadata';
 
 function Likes() {
   const navigate = useNavigate();
   let location = useLocation();
 
   const [details, setdetails] = useState([]);
+  const [songs, setSongs] = useState([]);
+
   const [songlink, setsonglink] = useState([]);
   var [index, setindex] = useState("");
   var [rerender, setrerender] = useState(false);
   const [like, setlike] = useState(false);
+  const [download, setdownload] = useState(false);
 
   function audioseter(i) {
     setindex(i);
@@ -215,6 +224,16 @@ function Likes() {
 
       // Now you can use the parsedData object
       setdetails(parsedData.reverse());
+      // setSongs(parsedData.reverse());
+      const extractedSongs = parsedData.map((song) => ({
+        title: song.name,
+        url: song.downloadUrl[4].url,
+        image: song.image[2].url,
+        artist: song.artists.primary.map((artist) => artist.name).join(" , "),
+        album: song.album.name,
+        year: song.year,
+      }));
+      setSongs(extractedSongs);
     } else {
       console.log("No data found in localStorage.");
     }
@@ -224,11 +243,61 @@ function Likes() {
     likeset(songlink[0]);
   }, [songlink]);
 
+
+  const downloadSongs = () => {
+
+    if (songs.length>0) {
+      setdownload(true);
+      toast.success("Downloading songs");
+      // Create a zip file
+      const zip = new JSZip();
+      const promises = [];
+
+      // Add each song to the zip file
+      songs.forEach((song) => {
+        const { title, url} = song;
+        const promise = fetch(url)
+          .then((response) => response.blob())
+          .then((blob) => {
+            zip.file(`${title} (320kbps).mp3`, blob, { binary: true });
+          })
+          .catch((error) => toast.error("Error downloading song:", error));
+        promises.push(promise);
+      });
+
+      // Wait for all promises to resolve before generating the zip file
+      Promise.all(promises).then(() => {
+        // Generate the zip file and initiate download
+        zip.generateAsync({ type: "blob" }).then((content) => {
+          const zipUrl = window.URL.createObjectURL(content);
+          const link = document.createElement("a");
+          link.href = zipUrl;
+          link.download = "songs.zip";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setdownload(false);
+          toast.success("Download songs completed successfully");
+        });
+      });
+
+    }
+    else{
+      toast.error("No songs available to download");
+    }
+
+  };
+
+  
+
+  
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
   //   console.log(details);
   //   console.log(rerender);
   //   console.log(index);
+  // console.log(download);
+  // console.log(songs);
   return (
     <div className="w-full h-screen bg-slate-700">
       <Toaster position="top-center" reverseOrder={false} />
@@ -239,15 +308,28 @@ function Likes() {
         ></i>
         <h1 className="text-xl text-zinc-300 font-black">THE ULTIMATE SONGS</h1>
       </div>
+      <div className="w-full">
+        <button
+          className="ml-[80%] sm:ml-[50%] hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit rounded-md p-2 font-semibold bg-slate-400 "
+          onClick={downloadSongs}
+          disabled={download}
+        >
+          {download ? "downloading..." : "Download All Songs"}
+        </button>
+      </div>
+
       {details.length > 0 ? (
-        <div className="flex w-full text-white p-10 sm:p-3 sm:gap-3 h-[65vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
+        <div className="flex w-full text-white p-10 sm:p-3 sm:gap-3 h-[60vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
           {details?.map((d, i) => (
             <div
               title="click on song image or name to play the song"
               key={i}
               className="items-center justify-center relative hover:scale-95 sm:hover:scale-100 duration-150 w-[40%] flex mb-3 sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[10vw] sm:h-[15vh] cursor-pointer bg-slate-600  "
             >
-              <div onClick={() => audioseter(i)} className="flex w-[80%] items-center">
+              <div
+                onClick={() => audioseter(i)}
+                className="flex w-[80%] items-center"
+              >
                 <motion.img
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
