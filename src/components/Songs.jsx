@@ -512,6 +512,7 @@ const Songs = () => {
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
               ></i>
+              <i onClick={()=>navigate(`/songs/details/${e.id}`)} className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ri-information-fill"></i>
               {/*               
               {localStorage.getItem("likeData") &&
                 JSON.parse(localStorage.getItem("likeData")).some(

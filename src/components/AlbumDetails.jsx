@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import wavs from "../../public/wavs.gif";
 import {
@@ -246,11 +246,11 @@ const AlbumDetails = () => {
     var interval = seccall();
 
     return () => clearInterval(interval);
-  }, [details,like,songlink,like2,existingData]);
+  }, [details, like, songlink, like2, existingData]);
 
   useEffect(() => {
     likeset(songlink[0]);
-  }, [details,like,songlink,like2,existingData]);
+  }, [details, like, songlink, like2, existingData]);
 
   useEffect(() => {
     // Retrieve all data from localStorage
@@ -266,7 +266,7 @@ const AlbumDetails = () => {
     } else {
       console.log("No data found in localStorage.");
     }
-  }, [details,like,songlink,like2]);
+  }, [details, like, songlink, like2]);
 
   // useEffect(() => {
   //   Getdetails();
@@ -281,7 +281,7 @@ const AlbumDetails = () => {
   // console.log();
   // console.log(index);
   // console.log(like);
-  console.log(existingData);
+  // console.log(existingData);
   return details.length ? (
     <motion.div
       initial={{ opacity: 0, scale: 0 }}
@@ -474,6 +474,10 @@ const AlbumDetails = () => {
                 className={`text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
+              ></i>
+              <i
+                onClick={() => navigate(`/songs/details/${e.id}`)}
+                className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ri-information-fill"
               ></i>
 
               {/* {localStorage.getItem("likeData") &&

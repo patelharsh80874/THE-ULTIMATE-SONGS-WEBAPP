@@ -582,13 +582,13 @@ const Home = () => {
                 onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
                 className="hidden sm:visible sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
               ></i>
-
               <i
                 onClick={() => likehandle(e)}
                 className={`text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
               ></i>
+              <i onClick={()=>navigate(`songs/details/${e.id}`)} className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ri-information-fill"></i>
 
               {/* {localStorage.getItem("likeData") &&
               JSON.parse(localStorage.getItem("likeData")).some(
