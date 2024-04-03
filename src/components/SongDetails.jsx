@@ -26,7 +26,8 @@ import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
 
 const SongDetails = () => {
-  const { id } = useParams();
+  let { id } = useParams();
+  // let { pathname } = useLocation();
   const Navigate = useNavigate();
   const [details, setdetails] = useState([]);
   const [song, setsong] = useState([]);
@@ -248,6 +249,13 @@ const SongDetails = () => {
     }
   };
 
+  // function idch(e) {
+  //   id = e;
+  //   setdetails([]);
+  //   setsong([]);
+  //   setsonglink([]);
+  // }
+
   function seccall() {
     const intervalId = setInterval(() => {
       if (details.length === 0 && song.length === 0) {
@@ -292,7 +300,7 @@ const SongDetails = () => {
 
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
 
-  //   console.log(details);
+  // console.log(id);
   //   console.log(song);
   //   console.log(song[0]?.artists?.primary);
 
@@ -558,12 +566,11 @@ const SongDetails = () => {
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
               ></i>
-              {/* <Link to={`/songs/details/${e.id}`}>
-                <i
-                  // onClick={() => Navigate(``)}
-                  className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer  ri-information-fill"
-                ></i>
-              </Link> */}
+
+              {/* <i
+                onClick={() => idch(e.id)}
+                className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer  ri-information-fill"
+              ></i> */}
 
               {/* {localStorage.getItem("likeData") &&
               JSON.parse(localStorage.getItem("likeData")).some(

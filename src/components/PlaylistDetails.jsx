@@ -36,7 +36,7 @@ const PlaylistDetails = () => {
   const Getdetails = async () => {
     try {
       const { data } = await axios.get(
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/playlists?id=${finalid}`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/playlists?id=${finalid}&limit=100`
       );
       // setdetails(data.data.songs);
       setdetails(data?.data?.songs);
