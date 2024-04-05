@@ -43,18 +43,21 @@ function Likes() {
     setsonglink([details[i]]);
   }
 
-  function likeset(e) {
-    // console.log(e);
-    var tf =
-      localStorage.getItem("likeData") &&
-      JSON.parse(localStorage.getItem("likeData")).some(
-        (item) => item.id == e?.id
-      );
-    // console.log(tf);
-    // console.log(e?.id);
-    setlike(tf);
-    // console.log(like);
-  }
+  // function likeset(e) {
+  //   // console.log(e);
+  //   var tf =
+  //     localStorage.getItem("likeData") &&
+  //     JSON.parse(localStorage.getItem("likeData")).some(
+  //       (item) => item.id == e?.id
+  //     );
+  //   // console.log(tf);
+  //   // console.log(e?.id);
+  //   setlike(tf);
+  //   // console.log(like);
+  // }
+  // function indexset() {
+  //   setindex(details.findIndex((item) => item.id === songlink[0]?.id))
+  // }
 
   function likehandle(i) {
     // Retrieve existing data from localStorage
@@ -129,7 +132,7 @@ function Likes() {
   //   }
   // }
 
-  function removehandle(i) {
+  function removehandle(i,ind) {
     setlike(false);
     let existingData = localStorage.getItem("likeData");
 
@@ -152,8 +155,19 @@ function Likes() {
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       //   console.log("Song removed successfully.");
       toast.success("Song removed successfully. 🚮");
-      setsonglink([]);
-      setrerender(!rerender);
+      if (songlink[0].id != i) {
+        setrerender(!rerender);
+        if(index > ind){
+          setindex(index-1)
+        }
+        // else{
+        //   setindex(details.findIndex((item) => item.id === songlink[0].id)+1)
+        // }
+      } else {
+        setrerender(!rerender);
+        setsonglink([]);
+      }
+      // setsonglink([]);
 
       // if (index>0 && details.length>=0) {
       //     setrerender(!rerender)
@@ -221,7 +235,6 @@ function Likes() {
     if (allData) {
       // Parse the JSON string to convert it into a JavaScript object
       const parsedData = JSON.parse(allData);
-
       // Now you can use the parsedData object
       setdetails(parsedData.reverse());
       // setSongs(parsedData.reverse());
@@ -234,19 +247,18 @@ function Likes() {
         year: song.year,
       }));
       setSongs(extractedSongs);
+      // console.log((details.findIndex((item) => item.id === songlink[0].id)))
     } else {
       console.log("No data found in localStorage.");
     }
   }, [rerender, songlink]);
 
-  useEffect(() => {
-    likeset(songlink[0]);
-  }, [songlink]);
-
+  // useEffect(() => {
+  //   indexset();
+  // }, [rerender]);
 
   const downloadSongs = () => {
-
-    if (songs.length>0) {
+    if (songs.length > 0) {
       setdownload(true);
       toast.success("Downloading songs");
       // Create a zip file
@@ -255,7 +267,7 @@ function Likes() {
 
       // Add each song to the zip file
       songs.forEach((song) => {
-        const { title, url} = song;
+        const { title, url } = song;
         const promise = fetch(url)
           .then((response) => response.blob())
           .then((blob) => {
@@ -280,24 +292,20 @@ function Likes() {
           toast.success("Download songs completed successfully");
         });
       });
-
-    }
-    else{
+    } else {
       toast.error("No songs available to download");
     }
-
   };
 
-  
-
-  
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
   //   console.log(details);
   //   console.log(rerender);
-  //   console.log(index);
+    // console.log(index);
   // console.log(download);
-  // console.log(songs);
+  // console.log(songlink);
+
+  // console.log(songlink[0]?.id);
   return (
     <div className="w-full h-screen bg-slate-700">
       <Toaster position="top-center" reverseOrder={false} />
@@ -364,7 +372,7 @@ function Likes() {
 
               <i
                 title="Remove Song "
-                onClick={() => removehandle(d.id)}
+                onClick={() => removehandle(d.id,i)}
                 className="m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw] text-xl bg-red-500  duration-300 cursor-pointer text-zinc-300 ri-dislike-fill"
               ></i>
             </div>
@@ -424,7 +432,7 @@ function Likes() {
                   className="hidden sm:flex  cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
                 ></i>
 
-                {like ? (
+                {/* {like ? (
                   <i
                     title="You Liked This Song"
                     onClick={() => likehandle(e)}
@@ -436,7 +444,7 @@ function Likes() {
                     onClick={() => likehandle(e)}
                     className="text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer text-zinc-300  ri-heart-3-fill"
                   ></i>
-                )}
+                )} */}
                 <i
                   title="Remove Song "
                   onClick={() => removehandle(e.id)}
