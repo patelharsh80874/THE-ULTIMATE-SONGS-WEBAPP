@@ -155,6 +155,7 @@ function Likes() {
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       //   console.log("Song removed successfully.");
       toast.success("Song removed successfully. 🚮");
+      setrerender(!rerender);
       if (songlink[0].id != i) {
         setrerender(!rerender);
         if(index > ind){
