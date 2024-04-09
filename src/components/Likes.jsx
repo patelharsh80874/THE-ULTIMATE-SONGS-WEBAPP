@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import wavs from "../../public/wavs.gif";
-import empty from "../../public/empty.gif";
+import empty from "../../public/empty2.gif";
 import {
   animate,
   circIn,
@@ -42,6 +42,8 @@ function Likes() {
     setindex(i);
     setsonglink([details[i]]);
   }
+
+
 
   // function likeset(e) {
   //   // console.log(e);
@@ -256,9 +258,6 @@ function Likes() {
     }
   }, [rerender, songlink]);
 
-  // useEffect(() => {
-  //   indexset();
-  // }, [rerender]);
 
   const downloadSongs = () => {
     if (songs.length > 0) {
@@ -396,7 +395,7 @@ function Likes() {
       ) : (
         <img
           onClick={() => emptyfile()}
-          className="w-[20%] cursor-pointer rounded-md sm:w-[80%] h-[50%] sm:h-[40%] ml-10 sm:m-10 mt-5"
+          className="max-w-[30%] cursor-pointer rounded-md sm:max-w-[80%] max-h-[50%] sm:max-h-[30%] m-auto sm:m-10 mt-5"
           src={empty}
         />
       )}

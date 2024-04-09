@@ -52,11 +52,13 @@ const Songs = () => {
   function searchClick() {
     if (query !== requery) {
       toast.success(`Searching ${query} , Wait For Results`);
-      setsearchclick(!searchclick);
       setsearch([]);
       setsonglink([]);
       setindex("");
       setpage(1);
+      setrequery(query);
+      setsearchclick(!searchclick);
+      
     }
     else{
       toast.error(`Please Check Your Search Query , Its Same As Before `);
@@ -261,7 +263,7 @@ const Songs = () => {
       ) {
         setpage(page + 1);
         Getsearch();
-        setrequery(query);
+        // setrequery(query);
       }
     }, 1000);
     return intervalId;

@@ -27,7 +27,7 @@ const Album = () => {
       const { data } = await axios.get(
         // `https://saavn.dev/api/search/albums?query=${query}&page=1&limit=10`
         // `https://jiosaavan-harsh-patel.vercel.app/search/albums?query=${query}`
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${query}`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${query}&limit=100`
       );
       setalbums(data?.data?.results);
       localStorage.setItem("albums", JSON.stringify(data?.data?.results));
@@ -39,8 +39,9 @@ const Album = () => {
   function searchClick() {
     if (query !== requery){
       toast.success(`Searching ${query} , Wait For Results`);
-      setsearch(!search)
+      setrequery(query);
       setalbums([])
+      setsearch(!search)
     }
     else{
       toast.error(`Please Check Your Search Query , Its Same As Before `);
@@ -51,7 +52,6 @@ const Album = () => {
     const intervalId = setInterval(() => {
       if (albums.length === 0 || query.length !== requery.length) {
         Getalbums();
-        setrequery(query);
       }
     }, 1000);
     return intervalId;
@@ -110,7 +110,7 @@ const Album = () => {
            <h3 onClick={()=>searchClick()} className="duration-300 cursor-pointer hover:text-slate-400 text-xl  bg-slate-400 p-2 rounded-md hover:bg-slate-600 hover:scale-90">Search <i  
           className="  ri-search-2-line"></i></h3>
         </motion.div>
-        <motion.div className="w-full min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
+        <motion.div className="w-full overflow-hidden overflow-y-auto h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
           {albums?.map((e, i) => (
             <motion.div
             initial={{  scale: 0 }}

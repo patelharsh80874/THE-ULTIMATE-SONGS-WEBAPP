@@ -28,7 +28,7 @@ const Artists = () => {
       const { data } = await axios.get(
         // `https://saavn.dev/api/search/artists?query=${query}&limit=10`
         // `https://jiosaavan-harsh-patel.vercel.app/search/artists?query=${query}&limit=10`
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/artists?query=${query}`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/artists?query=${query}&limit=100`
       );
       setartists(data?.data?.results);
       localStorage.setItem("artists", JSON.stringify(data?.data?.results));
@@ -40,8 +40,9 @@ const Artists = () => {
   function searchClick() {
     if (query !== requery){
       toast.success(`Searching ${query} , Wait For Results`);
-      setsearch(!search)
+      setrequery(query);
       setartists([])
+      setsearch(!search)
     }
     else{
       toast.error(`Please Check Your Search Query , Its Same As Before `);
@@ -52,7 +53,6 @@ const Artists = () => {
     const intervalId = setInterval(() => {
       if (artists.length === 0 || query.length !== requery.length) {
         Getartists();
-        setrequery(query);
       }
     }, 1000);
     return intervalId;
@@ -113,7 +113,7 @@ const Artists = () => {
           className="  ri-search-2-line"></i></h3>
         </motion.div>
         <motion.div 
-        className="w-full min-h-[85vh]  sm:min-h-[85vh]   flex flex-wrap px-5    gap-5  justify-center   bg-slate-700">
+        className="w-full overflow-hidden overflow-y-auto h-[85vh]  sm:min-h-[85vh]   flex flex-wrap px-5    gap-5 sm:gap-5  justify-center   bg-slate-700">
           {artists?.map((e, i) => (
             <motion.div
             initial={{  scale: 0 }}
@@ -122,7 +122,7 @@ const Artists = () => {
             viewport={{ once: true }}
               key={i}
               onClick={()=>navigate(`/artists/details/${e.id}`)}
-              className="w-[15vw] h-[30vh] sm:w-[40vw]  sm:h-[20vh] sm:mb-12 rounded-md bg-red-200 cursor-pointer"
+              className="w-[15vw] h-[30vh] sm:w-[40vw] mb-5  sm:h-[20vh] sm:mb-12 rounded-md bg-red-200 cursor-pointer"
             >
               <img
                 className="w-full h-full object-fill rounded-md"
