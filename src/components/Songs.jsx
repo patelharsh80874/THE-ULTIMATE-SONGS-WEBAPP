@@ -51,11 +51,15 @@ const Songs = () => {
   // }
   function searchClick() {
     if (query !== requery) {
+      toast.success(`Searching ${query} , Wait For Results`);
       setsearchclick(!searchclick);
       setsearch([]);
       setsonglink([]);
       setindex("");
       setpage(1);
+    }
+    else{
+      toast.error(`Please Check Your Search Query , Its Same As Before `);
     }
   }
 
@@ -232,6 +236,7 @@ const Songs = () => {
 
   const handleDownloadSong = async (url, name) => {
     try {
+      toast.success(`Song ${name} Downloading...`);
       const res = await fetch(url);
       const blob = await res.blob();
       const link = document.createElement("a");
@@ -242,6 +247,7 @@ const Songs = () => {
       link.click();
 
       document.body.removeChild(link);
+      toast.success("Song Downloaded ✅");
     } catch (error) {
       console.log("Error fetching or downloading files", error);
     }
@@ -433,7 +439,7 @@ const Songs = () => {
               </div>
             </div>
 
-            {existingData.find((element) => element.id == d.id) ? (
+            {existingData?.find((element) => element?.id == d?.id) ? (
               <i
                 onClick={() => likehandle2(d)}
                 className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]    duration-300 cursor-pointer text-red-500  ri-heart-3-fill`}
@@ -512,7 +518,7 @@ const Songs = () => {
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
               ></i>
-              <i onClick={()=>navigate(`/songs/details/${e.id}`)} className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ri-information-fill"></i>
+              {/* <i onClick={()=>navigate(`/songs/details/${e.id}`)} className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ri-information-fill"></i> */}
               {/*               
               {localStorage.getItem("likeData") &&
                 JSON.parse(localStorage.getItem("likeData")).some(

@@ -14,6 +14,7 @@ import {
 import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
+import toast, { Toaster } from "react-hot-toast";
 
 const Album = () => {
   const navigate = useNavigate();
@@ -37,8 +38,12 @@ const Album = () => {
 
   function searchClick() {
     if (query !== requery){
+      toast.success(`Searching ${query} , Wait For Results`);
       setsearch(!search)
       setalbums([])
+    }
+    else{
+      toast.error(`Please Check Your Search Query , Its Same As Before `);
     }
   }
 
@@ -81,6 +86,7 @@ const Album = () => {
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.7 }}
      className="w-full min-h-[100vh] bg-slate-700">
+    <Toaster position="top-center" reverseOrder={false} />
       <motion.div className="w-full min-h-[100vh] ">
         <motion.div
          initial={{ y: -50, scale: 0 }}

@@ -220,6 +220,7 @@ const Home = () => {
 
   const handleDownloadSong = async (url, name) => {
     try {
+      toast.success(`Song ${name} Downloading...`);
       const res = await fetch(url);
       const blob = await res.blob();
       const link = document.createElement("a");
@@ -230,6 +231,7 @@ const Home = () => {
       link.click();
 
       document.body.removeChild(link);
+      toast.success("Song Downloaded ✅");
     } catch (error) {
       console.log("Error fetching or downloading files", error);
     }
@@ -588,7 +590,7 @@ const Home = () => {
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
               ></i>
-              <i onClick={()=>navigate(`songs/details/${e.id}`)} className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ri-information-fill"></i>
+              {/* <i onClick={()=>navigate(`songs/details/${e.id}`)} className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ri-information-fill"></i> */}
 
               {/* {localStorage.getItem("likeData") &&
               JSON.parse(localStorage.getItem("likeData")).some(

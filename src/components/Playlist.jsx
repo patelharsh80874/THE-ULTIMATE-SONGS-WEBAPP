@@ -14,6 +14,7 @@ import {
 import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
+import toast, { Toaster } from "react-hot-toast";
 
 const Playlist = () => {
   const navigate = useNavigate();
@@ -41,8 +42,12 @@ const Playlist = () => {
 
   function searchClick() {
     if (query !== requery) {
+      toast.success(`Searching ${query} , Wait For Results`);
       setsearch(!search);
       setplaylist([]);
+    }
+    else{
+      toast.error(`Please Check Your Search Query , Its Same As Before `);
     }
   }
 
@@ -87,6 +92,7 @@ const Playlist = () => {
       transition={{ duration: 0.7 }}
       className="w-full min-h-[100vh] bg-slate-700"
     >
+      <Toaster position="top-center" reverseOrder={false} />
       <motion.div className="w-full min-h-[100vh] ">
         <motion.div
           initial={{ y: -50, scale: 0 }}

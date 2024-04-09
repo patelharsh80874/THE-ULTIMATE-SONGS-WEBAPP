@@ -213,6 +213,7 @@ function Likes() {
 
   const handleDownloadSong = async (url, name, img) => {
     try {
+      toast.success(`Song ${name} Downloading...`);
       const res = await fetch(url);
       const blob = await res.blob();
       const link = document.createElement("a");
@@ -223,6 +224,7 @@ function Likes() {
       link.click();
 
       document.body.removeChild(link);
+      toast.success("Song Downloaded ✅");
     } catch (error) {
       console.log("Error fetching or downloading files", error);
     }
@@ -269,6 +271,7 @@ function Likes() {
       // Add each song to the zip file
       songs.forEach((song) => {
         const { title, url } = song;
+        // toast.success(`Song ${title} Downloading...`);
         const promise = fetch(url)
           .then((response) => response.blob())
           .then((blob) => {
@@ -276,6 +279,7 @@ function Likes() {
           })
           .catch((error) => toast.error("Error downloading song:", error));
         promises.push(promise);
+        // toast.success(`Song ${title} Downloaded ✅`);
       });
 
       // Wait for all promises to resolve before generating the zip file
