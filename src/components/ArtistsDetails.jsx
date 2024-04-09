@@ -389,7 +389,7 @@ const ArtistsDetails = () => {
               </div>
             </div>
 
-            {existingData.find((element) => element.id == d.id) ? (
+            {existingData?.find((element) => element?.id == d?.id) ? (
               <i
                 onClick={() => likehandle2(d)}
                 className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]    duration-300 cursor-pointer text-red-500  ri-heart-3-fill`}
