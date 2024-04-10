@@ -240,7 +240,6 @@ const Home = () => {
   //     console.warn("MediaSession API is not supported.");
   //   }
   // };
-
   const initializeMediaSession = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
   
