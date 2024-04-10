@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import wavs from "../../public/wavs.gif";
@@ -37,6 +37,7 @@ function Likes() {
   var [rerender, setrerender] = useState(false);
   const [like, setlike] = useState(false);
   const [download, setdownload] = useState(false);
+  const audioRef = useRef();
 
   function audioseter(i) {
     setindex(i);
@@ -194,6 +195,34 @@ function Likes() {
     toast.error("it's empty, liked songs will be shown in this page 👇");
   }
 
+  const initializeMediaSession = () => {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: songlink[0]?.name,
+        artist: songlink[0]?.album?.name,
+        artwork: [{ src: songlink[0]?.image[2]?.url, sizes: "512x512", type: "image/jpeg" }],
+      });
+
+      navigator.mediaSession.setActionHandler("play", function() {
+        // Handle play action
+        audioRef.current.play();
+      });
+
+      navigator.mediaSession.setActionHandler("pause", function() {
+        // Handle pause action
+        audioRef.current.pause();
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", function() {
+        pre();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", function() {
+        next();
+      });
+    }
+  };
+
   function next() {
     if (index < details.length - 1) {
       setindex(index++);
@@ -257,6 +286,12 @@ function Likes() {
       console.log("No data found in localStorage.");
     }
   }, [rerender, songlink]);
+
+  useEffect(() => {
+    if (songlink.length > 0) {
+      initializeMediaSession();
+    }
+  }, [songlink]);
 
 
   const downloadSongs = () => {
@@ -466,6 +501,7 @@ function Likes() {
                 ></i>
                 <audio
                   className="w-[80%] "
+                  ref={audioRef}
                   controls
                   autoPlay
                   onEnded={next}

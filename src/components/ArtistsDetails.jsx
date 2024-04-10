@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -33,6 +33,7 @@ const ArtistsDetails = () => {
   const [like, setlike] = useState(false);
   const [like2, setlike2] = useState(false);
   const [existingData, setexistingData] = useState(null);
+  const audioRef = useRef();
 
   const Getdetails = async () => {
     try {
@@ -200,6 +201,34 @@ const ArtistsDetails = () => {
     }
   }
 
+  const initializeMediaSession = () => {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: songlink[0]?.name,
+        artist: songlink[0]?.album?.name,
+        artwork: [{ src: songlink[0]?.image[2]?.url, sizes: "512x512", type: "image/jpeg" }],
+      });
+
+      navigator.mediaSession.setActionHandler("play", function() {
+        // Handle play action
+        audioRef.current.play();
+      });
+
+      navigator.mediaSession.setActionHandler("pause", function() {
+        // Handle pause action
+        audioRef.current.pause();
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", function() {
+        pre();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", function() {
+        next();
+      });
+    }
+  };
+
   function next() {
     if (index < details.length - 1) {
       setindex(index++);
@@ -273,6 +302,12 @@ const ArtistsDetails = () => {
       console.log("No data found in localStorage.");
     }
   }, [details, like, songlink, like2]);
+
+  useEffect(() => {
+    if (songlink.length > 0) {
+      initializeMediaSession();
+    }
+  }, [songlink]);
 
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
@@ -508,6 +543,7 @@ const ArtistsDetails = () => {
               ></i>
               <audio
                 className="w-[80%] "
+                ref={audioRef}
                 controls
                 autoPlay
                 onEnded={() => next()}

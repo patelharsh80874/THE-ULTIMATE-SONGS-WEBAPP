@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import wavs from "../../public/wavs.gif";
@@ -31,6 +31,7 @@ const PlaylistDetails = () => {
   const [like, setlike] = useState("");
   const [like2, setlike2] = useState(false);
   const [existingData, setexistingData] = useState(null);
+  const audioRef = useRef();
   // settitle(songlink.name);
 
   const Getdetails = async () => {
@@ -235,6 +236,34 @@ const PlaylistDetails = () => {
     }
   };
 
+  const initializeMediaSession = () => {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: songlink[0]?.name,
+        artist: songlink[0]?.album?.name,
+        artwork: [{ src: songlink[0]?.image[2]?.url, sizes: "512x512", type: "image/jpeg" }],
+      });
+
+      navigator.mediaSession.setActionHandler("play", function() {
+        // Handle play action
+        audioRef.current.play();
+      });
+
+      navigator.mediaSession.setActionHandler("pause", function() {
+        // Handle pause action
+        audioRef.current.pause();
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", function() {
+        pre();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", function() {
+        next();
+      });
+    }
+  };
+
   function seccall() {
     const intervalId = setInterval(() => {
       if (details.length === 0) {
@@ -273,6 +302,12 @@ const PlaylistDetails = () => {
   // useEffect(() => {
   //   Getdetails();
   // }, []);
+
+  useEffect(() => {
+    if (songlink.length > 0) {
+      initializeMediaSession();
+    }
+  }, [songlink]);
 
   var title = songlink[0]?.name;
 
@@ -518,6 +553,7 @@ const PlaylistDetails = () => {
               </button>
               <audio
                 className="w-[80%]"
+                ref={audioRef}
                 controls
                 autoPlay
                 onEnded={() => next()}
@@ -600,3 +636,7 @@ const PlaylistDetails = () => {
 };
 
 export default PlaylistDetails;
+
+
+
+
