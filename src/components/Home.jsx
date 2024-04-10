@@ -105,6 +105,7 @@ const Home = () => {
   function audioseter(i) {
     setindex(i);
     setsonglink([details[i]]);
+    initializeMediaSession();
   }
 
   function likeset(e) {
@@ -277,18 +278,22 @@ const Home = () => {
     if (index < details.length - 1) {
       setindex(index++);
       audioseter(index);
+      initializeMediaSession();
     } else {
       setindex(0);
       setsonglink([details[0]]);
+      initializeMediaSession();
     }
   }
   function pre() {
     if (index > 0) {
       setindex(index--);
       audioseter(index);
+      initializeMediaSession();
     } else {
       setindex(details.length - 1);
       setsonglink([details[details.length - 1]]);
+      initializeMediaSession();
     }
   }
 
