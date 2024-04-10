@@ -370,6 +370,7 @@ const Home = () => {
 
   useEffect(() => {
    if (songlink.length > 0) {
+    audioRef.current.play()
     initializeMediaSession();
    }
   }, [songlink]);
