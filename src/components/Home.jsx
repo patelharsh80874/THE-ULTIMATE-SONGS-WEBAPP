@@ -105,8 +105,8 @@ const Home = () => {
   function audioseter(i) {
     setindex(i);
     setsonglink([details[i]]);
-    audioRef.current.play()
-    initializeMediaSession();
+    // audioRef.current.play()
+    // initializeMediaSession();
   }
 
   function likeset(e) {
@@ -292,26 +292,26 @@ const Home = () => {
     if (index < details.length - 1) {
       setindex(index++);
       audioseter(index);
-      audioRef.current.play()
-      initializeMediaSession();
+      // audioRef.current.play()
+      // initializeMediaSession();
     } else {
       setindex(0);
       setsonglink([details[0]]);
-      audioRef.current.play()
-      initializeMediaSession();
+      // audioRef.current.play()
+      // initializeMediaSession();
     }
   }
   function pre() {
     if (index > 0) {
       setindex(index--);
       audioseter(index);
-      audioRef.current.play()
-      initializeMediaSession();
+      // audioRef.current.play()
+      // initializeMediaSession();
     } else {
       setindex(details.length - 1);
       setsonglink([details[details.length - 1]]);
-      audioRef.current.play()
-      initializeMediaSession();
+      // audioRef.current.play()
+      // initializeMediaSession();
     }
   }
 
@@ -382,11 +382,14 @@ const Home = () => {
   }, [songlink]);
 
   useEffect(() => {
-   if (songlink.length > 0) {
-    audioRef.current.play()
-    initializeMediaSession();
-   }
+    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  
+    if (!isIOS && songlink.length > 0) {
+      audioRef.current.play();
+      initializeMediaSession();
+    }
   }, [songlink]);
+  
 
   // useEffect(() => {
   //   initializeMediaSession();
