@@ -196,42 +196,55 @@ const Home = () => {
   //   console.log(isLiked);
   // }
 
+
   // const initializeMediaSession = () => {
   //   if ("mediaSession" in navigator) {
-  //     navigator.mediaSession.metadata = new window.MediaMetadata({
-  //       title: songlink[0]?.name,
-  //       artist: songlink[0]?.album?.name,
+  //     navigator.mediaSession.metadata = new MediaMetadata({
+  //       title: songlink[0]?.name || "",
+  //       artist: songlink[0]?.album?.name || "",
   //       artwork: [
   //         {
-  //           src: songlink[0]?.image[2]?.url,
+  //           src: songlink[0]?.image[2]?.url || "",
   //           sizes: "512x512",
   //           type: "image/jpeg",
   //         },
   //       ],
   //     });
-
+  
   //     navigator.mediaSession.setActionHandler("play", function () {
   //       // Handle play action
-  //       audioRef.current.play();
+  //       if (audioRef.current) {
+  //         audioRef.current.play().catch((error) => {
+  //           console.error("Play error:", error);
+  //         });
+  //       }
   //     });
-
+  
   //     navigator.mediaSession.setActionHandler("pause", function () {
   //       // Handle pause action
-  //       audioRef.current.pause();
+  //       if (audioRef.current) {
+  //         audioRef.current.pause().catch((error) => {
+  //           console.error("Pause error:", error);
+  //         });
+  //       }
   //     });
-
+  
   //     navigator.mediaSession.setActionHandler("previoustrack", function () {
   //       pre();
   //     });
-
+  
   //     navigator.mediaSession.setActionHandler("nexttrack", function () {
   //       next();
   //     });
+  //   } else {
+  //     console.warn("MediaSession API is not supported.");
   //   }
   // };
 
   const initializeMediaSession = () => {
-    if ("mediaSession" in navigator) {
+    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  
+    if (!isIOS && "mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
         artist: songlink[0]?.album?.name || "",
@@ -270,9 +283,10 @@ const Home = () => {
         next();
       });
     } else {
-      console.warn("MediaSession API is not supported.");
+      console.warn("MediaSession API is not supported or the device is iOS.");
     }
   };
+  
   
 
   function next() {
