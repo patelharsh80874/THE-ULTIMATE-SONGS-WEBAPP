@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, Navigate, json, useNavigate } from "react-router-dom";
 import logo from "./../../public/logo3.jpg";
 import axios from "axios";
@@ -32,6 +32,8 @@ const Home = () => {
   var [index, setindex] = useState("");
   var [page, setpage] = useState(1);
   var [page2, setpage2] = useState(Math.floor(Math.random() * 50));
+  const audioRef = useRef();
+
   const options = [
     // "hindi",
     // "english",
@@ -104,8 +106,6 @@ const Home = () => {
     setindex(i);
     setsonglink([details[i]]);
   }
-
-  
 
   function likeset(e) {
     // console.log(e);
@@ -187,7 +187,6 @@ const Home = () => {
     }
   }
 
-
   // function SongLike(e) {
   //   console.log(e);
   //   // Check if the song is already liked (exists in localStorage)
@@ -195,26 +194,56 @@ const Home = () => {
   //   console.log(isLiked);
   // }
 
+  const initializeMediaSession = () => {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: songlink[0]?.name,
+        artist: songlink[0]?.album?.name,
+        artwork: [
+          {
+            src: songlink[0]?.image[2]?.url,
+            sizes: "512x512",
+            type: "image/jpeg",
+          },
+        ],
+      });
+
+      navigator.mediaSession.setActionHandler("play", function () {
+        // Handle play action
+        audioRef.current.play();
+      });
+
+      navigator.mediaSession.setActionHandler("pause", function () {
+        // Handle pause action
+        audioRef.current.pause();
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", function () {
+        pre();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", function () {
+        next();
+      });
+    }
+  };
+
   function next() {
     if (index < details.length - 1) {
       setindex(index++);
       audioseter(index);
-     
     } else {
       setindex(0);
       setsonglink([details[0]]);
-      
     }
   }
   function pre() {
     if (index > 0) {
       setindex(index--);
       audioseter(index);
-      
     } else {
       setindex(details.length - 1);
       setsonglink([details[details.length - 1]]);
-      
     }
   }
 
@@ -282,7 +311,20 @@ const Home = () => {
 
   useEffect(() => {
     likeset(songlink[0]);
+    // if (songlink.length > 0) {
+    //   initializeMediaSession();
+    // }
   }, [songlink]);
+
+  useEffect(() => {
+    if (songlink.length > 0) {
+      initializeMediaSession();
+    }
+  }, [songlink]);
+
+  // useEffect(() => {
+  //   initializeMediaSession();
+  // }, [songlink]);
 
   // useEffect(() => {
   //   Getdetails();
@@ -384,7 +426,6 @@ const Home = () => {
           <motion.div className="songs px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {details?.map((t, i) => (
               <motion.div
-              
                 //  whileHover={{ scale: 1.2 }}
                 //  viewport={{ once: true }}
                 initial={{ y: -100, scale: 0.5 }}
@@ -633,6 +674,7 @@ const Home = () => {
               </button>
               <audio
                 className="w-[80%]"
+                ref={audioRef}
                 controls
                 autoPlay
                 onEnded={next}
