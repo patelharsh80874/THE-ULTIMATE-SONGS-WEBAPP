@@ -105,6 +105,7 @@ const Home = () => {
   function audioseter(i) {
     setindex(i);
     setsonglink([details[i]]);
+    audioRef.current.play()
     initializeMediaSession();
   }
 
@@ -278,10 +279,12 @@ const Home = () => {
     if (index < details.length - 1) {
       setindex(index++);
       audioseter(index);
+      audioRef.current.play()
       initializeMediaSession();
     } else {
       setindex(0);
       setsonglink([details[0]]);
+      audioRef.current.play()
       initializeMediaSession();
     }
   }
@@ -289,10 +292,12 @@ const Home = () => {
     if (index > 0) {
       setindex(index--);
       audioseter(index);
+      audioRef.current.play()
       initializeMediaSession();
     } else {
       setindex(details.length - 1);
       setsonglink([details[details.length - 1]]);
+      audioRef.current.play()
       initializeMediaSession();
     }
   }
