@@ -1,3 +1,6 @@
+
+ <img width="959" alt="the ultimate songs" src="https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP/assets/110234600/4950e39a-9f33-418d-87cc-76672ca5430c">
+
  Project Summary : Songs Webapp
  Developed a React.js web app with Tailwind CSS and
  Integrated JioSaavn API to fetch and display songs,
