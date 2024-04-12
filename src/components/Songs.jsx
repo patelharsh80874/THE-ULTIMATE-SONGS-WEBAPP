@@ -419,14 +419,27 @@ const Songs = () => {
   //   }
   // }, [query]);
 
+  // useEffect(() => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  
+  //   if (!isIOS && songlink.length > 0) {
+  //     audioRef.current.play();
+  //     initializeMediaSession();
+  //   }
+  // }, [songlink]);
+
   useEffect(() => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
   
-    if (!isIOS && songlink.length > 0) {
+    if (songlink.length > 0) {
       audioRef.current.play();
-      initializeMediaSession();
+      
+      if (!isIOS) {
+        initializeMediaSession();
+      }
     }
   }, [songlink]);
+  
 
   var title = songlink[0]?.name;
 
