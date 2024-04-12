@@ -450,6 +450,12 @@ const Songs = () => {
       }
     }
   }, [songlink]);
+
+  useEffect(() => {
+    // Call initializeMediaSession every time songlink changes
+    initializeMediaSession();
+  }, [songlink]);
+  
   
   
 
