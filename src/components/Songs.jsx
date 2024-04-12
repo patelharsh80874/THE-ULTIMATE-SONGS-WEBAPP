@@ -400,6 +400,7 @@ const Songs = () => {
   
   
 
+
   
   
 
@@ -540,16 +541,20 @@ const Songs = () => {
       }
     }
   }, [songlink]);
-
   
+  useEffect(() => {
+    return () => {
+      // Cleanup event listeners
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.setActionHandler("play", null);
+        navigator.mediaSession.setActionHandler("pause", null);
+        navigator.mediaSession.setActionHandler("previoustrack", null);
+        navigator.mediaSession.setActionHandler("nexttrack", null);
+      }
+    };
+  }, []);
 
 
-
-
-
-  
-  
-  
 
   var title = songlink[0]?.name;
 
