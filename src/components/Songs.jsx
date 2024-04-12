@@ -267,6 +267,71 @@ const Songs = () => {
   //   }
   // };
 
+  // const initializeMediaSession = () => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  
+  //   if ("mediaSession" in navigator) {
+  //     navigator.mediaSession.metadata = new MediaMetadata({
+  //       title: songlink[0]?.name || "",
+  //       artist: songlink[0]?.album?.name || "",
+  //       artwork: [
+  //         {
+  //           src: songlink[0]?.image[2]?.url || "",
+  //           sizes: "512x512",
+  //           type: "image/jpeg",
+  //         },
+  //       ],
+  //     });
+  
+  //     navigator.mediaSession.setActionHandler("play", function () {
+  //       // Handle play action
+  //       if (audioRef.current) {
+  //         audioRef.current.play().catch((error) => {
+  //           console.error("Play error:", error);
+  //         });
+  //       }
+  //     });
+  
+  //     navigator.mediaSession.setActionHandler("pause", function () {
+  //       // Handle pause action
+  //       if (audioRef.current) {
+  //         audioRef.current.pause().catch((error) => {
+  //           console.error("Pause error:", error);
+  //         });
+  //       }
+  //     });
+  
+  //     navigator.mediaSession.setActionHandler("previoustrack", function () {
+  //       pre();
+  //     });
+  
+  //     navigator.mediaSession.setActionHandler("nexttrack", function () {
+  //       next();
+  //     });
+  //   } else {
+  //     console.warn("MediaSession API is not supported.");
+  //   }
+  
+  //   if (isIOS) {
+  //     // Enable background audio playback for iOS
+  //     document.addEventListener("visibilitychange", () => {
+  //       if (document.visibilityState === "visible") {
+  //         if (audioRef.current && audioRef.current.paused) {
+  //           audioRef.current.play().catch((error) => {
+  //             console.error("Play error:", error);
+  //           });
+  //         }
+  //       } else {
+  //         if (audioRef.current && !audioRef.current.paused) {
+  //           audioRef.current.pause().catch((error) => {
+  //             console.error("Pause error:", error);
+  //           });
+  //         }
+  //       }
+  //     });
+  //   }
+  // };
+
   const initializeMediaSession = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
   
@@ -284,7 +349,6 @@ const Songs = () => {
       });
   
       navigator.mediaSession.setActionHandler("play", function () {
-        // Handle play action
         if (audioRef.current) {
           audioRef.current.play().catch((error) => {
             console.error("Play error:", error);
@@ -293,7 +357,6 @@ const Songs = () => {
       });
   
       navigator.mediaSession.setActionHandler("pause", function () {
-        // Handle pause action
         if (audioRef.current) {
           audioRef.current.pause().catch((error) => {
             console.error("Pause error:", error);
@@ -314,7 +377,7 @@ const Songs = () => {
   
     if (isIOS) {
       // Enable background audio playback for iOS
-      document.addEventListener("visibilitychange", () => {
+      const handleVisibilityChange = () => {
         if (document.visibilityState === "visible") {
           if (audioRef.current && audioRef.current.paused) {
             audioRef.current.play().catch((error) => {
@@ -328,9 +391,19 @@ const Songs = () => {
             });
           }
         }
-      });
+      };
+  
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+  
+      // Cleanup event listener when component unmounts
+      return () => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      };
     }
   };
+  
+
+  
   
 
   function next() {
@@ -428,33 +501,43 @@ const Songs = () => {
   //   }
   // }, [songlink]);
 
-  useEffect(() => {
-    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  // useEffect(() => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
   
+  //   if (songlink.length > 0) {
+  //     if (!isIOS) {
+  //       // For non-iOS devices, autoplay and initialize media session
+  //       audioRef.current.play();
+  //       initializeMediaSession();
+  //     } else {
+  //       // For iOS devices, wait for user interaction to start playback
+  //       const handleUserInteraction = () => {
+  //         audioRef.current.play().catch(error => {
+  //           console.error('Play error:', error);
+  //         });
+  //         initializeMediaSession();
+  //         // Remove event listener after the first user interaction
+  //         document.removeEventListener('click', handleUserInteraction);
+  //       };
+  //       document.addEventListener('click', handleUserInteraction);
+  //     }
+  //   }
+  // }, [songlink]);
+
+  useEffect(() => {
+    initializeMediaSession();
+  }, []);
+  
+  useEffect(() => {
     if (songlink.length > 0) {
-      if (!isIOS) {
-        // For non-iOS devices, autoplay and initialize media session
+      // Autoplay for non-iOS devices
+      if (!/(iPhone|iPod|iPad)/i.test(navigator.userAgent)) {
         audioRef.current.play();
-        initializeMediaSession();
-      } else {
-        // For iOS devices, wait for user interaction to start playback
-        const handleUserInteraction = () => {
-          audioRef.current.play().catch(error => {
-            console.error('Play error:', error);
-          });
-          initializeMediaSession();
-          // Remove event listener after the first user interaction
-          document.removeEventListener('click', handleUserInteraction);
-        };
-        document.addEventListener('click', handleUserInteraction);
       }
     }
   }, [songlink]);
 
-  useEffect(() => {
-    // Call initializeMediaSession every time songlink changes
-    initializeMediaSession();
-  }, [songlink]);
+
   
   
   
