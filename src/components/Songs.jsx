@@ -404,6 +404,9 @@ const Songs = () => {
   
 
   
+  
+
+  
 
   function next() {
     if (index < search.length - 1) {
@@ -500,31 +503,46 @@ const Songs = () => {
   //   }
   // }, [songlink]);
 
-  useEffect(() => {
-    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  // useEffect(() => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
   
-    if (songlink.length > 0) {
-      if (!isIOS) {
-        // For non-iOS devices, autoplay and initialize media session
-        audioRef.current.play();
-        initializeMediaSession();
-      } else {
-        // For iOS devices, wait for user interaction to start playback
-        const handleUserInteraction = () => {
-          audioRef.current.play().catch(error => {
-            console.error('Play error:', error);
-          });
-          initializeMediaSession();
-          // Remove event listener after the first user interaction
-          document.removeEventListener('click', handleUserInteraction);
-        };
-        document.addEventListener('click', handleUserInteraction);
-      }
-    }
-  }, [songlink]);
+  //   if (songlink.length > 0) {
+  //     if (!isIOS) {
+  //       // For non-iOS devices, autoplay and initialize media session
+  //       audioRef.current.play();
+  //       initializeMediaSession();
+  //     } else {
+  //       // For iOS devices, wait for user interaction to start playback
+  //       const handleUserInteraction = () => {
+  //         audioRef.current.play().catch(error => {
+  //           console.error('Play error:', error);
+  //         });
+  //         initializeMediaSession();
+  //         // Remove event listener after the first user interaction
+  //         document.removeEventListener('click', handleUserInteraction);
+  //       };
+  //       document.addEventListener('click', handleUserInteraction);
+  //     }
+  //   }
+  // }, [songlink]);
+
+  // useEffect(() => {
+  //   initializeMediaSession();
+  // }, [songlink]);
 
   useEffect(() => {
     initializeMediaSession();
+  }, [songlink]);
+  
+  useEffect(() => {
+    if (songlink.length > 0) {
+      // Autoplay for non-iOS devices
+      if (!/(iPhone|iPod|iPad)/i.test(navigator.userAgent)) {
+        audioRef.current.play().catch((error) => {
+          console.error("Autoplay error:", error);
+        });
+      }
+    }
   }, [songlink]);
   
 
