@@ -404,7 +404,6 @@ const Songs = () => {
   
 
   
-  
 
   function next() {
     if (index < search.length - 1) {
@@ -526,7 +525,7 @@ const Songs = () => {
 
   useEffect(() => {
     initializeMediaSession();
-  }, []);
+  }, [songlink]);
   
   useEffect(() => {
     if (songlink.length > 0) {
@@ -536,6 +535,8 @@ const Songs = () => {
       }
     }
   }, [songlink]);
+
+
 
 
   
