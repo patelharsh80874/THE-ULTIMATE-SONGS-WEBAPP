@@ -432,13 +432,25 @@ const Songs = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
   
     if (songlink.length > 0) {
-      audioRef.current.play();
-      
       if (!isIOS) {
+        // For non-iOS devices, autoplay and initialize media session
+        audioRef.current.play();
         initializeMediaSession();
+      } else {
+        // For iOS devices, wait for user interaction to start playback
+        const handleUserInteraction = () => {
+          audioRef.current.play().catch(error => {
+            console.error('Play error:', error);
+          });
+          initializeMediaSession();
+          // Remove event listener after the first user interaction
+          document.removeEventListener('click', handleUserInteraction);
+        };
+        document.addEventListener('click', handleUserInteraction);
       }
     }
   }, [songlink]);
+  
   
 
   var title = songlink[0]?.name;
