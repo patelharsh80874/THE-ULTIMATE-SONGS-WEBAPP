@@ -219,11 +219,15 @@ const Songs = () => {
   }
 
 
+  
   // const initializeMediaSession = () => {
-  //   if ("mediaSession" in navigator) {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  
+  //   if (!isIOS && "mediaSession" in navigator) {
   //     navigator.mediaSession.metadata = new MediaMetadata({
   //       title: songlink[0]?.name || "",
   //       artist: songlink[0]?.album?.name || "",
+  //       // artist: songlink[0]?.artists?.primary?.map((e)=>e.name) || "",
   //       artwork: [
   //         {
   //           src: songlink[0]?.image[2]?.url || "",
@@ -259,18 +263,17 @@ const Songs = () => {
   //       next();
   //     });
   //   } else {
-  //     console.warn("MediaSession API is not supported.");
+  //     console.warn("MediaSession API is not supported or the device is iOS.");
   //   }
   // };
-  
+
   const initializeMediaSession = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
   
-    if (!isIOS && "mediaSession" in navigator) {
+    if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
         artist: songlink[0]?.album?.name || "",
-        // artist: songlink[0]?.artists?.primary?.map((e)=>e.name) || "",
         artwork: [
           {
             src: songlink[0]?.image[2]?.url || "",
@@ -306,9 +309,29 @@ const Songs = () => {
         next();
       });
     } else {
-      console.warn("MediaSession API is not supported or the device is iOS.");
+      console.warn("MediaSession API is not supported.");
+    }
+  
+    if (isIOS) {
+      // Enable background audio playback for iOS
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          if (audioRef.current && audioRef.current.paused) {
+            audioRef.current.play().catch((error) => {
+              console.error("Play error:", error);
+            });
+          }
+        } else {
+          if (audioRef.current && !audioRef.current.paused) {
+            audioRef.current.pause().catch((error) => {
+              console.error("Pause error:", error);
+            });
+          }
+        }
+      });
     }
   };
+  
 
   function next() {
     if (index < search.length - 1) {
