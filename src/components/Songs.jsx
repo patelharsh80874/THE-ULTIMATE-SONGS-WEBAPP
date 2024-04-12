@@ -105,7 +105,7 @@ const Songs = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike(true);
-      toast.success("Song added to Likes section ✅");
+      toast.success(`Song (${i?.name}) added to Likes section ✅`);
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -133,7 +133,7 @@ const Songs = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success("Song removed successfully. 🚮");
+        toast.success(`Song (${i?.name}) removed successfully. 🚮`);
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
@@ -172,7 +172,7 @@ const Songs = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike2(!like2);
-      toast.success("Song added to Likes section. ✅");
+      toast.success(`Song (${i?.name}) added to Likes section. ✅`);
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -200,7 +200,7 @@ const Songs = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success("Song removed successfully. 🚮");
+        toast.success(`Song (${i?.name}) removed successfully. 🚮`);
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
@@ -270,6 +270,7 @@ const Songs = () => {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
         artist: songlink[0]?.album?.name || "",
+        // artist: songlink[0]?.artists?.primary?.map((e)=>e.name) || "",
         artwork: [
           {
             src: songlink[0]?.image[2]?.url || "",
@@ -407,7 +408,7 @@ const Songs = () => {
   var title = songlink[0]?.name;
 
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
-  // console.log(search);
+  console.log(search);
   // console.log(searchclick);
   return (
     <motion.div

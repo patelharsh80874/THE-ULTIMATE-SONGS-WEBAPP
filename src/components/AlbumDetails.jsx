@@ -85,7 +85,7 @@ const AlbumDetails = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike(true);
-      toast.success("Song added to Likes section. ✅");
+      toast.success(`Song (${i?.name}) added to Likes section. ✅`);
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -113,7 +113,7 @@ const AlbumDetails = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success("Song removed successfully. 🚮");
+        toast.success(`Song (${i?.name}) removed successfully. 🚮`);
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
@@ -152,7 +152,7 @@ const AlbumDetails = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike2(!like2);
-      toast.success("Song added to Likes section. ✅");
+      toast.success(`Song (${i?.name}) added to Likes section. ✅`);
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -180,7 +180,7 @@ const AlbumDetails = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success("Song removed successfully. 🚮");
+        toast.success(`Song (${i?.name}) removed successfully. 🚮`);
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
