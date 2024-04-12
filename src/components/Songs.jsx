@@ -348,27 +348,23 @@ const Songs = () => {
         ],
       });
   
-      navigator.mediaSession.setActionHandler("play", function () {
-        if (audioRef.current) {
-          audioRef.current.play().catch((error) => {
-            console.error("Play error:", error);
-          });
-        }
+      navigator.mediaSession.setActionHandler("play", () => {
+        audioRef.current.play().catch((error) => {
+          console.error("Play error:", error);
+        });
       });
   
-      navigator.mediaSession.setActionHandler("pause", function () {
-        if (audioRef.current) {
-          audioRef.current.pause().catch((error) => {
-            console.error("Pause error:", error);
-          });
-        }
+      navigator.mediaSession.setActionHandler("pause", () => {
+        audioRef.current.pause().catch((error) => {
+          console.error("Pause error:", error);
+        });
       });
   
-      navigator.mediaSession.setActionHandler("previoustrack", function () {
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
         pre();
       });
   
-      navigator.mediaSession.setActionHandler("nexttrack", function () {
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
         next();
       });
     } else {
@@ -376,7 +372,6 @@ const Songs = () => {
     }
   
     if (isIOS) {
-      // Enable background audio playback for iOS
       const handleVisibilityChange = () => {
         if (document.visibilityState === "visible") {
           if (audioRef.current && audioRef.current.paused) {
@@ -395,12 +390,14 @@ const Songs = () => {
   
       document.addEventListener("visibilitychange", handleVisibilityChange);
   
-      // Cleanup event listener when component unmounts
       return () => {
         document.removeEventListener("visibilitychange", handleVisibilityChange);
       };
     }
   };
+  
+
+  
   
 
   
@@ -536,7 +533,6 @@ const Songs = () => {
   
   useEffect(() => {
     if (songlink.length > 0) {
-      // Autoplay for non-iOS devices
       if (!/(iPhone|iPod|iPad)/i.test(navigator.userAgent)) {
         audioRef.current.play().catch((error) => {
           console.error("Autoplay error:", error);
@@ -544,6 +540,7 @@ const Songs = () => {
       }
     }
   }, [songlink]);
+
   
 
 
