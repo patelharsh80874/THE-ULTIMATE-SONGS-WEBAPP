@@ -351,12 +351,12 @@ const Home = () => {
   }
   function seccall2() {
     const intervalId2 = setInterval(() => {
-      if (details.length >= 0 && page < 10) {
-        setpage2(Math.floor(Math.random() * 50));
+      if (details.length >= 0 && page < 20) {
+        setpage2(Math.floor(Math.random() * 10 *Math.random()*10));
         setpage(page + 1);
         Getdetails();
       }
-    }, 1500);
+    }, page<=2 ? 500 : 2000);
     return intervalId2;
   }
 
@@ -538,7 +538,7 @@ const Home = () => {
             ))}
 
             <img
-              className={page >= 9 ? "hidden" : "w-[20%] h-[20%]"}
+              className={page >= 18 ? "hidden" : "w-[20%] h-[20%]"}
               src={wait}
             />
           </motion.div>

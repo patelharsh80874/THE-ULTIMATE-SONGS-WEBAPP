@@ -22,14 +22,16 @@ const Album = () => {
   const [requery, setrequery] = useState("");
   const [albums, setalbums] = useState([]);
   const [search, setsearch] = useState(false)
+  var [page, setpage] = useState(1);
   const Getalbums = async () => {
     try {
       const { data } = await axios.get(
         // `https://saavn.dev/api/search/albums?query=${query}&page=1&limit=10`
         // `https://jiosaavan-harsh-patel.vercel.app/search/albums?query=${query}`
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${query}&limit=100`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${query}&page=${page}&limit=20`
       );
-      setalbums(data?.data?.results);
+      // setalbums(data?.data?.results);
+      setalbums((prevState) => [...prevState, ...data?.data?.results]);
       localStorage.setItem("albums", JSON.stringify(data?.data?.results));
     } catch (error) {
       console.log("error", error);
@@ -41,6 +43,7 @@ const Album = () => {
       toast.success(`Searching ${query} , Wait For Results`);
       setrequery(query);
       setalbums([])
+      setpage(1);
       setsearch(!search)
     }
     else{
@@ -50,10 +53,11 @@ const Album = () => {
 
   function seccall() {
     const intervalId = setInterval(() => {
-      if (albums.length === 0 || query.length !== requery.length) {
+      if (albums.length >= 0 && page<20 || query.length !== requery.length ) {
+        setpage(page + 1)
         Getalbums();
       }
-    }, 1000);
+    }, page<=2 ? 1000 : 2000);
     return intervalId;
   }
   useEffect(() => {
@@ -62,7 +66,7 @@ const Album = () => {
     }
 
     return () => clearInterval(interval);
-  }, [search, albums]);
+  }, [search, albums,page]);
 
   useEffect(() => {
     const allData = localStorage.getItem("albums");
@@ -80,6 +84,7 @@ const Album = () => {
   }, []);
 
 // console.log(albums);
+// console.log(page)
   return (
     <motion.div
     initial={{ opacity: 0, scale: 0 }}
@@ -115,7 +120,7 @@ const Album = () => {
             <motion.div
             initial={{  scale: 0 }}
             animate={{  scale: 1 }}
-            transition={{delay:i*0.1 }}
+            // transition={{delay:i*0.1 }}
             viewport={{ once: true }}
               key={i}
               onClick={()=>navigate(`/albums/details/${e.id}`)}

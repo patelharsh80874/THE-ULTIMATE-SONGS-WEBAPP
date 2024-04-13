@@ -16,6 +16,8 @@ import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
+import { ID3Writer } from 'browser-id3-writer';
+
 
 const Songs = () => {
   const navigate = useNavigate();
@@ -59,9 +61,7 @@ const Songs = () => {
       setpage(1);
       setrequery(query);
       setsearchclick(!searchclick);
-      
-    }
-    else{
+    } else {
       toast.error(`Please Check Your Search Query , Its Same As Before `);
     }
   }
@@ -218,11 +218,9 @@ const Songs = () => {
     }
   }
 
-
-  
   // const initializeMediaSession = () => {
   //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
   //   if (!isIOS && "mediaSession" in navigator) {
   //     navigator.mediaSession.metadata = new MediaMetadata({
   //       title: songlink[0]?.name || "",
@@ -236,7 +234,7 @@ const Songs = () => {
   //         },
   //       ],
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("play", function () {
   //       // Handle play action
   //       if (audioRef.current) {
@@ -245,7 +243,7 @@ const Songs = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("pause", function () {
   //       // Handle pause action
   //       if (audioRef.current) {
@@ -254,11 +252,11 @@ const Songs = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("previoustrack", function () {
   //       pre();
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("nexttrack", function () {
   //       next();
   //     });
@@ -269,7 +267,7 @@ const Songs = () => {
 
   const initializeMediaSession = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
@@ -282,7 +280,7 @@ const Songs = () => {
           },
         ],
       });
-  
+
       navigator.mediaSession.setActionHandler("play", function () {
         // Handle play action
         if (audioRef.current) {
@@ -291,7 +289,7 @@ const Songs = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("pause", function () {
         // Handle pause action
         if (audioRef.current) {
@@ -300,18 +298,18 @@ const Songs = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("previoustrack", function () {
         pre();
       });
-  
+
       navigator.mediaSession.setActionHandler("nexttrack", function () {
         next();
       });
     } else {
       console.warn("MediaSession API is not supported.");
     }
-  
+
     if (isIOS) {
       // Enable background audio playback for iOS
       document.addEventListener("visibilitychange", () => {
@@ -332,8 +330,6 @@ const Songs = () => {
     }
   };
 
-
-
   function next() {
     if (index < search.length - 1) {
       setindex(index++);
@@ -353,7 +349,7 @@ const Songs = () => {
     }
   }
 
-  const handleDownloadSong = async (url, name) => {
+  const handleDownloadSong = async (url, name,poster) => {
     try {
       toast.success(`Song ${name} Downloading...`);
       const res = await fetch(url);
@@ -372,17 +368,18 @@ const Songs = () => {
     }
   };
 
+
   function seccall() {
     const intervalId = setInterval(() => {
       if (
-        (search.length >= 0 && page < 20) ||
+        (search.length >= 0 && page < 25) ||
         query.length !== requery.length
       ) {
         setpage(page + 1);
         Getsearch();
         // setrequery(query);
       }
-    }, 1000);
+    }, page<=2 ? 1000 : 2500);
     return intervalId;
   }
 
@@ -422,18 +419,18 @@ const Songs = () => {
 
   useEffect(() => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if (!isIOS && songlink.length > 0) {
       audioRef.current.play();
       initializeMediaSession();
     }
   }, [songlink]);
 
-
   var title = songlink[0]?.name;
 
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
-  console.log(search);
+  // console.log(search);
+  // console.log(page)
   // console.log(searchclick);
   return (
     <motion.div
@@ -748,7 +745,8 @@ const Songs = () => {
                   onClick={() =>
                     handleDownloadSong(
                       e.downloadUrl[4].url,
-                      e.name + " 320kbps"
+                      e.name + " 320kbps",
+                      e?.image[2]?.url
                     )
                   }
                   className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
