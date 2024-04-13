@@ -352,7 +352,7 @@ const Home = () => {
   function seccall2() {
     const intervalId2 = setInterval(() => {
       if (details.length >= 0 && page < 20) {
-        setpage2(Math.floor(Math.random() * 10 *Math.random()*10));
+        setpage2(Math.floor(Math.random() * 42.78 + Math.random()*10.365));
         setpage(page + 1);
         Getdetails();
       }
@@ -417,7 +417,7 @@ const Home = () => {
   // console.log(details);
   // console.log(home);
   // console.log(page);
-  // console.log(page2);
+  console.log(page2);
   // console.log(songlink);
   // console.log(index)
   return details.length > 0 ? (
