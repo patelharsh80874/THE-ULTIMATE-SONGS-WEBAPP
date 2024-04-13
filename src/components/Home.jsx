@@ -417,7 +417,7 @@ const Home = () => {
   // console.log(details);
   // console.log(home);
   // console.log(page);
-  console.log(page2);
+  // console.log(page2);
   // console.log(songlink);
   // console.log(index)
   return details.length > 0 ? (
