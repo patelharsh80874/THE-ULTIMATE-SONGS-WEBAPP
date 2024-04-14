@@ -30,7 +30,7 @@ const Album = () => {
       const { data } = await axios.get(
         // `https://saavn.dev/api/search/albums?query=${query}&page=1&limit=10`
         // `https://jiosaavan-harsh-patel.vercel.app/search/albums?query=${query}`
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${requery}&page=${page}&limit=20`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${requery}&page=${page}&limit=40`
       );
       // setalbums(data?.data?.results);
       // setalbums((prevState) => [...prevState, ...data?.data?.results]);
@@ -139,7 +139,7 @@ const Album = () => {
          initial={{ y: -50, scale: 0 }}
          animate={{ y: 0, scale: 1 }}
          transition={{ ease: Circ.easeIn, duration: 0.7, delay: 1 }}
-         className="search fixed bg-slate-700   gap-3 w-full   sm:w-full h-[15vh] flex items-center justify-center ">
+         className="search fixed z-[99] bg-slate-700   gap-3 w-full   sm:w-full h-[15vh] flex items-center justify-center ">
           <i
             onClick={() => navigate(-1)}
             className="ml-5 cursor-pointer text-3xl bg-green-500 rounded-full ri-arrow-left-line"

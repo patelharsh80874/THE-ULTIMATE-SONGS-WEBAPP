@@ -49,13 +49,14 @@ const Songs = () => {
   const Getsearch = async () => {
     try {
       const { data } = await axios.get(
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${requery}&page=${page}&limit=10`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${requery}&page=${page}&limit=40`
       );
       // setsearch((prevState) => [...prevState, ...data.data.results]);
       const newData = data.data.results.filter(newItem => !search.some(prevItem => prevItem.id === newItem.id));
       setsearch(prevState => [...prevState, ...newData]);
       setpage(page + 1);
       sethasMore(newData.length>0);
+      // sethasMore(true);
     } catch (error) {
       console.log("error", error);
     }
