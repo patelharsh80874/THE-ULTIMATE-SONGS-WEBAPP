@@ -55,7 +55,7 @@ const Songs = () => {
       const newData = data.data.results.filter(newItem => !search.some(prevItem => prevItem.id === newItem.id));
       setsearch(prevState => [...prevState, ...newData]);
       setpage(page + 1);
-      sethasMore(true);
+      sethasMore(newData.length>0);
     } catch (error) {
       console.log("error", error);
     }
@@ -424,15 +424,17 @@ const Songs = () => {
   }, [searchclick]);
 
   function newdata() {
-    if (page>=30) {
-      sethasMore(false);
-    }
-    else{
-      setTimeout(() => {
-        Getsearch();
-    }, 1000);
-    }
-    
+    // if (page>=30) {
+    //   sethasMore(false);
+    // }
+    // else{
+    //   setTimeout(() => {
+    //     Getsearch();
+    // }, 1000);
+    // }
+    setTimeout(() => {
+          Getsearch();
+      }, 1000);
   }
 
   function nomoredata() {

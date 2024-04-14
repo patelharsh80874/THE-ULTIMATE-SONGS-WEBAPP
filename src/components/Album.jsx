@@ -36,9 +36,10 @@ const Album = () => {
       // setalbums((prevState) => [...prevState, ...data?.data?.results]);
       // setalbums((prevState) => [...prevState, ...data?.data?.results]);
       setpage(page + 1);
-      sethasMore(true);
+      // sethasMore(true);
       const newData = data.data.results.filter(newItem => !albums.some(prevItem => prevItem.id === newItem.id));
       setalbums(prevState => [...prevState, ...newData]);
+      sethasMore(newData.length>0)
       localStorage.setItem("albums", JSON.stringify(data?.data?.results));
     } catch (error) {
       console.log("error", error);
@@ -86,14 +87,18 @@ const Album = () => {
   }, [search]);
 
   function newdata() {
-    if (page>=25) {
-      sethasMore(false);
-    }
-    else{
-      setTimeout(() => {
-        Getalbums();
-    }, 1000);
-    }
+    // if (page>=25) {
+    //   sethasMore(false);
+    // }
+    // else{
+    //   setTimeout(() => {
+    //     Getalbums();
+    // }, 1000);
+    // }
+
+    setTimeout(() => {
+          Getalbums();
+      }, 1000);
     
   }
 
