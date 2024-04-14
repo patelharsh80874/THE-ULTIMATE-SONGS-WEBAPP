@@ -16,8 +16,7 @@ import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
-import { ID3Writer } from 'browser-id3-writer';
-
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const Songs = () => {
   const navigate = useNavigate();
@@ -32,15 +31,31 @@ const Songs = () => {
   const [like2, setlike2] = useState(false);
   const [existingData, setexistingData] = useState(null);
   const audioRef = useRef();
+  const [hasMore, sethasMore] = useState(true);
+
+  // const Getsearch = async () => {
+  //   try {
+  //     const { data } = await axios.get(
+  //       `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${query}&page=${page}&limit=10`
+  //       // `https://jiosaavan-harsh-patel.vercel.app/search/songs?query=${query}&page=${page}&limit=10`
+  //     );
+
+  //     setsearch((prevState) => [...prevState, ...data.data.results]);
+  //   } catch (error) {
+  //     console.log("error", error);
+  //   }
+  // };
 
   const Getsearch = async () => {
     try {
       const { data } = await axios.get(
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${query}&page=${page}&limit=10`
-        // `https://jiosaavan-harsh-patel.vercel.app/search/songs?query=${query}&page=${page}&limit=10`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${requery}&page=${page}&limit=10`
       );
-
-      setsearch((prevState) => [...prevState, ...data.data.results]);
+      // setsearch((prevState) => [...prevState, ...data.data.results]);
+      const newData = data.data.results.filter(newItem => !search.some(prevItem => prevItem.id === newItem.id));
+      setsearch(prevState => [...prevState, ...newData]);
+      setpage(page + 1);
+      sethasMore(true);
     } catch (error) {
       console.log("error", error);
     }
@@ -349,7 +364,7 @@ const Songs = () => {
     }
   }
 
-  const handleDownloadSong = async (url, name,poster) => {
+  const handleDownloadSong = async (url, name, poster) => {
     try {
       toast.success(`Song ${name} Downloading...`);
       const res = await fetch(url);
@@ -368,28 +383,81 @@ const Songs = () => {
     }
   };
 
+  // function seccall() {
+  //   const intervalId = setInterval(
+  //     () => {
+  //       if (
+  //         (search.length >= 0 && page < 25) ||
+  //         query.length !== requery.length
+  //       ) {
+  //         setpage(page + 1);
+  //         Getsearch();
+  //         // setrequery(query);
+  //       }
+  //     },
+  //     page <= 2 ? 1000 : 2500
+  //   );
+  //   return intervalId;
+  // }
 
-  function seccall() {
-    const intervalId = setInterval(() => {
-      if (
-        (search.length >= 0 && page < 25) ||
-        query.length !== requery.length
-      ) {
-        setpage(page + 1);
-        Getsearch();
-        // setrequery(query);
-      }
-    }, page<=2 ? 1000 : 2500);
-    return intervalId;
-  }
+  // useEffect(() => {
+  //   if (query.length > 0) {
+  //     var interval = seccall();
+  //   }
+
+  //   return () => clearInterval(interval);
+  // }, [searchclick, search, page]);
+
+  // useEffect(() => {
+  //   if (query.length > 0) {
+  //     Getsearch();
+  //   }
+  // }, [searchclick]);
 
   useEffect(() => {
-    if (query.length > 0) {
-      var interval = seccall();
-    }
+    setTimeout(() => {
+      if (query.length > 0) {
+        Getsearch();
+      }
+    }, 1000);
+   
+  }, [searchclick]);
 
-    return () => clearInterval(interval);
-  }, [searchclick, search, page]);
+  function newdata() {
+    if (page>=30) {
+      sethasMore(false);
+    }
+    else{
+      setTimeout(() => {
+        Getsearch();
+    }, 1000);
+    }
+    
+  }
+
+  function nomoredata() {
+    toast.success("No more items/data available")
+  }
+  // const fetchMoreData = () => {
+  //   console.log("Fetching more data...");
+  //   Getsearch();
+  // };
+
+  // const refershHandler = async () => {
+  //   if (search.length === 0) {
+  //     Getsearch();
+  //   } else {
+  //     setpage(1);
+  //     setsearch([]);
+  //     Getsearch();
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   if (query.length > 0) {
+  //     refershHandler();
+  //   }
+  // }, [searchclick]);
 
   useEffect(() => {
     likeset(songlink[0]);
@@ -430,7 +498,8 @@ const Songs = () => {
 
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
   // console.log(search);
-  // console.log(page)
+  // console.log(page);
+  // console.log(hasMore);
   // console.log(searchclick);
   return (
     <motion.div
@@ -444,7 +513,7 @@ const Songs = () => {
         initial={{ y: -50, scale: 0 }}
         animate={{ y: 0, scale: 1 }}
         transition={{ ease: Circ.easeIn, duration: 0.7, delay: 0.7 }}
-        className="search gap-3 w-full sm:w-full pt-[3vh] sm:h-[5vh] h-[10vh] flex items-center justify-center "
+        className="search fixed z-50 pb-10  bg-slate-700  gap-3 w-full sm:w-full pt-[5vh] sm:h-[5vh] h-[10vh] flex items-center justify-center "
       >
         <i
           onClick={() => navigate(-1)}
@@ -523,77 +592,86 @@ const Songs = () => {
         )}
       </div> */}
 
-      <div className="flex w-full mt-[3vh]  text-white p-10 sm:p-3 sm:gap-3 h-[64vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
-        {search?.map((d, i) => (
-          <div
-            title="click on song image or name to play the song"
-            key={i}
-            className="items-center justify-center relative hover:scale-95 sm:hover:scale-100 duration-150 w-[40%] flex mb-3 sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[10vw] sm:h-[15vh] cursor-pointer bg-slate-600  "
-          >
-            <div
-              onClick={() => audioseter(i)}
-              className="flex w-[80%] items-center"
-            >
-              <motion.img
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.7 }}
-                viewport={{ once: true }}
-                className="w-[10vw] h-[10vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
-                src={d.image[2].url}
-                alt=""
-              />
-              <img
-                className={`absolute top-0 w-[8%] sm:w-[10%] rounded-md ${
-                  d.id === songlink[0]?.id ? "block" : "hidden"
-                } `}
-                src={wavs}
-                alt=""
-              />
-              <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
-                <div className="flex flex-col">
-                  <h3
-                    className={`text-sm sm:text-xs leading-none  font-bold ${
-                      d.id === songlink[0]?.id && "text-green-300"
-                    }`}
-                  >
-                    {d.name}
-                  </h3>
-                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
-                    {d.album.name}
-                  </h4>
+      <div>
+        <InfiniteScroll
+          dataLength={search.length}
+          next={newdata}
+          hasMore={hasMore}
+          loader={page>2 && <h1 className="bg-slate-700 text-zinc-300">Loading...</h1>}
+          endMessage={<p className="bg-slate-700 text-zinc-300">No more items</p>}
+          // endMessage={()=>nomoredata()}
+        >
+          <div className="flex w-full mt-[7vh]  pb-[20vh] sm:pb-[30vh]  bg-slate-700  text-white p-10 sm:p-3 sm:gap-3  min-h-[64vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
+            {search?.map((d, i) => (
+              <div
+                title="click on song image or name to play the song"
+                key={i}
+                className="items-center justify-center relative hover:scale-95 sm:hover:scale-100 duration-150 w-[40%] flex mb-3 sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[10vw] sm:h-[15vh] cursor-pointer bg-slate-600  "
+              >
+                <div
+                  onClick={() => audioseter(i)}
+                  className="flex w-[80%] items-center"
+                >
+                  <motion.img
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.7 }}
+                    viewport={{ once: true }}
+                    className="w-[10vw] h-[10vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
+                    src={d.image[2].url}
+                    alt=""
+                  />
+                  <img
+                    className={`absolute top-0 w-[8%] sm:w-[10%] rounded-md ${
+                      d.id === songlink[0]?.id ? "block" : "hidden"
+                    } `}
+                    src={wavs}
+                    alt=""
+                  />
+                  <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
+                    <div className="flex flex-col">
+                      <h3
+                        className={`text-sm sm:text-xs leading-none  font-bold ${
+                          d.id === songlink[0]?.id && "text-green-300"
+                        }`}
+                      >
+                        {d.name}
+                      </h3>
+                      <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                        {d.album.name}
+                      </h4>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {existingData?.find((element) => element?.id == d?.id) ? (
-              <i
-                onClick={() => likehandle2(d)}
-                className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]    duration-300 cursor-pointer text-red-500  ri-heart-3-fill`}
-              ></i>
-            ) : (
-              <i
-                onClick={() => likehandle2(d)}
-                className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]   duration-300 cursor-pointer text-zinc-300  ri-heart-3-fill`}
-              ></i>
-            )}
+                {existingData?.find((element) => element?.id == d?.id) ? (
+                  <i
+                    onClick={() => likehandle2(d)}
+                    className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]    duration-300 cursor-pointer text-red-500  ri-heart-3-fill`}
+                  ></i>
+                ) : (
+                  <i
+                    onClick={() => likehandle2(d)}
+                    className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]   duration-300 cursor-pointer text-zinc-300  ri-heart-3-fill`}
+                  ></i>
+                )}
 
-            {/* <i
+                {/* <i
                 onClick={() => likehandle(d)}
                 className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]  bg-red-500   text-zinc-300 hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
               ></i> */}
 
-            {/* <i
+                {/* <i
               title="Remove Song "
               onClick={() => removehandle(d.id)}
               className="m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw] text-xl bg-red-500  duration-300 cursor-pointer text-zinc-300 ri-dislike-fill"
             ></i> */}
-          </div>
-        ))}
+              </div>
+            ))}
 
-        {/* <div className="flex gap-3 text-2xl  ">
+            {/* <div className="flex gap-3 text-2xl  ">
           <h1>MADE BY ❤️ HARSH PATEL</h1>
           <a
             target="_blank"
@@ -602,11 +680,14 @@ const Songs = () => {
             <i className=" ri-instagram-fill"></i>
           </a>
         </div> */}
+          </div>
+        </InfiniteScroll>
       </div>
+
       <motion.div
         className={
           songlink.length > 0
-            ? ` duration-700 flex rounded-full sm:rounded-none sm:rounded-t-[30%]  gap-3 items-center justify-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600 `
+            ? ` duration-700  fixed top-[80%] sm:top-[72%]   z-50  flex rounded-full sm:rounded-none sm:rounded-t-[30%]  gap-3 items-center justify-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600 `
             : "block"
         }
       >
@@ -615,7 +696,7 @@ const Songs = () => {
             initial={{ y: 50, opacity: 0, scale: 0 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             key={i}
-            className="flex sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3"
+            className="flex  sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3"
           >
             <motion.div
               initial={{ x: -50, opacity: 0, scale: 0 }}

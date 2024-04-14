@@ -15,6 +15,7 @@ import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const Album = () => {
   const navigate = useNavigate();
@@ -23,15 +24,21 @@ const Album = () => {
   const [albums, setalbums] = useState([]);
   const [search, setsearch] = useState(false)
   var [page, setpage] = useState(1);
+  const [hasMore, sethasMore] = useState(true);
   const Getalbums = async () => {
     try {
       const { data } = await axios.get(
         // `https://saavn.dev/api/search/albums?query=${query}&page=1&limit=10`
         // `https://jiosaavan-harsh-patel.vercel.app/search/albums?query=${query}`
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${query}&page=${page}&limit=20`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${requery}&page=${page}&limit=20`
       );
       // setalbums(data?.data?.results);
-      setalbums((prevState) => [...prevState, ...data?.data?.results]);
+      // setalbums((prevState) => [...prevState, ...data?.data?.results]);
+      // setalbums((prevState) => [...prevState, ...data?.data?.results]);
+      setpage(page + 1);
+      sethasMore(true);
+      const newData = data.data.results.filter(newItem => !albums.some(prevItem => prevItem.id === newItem.id));
+      setalbums(prevState => [...prevState, ...newData]);
       localStorage.setItem("albums", JSON.stringify(data?.data?.results));
     } catch (error) {
       console.log("error", error);
@@ -51,22 +58,44 @@ const Album = () => {
     }
   }
 
-  function seccall() {
-    const intervalId = setInterval(() => {
-      if (albums.length >= 0 && page<20 || query.length !== requery.length ) {
-        setpage(page + 1)
+  // function seccall() {
+  //   const intervalId = setInterval(() => {
+  //     if (albums.length >= 0 && page<20 || query.length !== requery.length ) {
+  //       setpage(page + 1)
+  //       Getalbums();
+  //     }
+  //   }, page<=2 ? 1000 : 2000);
+  //   return intervalId;
+  // }
+  // useEffect(() => {
+  //   if (query.length > 0) {
+  //     var interval = seccall();
+  //   }
+
+  //   return () => clearInterval(interval);
+  // }, [search, albums,page]);
+
+  
+  useEffect(() => {
+    setTimeout(() => {
+      if (query.length > 0) {
         Getalbums();
       }
-    }, page<=2 ? 1000 : 2000);
-    return intervalId;
-  }
-  useEffect(() => {
-    if (query.length > 0) {
-      var interval = seccall();
-    }
+    }, 1000);
+   
+  }, [search]);
 
-    return () => clearInterval(interval);
-  }, [search, albums,page]);
+  function newdata() {
+    if (page>=25) {
+      sethasMore(false);
+    }
+    else{
+      setTimeout(() => {
+        Getalbums();
+    }, 1000);
+    }
+    
+  }
 
   useEffect(() => {
     const allData = localStorage.getItem("albums");
@@ -84,8 +113,16 @@ const Album = () => {
   }, []);
 
 // console.log(albums);
+// console.log(hasMore);
 // console.log(page)
   return (
+    <InfiniteScroll
+    dataLength={albums.length}
+    next={newdata}
+    hasMore={hasMore}
+    loader={page>2 && <h1 className="bg-slate-700 text-zinc-300">Loading...</h1>}
+    endMessage={<p className="bg-slate-700 text-zinc-300">No more items</p>}
+  >
     <motion.div
     initial={{ opacity: 0, scale: 0 }}
     animate={{ opacity: 1, scale: 1 }}
@@ -97,7 +134,7 @@ const Album = () => {
          initial={{ y: -50, scale: 0 }}
          animate={{ y: 0, scale: 1 }}
          transition={{ ease: Circ.easeIn, duration: 0.7, delay: 1 }}
-         className="search gap-3 w-full   sm:w-full h-[15vh] flex items-center justify-center ">
+         className="search fixed bg-slate-700   gap-3 w-full   sm:w-full h-[15vh] flex items-center justify-center ">
           <i
             onClick={() => navigate(-1)}
             className="ml-5 cursor-pointer text-3xl bg-green-500 rounded-full ri-arrow-left-line"
@@ -115,7 +152,8 @@ const Album = () => {
            <h3 onClick={()=>searchClick()} className="duration-300 cursor-pointer hover:text-slate-400 text-xl  bg-slate-400 p-2 rounded-md hover:bg-slate-600 hover:scale-90">Search <i  
           className="  ri-search-2-line"></i></h3>
         </motion.div>
-        <motion.div className="w-full overflow-hidden overflow-y-auto h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
+    
+        <motion.div className="w-full pt-[15vh]   overflow-hidden  min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
           {albums?.map((e, i) => (
             <motion.div
             initial={{  scale: 0 }}
@@ -135,8 +173,10 @@ const Album = () => {
             </motion.div>
           ))}
         </motion.div>
+        
       </motion.div>
     </motion.div>
+    </InfiniteScroll>
   );
 }
 

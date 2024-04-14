@@ -96,7 +96,10 @@ const Home = () => {
         // }&limit=10`
         // `https://jiosaavan-harsh-patel.vercel.app/search/songs?query=${language}&page=${page2}&limit=10`
       );
-      setdetails((prevState) => [...prevState, ...data.data.results]);
+      // setdetails((prevState) => [...prevState, ...data.data.results]);
+      const newData = data.data.results.filter(newItem => !details.some(prevItem => prevItem.id === newItem.id));
+
+      setdetails(prevState => [...prevState, ...newData]);
     } catch (error) {
       console.log("error", error);
     }
