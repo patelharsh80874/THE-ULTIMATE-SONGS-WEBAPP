@@ -52,10 +52,12 @@ const Songs = () => {
         `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${requery}&page=${page}&limit=40`
       );
       // setsearch((prevState) => [...prevState, ...data.data.results]);
-      const newData = data.data.results.filter(newItem => !search.some(prevItem => prevItem.id === newItem.id));
-      setsearch(prevState => [...prevState, ...newData]);
+      const newData = data.data.results.filter(
+        (newItem) => !search.some((prevItem) => prevItem.id === newItem.id)
+      );
+      setsearch((prevState) => [...prevState, ...newData]);
       setpage(page + 1);
-      sethasMore(newData.length>0);
+      sethasMore(newData.length > 0);
       // sethasMore(true);
     } catch (error) {
       console.log("error", error);
@@ -421,7 +423,6 @@ const Songs = () => {
         Getsearch();
       }
     }, 1000);
-   
   }, [searchclick]);
 
   function newdata() {
@@ -434,12 +435,12 @@ const Songs = () => {
     // }, 1000);
     // }
     setTimeout(() => {
-          Getsearch();
-      }, 1000);
+      Getsearch();
+    }, 1000);
   }
 
   function nomoredata() {
-    toast.success("No more items/data available")
+    toast.success("No more items/data available");
   }
   // const fetchMoreData = () => {
   //   console.log("Fetching more data...");
@@ -509,14 +510,14 @@ const Songs = () => {
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.7 }}
-      className="w-full h-screen bg-slate-700 "
+      className="w-full  min-h-screen overflow-hidden bg-slate-700 "
     >
       <Toaster position="top-center" reverseOrder={false} />
       <motion.div
         initial={{ y: -50, scale: 0 }}
         animate={{ y: 0, scale: 1 }}
         transition={{ ease: Circ.easeIn, duration: 0.7, delay: 0.7 }}
-        className="search fixed z-50 pb-10  bg-slate-700  gap-3 w-full sm:w-full pt-[5vh] sm:h-[5vh] h-[10vh] flex items-center justify-center "
+        className="search fixed  z-[99]  backdrop-blur-xl  gap-3 w-full sm:w-full sm:max-h-[5vh] max-h-[10vh] py-8 flex items-center justify-center "
       >
         <i
           onClick={() => navigate(-1)}
@@ -525,7 +526,7 @@ const Songs = () => {
         {/* <i className=" text-2xl ri-search-2-line"></i> */}
 
         <input
-          className=" bg-black  rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:w-[50%] sm:h-[5vh] h-[8vh]"
+          className=" bg-black  rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:w-[50%] sm:max-h-[5vh] max-h-[8vh]"
           onChange={(e) => setquery(e.target.value)}
           placeholder="Search Songs"
           type="search"
@@ -594,17 +595,18 @@ const Songs = () => {
           </div>
         )}
       </div> */}
-
-      <div>
-        <InfiniteScroll
-          dataLength={search.length}
-          next={newdata}
-          hasMore={hasMore}
-          loader={page>2 && <h1 className="bg-slate-700 text-zinc-300">Loading...</h1>}
-          endMessage={<p className="bg-slate-700 text-zinc-300">No more items</p>}
-          // endMessage={()=>nomoredata()}
-        >
-          <div className="flex w-full mt-[7vh]  pb-[20vh] sm:pb-[30vh]  bg-slate-700  text-white p-10 sm:p-3 sm:gap-3  min-h-[64vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
+      <InfiniteScroll
+        dataLength={search.length}
+        next={newdata}
+        hasMore={hasMore}
+        loader={
+          page > 2 && <h1 className="bg-slate-700 text-zinc-300">Loading...</h1>
+        }
+        endMessage={<p className="bg-slate-700 text-zinc-300">No more items</p>}
+        // endMessage={()=>nomoredata()}
+      >
+        <div className="mt-8 mb-12 sm:mt-[9vh] overflow-hidden overflow-y-auto">
+          <div className="flex w-full bg-slate-700  text-white p-10 sm:p-3 sm:gap-3  sm:block flex-wrap gap-5 justify-center ">
             {search?.map((d, i) => (
               <div
                 title="click on song image or name to play the song"
@@ -684,13 +686,13 @@ const Songs = () => {
           </a>
         </div> */}
           </div>
-        </InfiniteScroll>
-      </div>
+        </div>
+      </InfiniteScroll>
 
       <motion.div
         className={
           songlink.length > 0
-            ? ` duration-700  fixed top-[80%] sm:top-[72%]   z-50  flex rounded-full sm:rounded-none sm:rounded-t-[30%]  gap-3 items-center justify-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600 `
+            ? ` duration-700 fixed z-[99] bottom-0    gap-3 items-center justify-center py-3 sm:h-[30vh]  w-full max-h-[30vh]     backdrop-blur-xl`
             : "block"
         }
       >
