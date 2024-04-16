@@ -386,12 +386,16 @@ const Songs = () => {
   
       navigator.mediaSession.setActionHandler("previoustrack", function () {
         pre();
+        audioRef.play();
         audioRef.current.play();
+        audioset();
       });
   
       navigator.mediaSession.setActionHandler("nexttrack", function () {
         next();
+        audioRef.play();
         audioRef.current.play();
+        audioset();
       });
     } else {
       console.warn("MediaSession API is not supported.");
@@ -443,22 +447,30 @@ const Songs = () => {
     if (index < search.length - 1) {
       setindex(index++);
       audioseter(index);
+      audioRef.play();
       audioRef.current.play();
+      audioset();
     } else {
       setindex(0);
       setsonglink([search[0]]);
+      audioRef.play();
       audioRef.current.play();
+      audioset();
     }
   }
   function pre() {
     if (index > 0) {
       setindex(index--);
       audioseter(index);
+      audioRef.play();
       audioRef.current.play();
+      audioset();
     } else {
       setindex(search.length - 1);
       setsonglink([search[search.length - 1]]);
+      audioRef.play();
       audioRef.current.play();
+      audioset();
     }
   }
 
@@ -534,8 +546,11 @@ const Songs = () => {
     }, 1000);
   }
 
-  function nomoredata() {
-    toast.success("No more items/data available");
+  function audioset() {
+    setTimeout(() => {
+      audioRef.current.play();
+      audioRef.play();
+    }, 1000);
   }
   // const fetchMoreData = () => {
   //   console.log("Fetching more data...");
@@ -615,7 +630,9 @@ const Songs = () => {
   
         // Initialize media session if not on iOS
         initializeMediaSession();
+        audioRef.play();
         audioRef.current.play();
+        audioset();
       }
     }
   }, [songlink]);
