@@ -283,76 +283,9 @@ const Songs = () => {
   //   }
   // };
 
-  // const initializeMediaSession = () => {
-  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-
-  //   if ("mediaSession" in navigator) {
-  //     navigator.mediaSession.metadata = new MediaMetadata({
-  //       title: songlink[0]?.name || "",
-  //       artist: songlink[0]?.album?.name || "",
-  //       artwork: [
-  //         {
-  //           src: songlink[0]?.image[2]?.url || "",
-  //           sizes: "512x512",
-  //           type: "image/jpeg",
-  //         },
-  //       ],
-  //     });
-
-  //     navigator.mediaSession.setActionHandler("play", function () {
-  //       // Handle play action
-  //       if (audioRef.current) {
-  //         audioRef.current.play().catch((error) => {
-  //           console.error("Play error:", error);
-  //         });
-  //       }
-  //     });
-
-  //     navigator.mediaSession.setActionHandler("pause", function () {
-  //       // Handle pause action
-  //       if (audioRef.current) {
-  //         audioRef.current.pause().catch((error) => {
-  //           console.error("Pause error:", error);
-  //         });
-  //       }
-  //     });
-
-  //     navigator.mediaSession.setActionHandler("previoustrack", function () {
-  //       pre();
-  //       audioRef.current.play();
-  //     });
-
-  //     navigator.mediaSession.setActionHandler("nexttrack", function () {
-  //       next();
-  //       audioRef.current.play();
-  //     });
-  //   } else {
-  //     console.warn("MediaSession API is not supported.");
-  //   }
-  //   if (isIOS) {
-  //     // Enable background audio playback for iOS
-  //     document.addEventListener("visibilitychange", () => {
-  //       if (document.visibilityState === "visible") {
-  //         if (audioRef.current && audioRef.current.paused) {
-  //           audioRef.current.play().catch((error) => {
-  //             console.error("Play error:", error);
-  //           });
-  //         }
-  //       } else {
-  //         if (audioRef.current && !audioRef.current.paused) {
-  //           audioRef.current.pause().catch((error) => {
-  //             console.error("Pause error:", error);
-  //           });
-  //         }
-  //       }
-  //     });
-  //   }
-  // };
-
-
   const initializeMediaSession = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
@@ -365,7 +298,7 @@ const Songs = () => {
           },
         ],
       });
-  
+
       navigator.mediaSession.setActionHandler("play", function () {
         // Handle play action
         if (audioRef.current) {
@@ -374,7 +307,7 @@ const Songs = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("pause", function () {
         // Handle pause action
         if (audioRef.current) {
@@ -383,64 +316,131 @@ const Songs = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("previoustrack", function () {
         pre();
-        audioRef.play();
         audioRef.current.play();
-        audioset();
       });
-  
+
       navigator.mediaSession.setActionHandler("nexttrack", function () {
         next();
-        audioRef.play();
         audioRef.current.play();
-        audioset();
       });
     } else {
       console.warn("MediaSession API is not supported.");
     }
-  
     if (isIOS) {
       // Enable background audio playback for iOS
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
           if (audioRef.current && audioRef.current.paused) {
-            // Start playing when returning to the app
             audioRef.current.play().catch((error) => {
               console.error("Play error:", error);
             });
           }
         } else {
           if (audioRef.current && !audioRef.current.paused) {
-            // Pause when leaving the app
             audioRef.current.pause().catch((error) => {
               console.error("Pause error:", error);
             });
           }
         }
       });
-  
-      // Handle iOS background audio restrictions
-      document.addEventListener("pause", () => {
-        if (audioRef.current && !audioRef.current.paused) {
-          // Pause when app goes to background
-          audioRef.current.pause().catch((error) => {
-            console.error("Pause error:", error);
-          });
-        }
-      });
-  
-      document.addEventListener("resume", () => {
-        if (audioRef.current && audioRef.current.paused) {
-          // Resume playing when app returns from background
-          audioRef.current.play().catch((error) => {
-            console.error("Play error:", error);
-          });
-        }
-      });
     }
   };
+
+
+  // const initializeMediaSession = () => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  
+  //   if ("mediaSession" in navigator) {
+  //     navigator.mediaSession.metadata = new MediaMetadata({
+  //       title: songlink[0]?.name || "",
+  //       artist: songlink[0]?.album?.name || "",
+  //       artwork: [
+  //         {
+  //           src: songlink[0]?.image[2]?.url || "",
+  //           sizes: "512x512",
+  //           type: "image/jpeg",
+  //         },
+  //       ],
+  //     });
+  
+  //     navigator.mediaSession.setActionHandler("play", function () {
+  //       // Handle play action
+  //       if (audioRef.current) {
+  //         audioRef.current.play().catch((error) => {
+  //           console.error("Play error:", error);
+  //         });
+  //       }
+  //     });
+  
+  //     navigator.mediaSession.setActionHandler("pause", function () {
+  //       // Handle pause action
+  //       if (audioRef.current) {
+  //         audioRef.current.pause().catch((error) => {
+  //           console.error("Pause error:", error);
+  //         });
+  //       }
+  //     });
+  
+  //     navigator.mediaSession.setActionHandler("previoustrack", function () {
+  //       pre();
+  //       audioRef.play();
+  //       audioRef.current.play();
+  //       audioset();
+  //     });
+  
+  //     navigator.mediaSession.setActionHandler("nexttrack", function () {
+  //       next();
+  //       audioRef.play();
+  //       audioRef.current.play();
+  //       audioset();
+  //     });
+  //   } else {
+  //     console.warn("MediaSession API is not supported.");
+  //   }
+  
+  //   if (isIOS) {
+  //     // Enable background audio playback for iOS
+  //     document.addEventListener("visibilitychange", () => {
+  //       if (document.visibilityState === "visible") {
+  //         if (audioRef.current && audioRef.current.paused) {
+  //           // Start playing when returning to the app
+  //           audioRef.current.play().catch((error) => {
+  //             console.error("Play error:", error);
+  //           });
+  //         }
+  //       } else {
+  //         if (audioRef.current && !audioRef.current.paused) {
+  //           // Pause when leaving the app
+  //           audioRef.current.pause().catch((error) => {
+  //             console.error("Pause error:", error);
+  //           });
+  //         }
+  //       }
+  //     });
+  
+  //     // Handle iOS background audio restrictions
+  //     document.addEventListener("pause", () => {
+  //       if (audioRef.current && !audioRef.current.paused) {
+  //         // Pause when app goes to background
+  //         audioRef.current.pause().catch((error) => {
+  //           console.error("Pause error:", error);
+  //         });
+  //       }
+  //     });
+  
+  //     document.addEventListener("resume", () => {
+  //       if (audioRef.current && audioRef.current.paused) {
+  //         // Resume playing when app returns from background
+  //         audioRef.current.play().catch((error) => {
+  //           console.error("Play error:", error);
+  //         });
+  //       }
+  //     });
+  //   }
+  // };
   
 
   function next() {
@@ -599,43 +599,43 @@ const Songs = () => {
   //   }
   // }, [query]);
 
-  // useEffect(() => {
-  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-
-  //   if (!isIOS && songlink.length > 0) {
-  //     audioRef.current.play();
-  //     initializeMediaSession();
-  //   }
-  // }, [songlink]);
-
   useEffect(() => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
-    if (songlink.length > 0) {
-      // Check if the current environment is iOS
-      if (isIOS) {
-        // On iOS, audio cannot be played without user interaction due to autoplay restrictions
-        // We need to rely on user interaction to start playing audio
-        // You might want to display a play button or some user interaction element to trigger audio playback
-  
-        // Initialize media session regardless of playback
-        initializeMediaSession();
-      } else {
-        // For non-iOS devices, we can attempt to play the audio
-        // Audio will be played if autoplay is allowed
-        // Otherwise, it will require user interaction to start playing
-        audioRef.current.play().catch((error) => {
-          console.error("Play error:", error);
-        });
-  
-        // Initialize media session if not on iOS
-        initializeMediaSession();
-        audioRef.play();
-        audioRef.current.play();
-        audioset();
-      }
+
+    if (!isIOS && songlink.length > 0) {
+      audioRef.current.play();
+      initializeMediaSession();
     }
   }, [songlink]);
+
+  // useEffect(() => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  
+  //   if (songlink.length > 0) {
+  //     // Check if the current environment is iOS
+  //     if (isIOS) {
+  //       // On iOS, audio cannot be played without user interaction due to autoplay restrictions
+  //       // We need to rely on user interaction to start playing audio
+  //       // You might want to display a play button or some user interaction element to trigger audio playback
+  
+  //       // Initialize media session regardless of playback
+  //       initializeMediaSession();
+  //     } else {
+  //       // For non-iOS devices, we can attempt to play the audio
+  //       // Audio will be played if autoplay is allowed
+  //       // Otherwise, it will require user interaction to start playing
+  //       audioRef.current.play().catch((error) => {
+  //         console.error("Play error:", error);
+  //       });
+  
+  //       // Initialize media session if not on iOS
+  //       initializeMediaSession();
+  //       audioRef.play();
+  //       audioRef.current.play();
+  //       audioset();
+  //     }
+  //   }
+  // }, [songlink]);
   
 
   var title = songlink[0]?.name;
