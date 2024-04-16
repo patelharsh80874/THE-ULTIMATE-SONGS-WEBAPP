@@ -443,18 +443,22 @@ const Songs = () => {
     if (index < search.length - 1) {
       setindex(index++);
       audioseter(index);
+      audioRef.current.play();
     } else {
       setindex(0);
       setsonglink([search[0]]);
+      audioRef.current.play();
     }
   }
   function pre() {
     if (index > 0) {
       setindex(index--);
       audioseter(index);
+      audioRef.current.play();
     } else {
       setindex(search.length - 1);
       setsonglink([search[search.length - 1]]);
+      audioRef.current.play();
     }
   }
 
@@ -611,6 +615,7 @@ const Songs = () => {
   
         // Initialize media session if not on iOS
         initializeMediaSession();
+        audioRef.current.play();
       }
     }
   }, [songlink]);
