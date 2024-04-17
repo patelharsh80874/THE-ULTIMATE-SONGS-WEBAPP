@@ -29,7 +29,7 @@ const ArtistsDetails = () => {
   const [details, setdetails] = useState([]);
   const [songlink, setsonglink] = useState([]);
   var [index, setindex] = useState("");
-  var [page, setpage] = useState(1);
+  var [page, setpage] = useState(0);
   const [like, setlike] = useState(false);
   const [like2, setlike2] = useState(false);
   const [existingData, setexistingData] = useState(null);

@@ -415,25 +415,28 @@ function Likes() {
   return (
     <div className="w-full h-screen bg-slate-700">
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="w-full flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
+      <div className="w-full justify-between px-3 fixed z-[99] backdrop-blur-xl flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
+        <div className="flex items-center gap-3">
         <i
           onClick={() => navigate(-1)}
-          className="text-3xl cursor-pointer ml-5 bg-green-500 rounded-full ri-arrow-left-line"
+          className="text-3xl cursor-pointer  bg-green-500 rounded-full ri-arrow-left-line"
         ></i>
-        <h1 className="text-xl text-zinc-300 font-black">THE ULTIMATE SONGS</h1>
-      </div>
-      <div className="w-full">
+         <h1 className="text-xl text-zinc-300 sm:text-sm font-black">THE ULTIMATE SONGS</h1>
+        </div>
+        <div className="w-fit">
         <button
-          className="ml-[80%] sm:ml-[50%] hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit rounded-md p-2 font-semibold bg-slate-400 "
+          className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-1 font-semibold bg-slate-400 "
           onClick={downloadSongs}
           disabled={download}
         >
           {download ? "downloading..." : "Download All Songs"}
         </button>
       </div>
+      </div>
+      
 
       {details.length > 0 ? (
-        <div className="flex w-full text-white p-10 sm:p-3 sm:gap-3 h-[60vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
+        <div className="flex w-full text-white p-10 pt-[15vh] pb-[30vh] sm:pt-[10vh] sm:pb-[35vh] sm:p-3 sm:gap-3 bg-slate-700 min-h-[60vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
           {details?.map((d, i) => (
             <div
               title="click on song image or name to play the song"
@@ -505,7 +508,7 @@ function Likes() {
         <motion.div
           className={
             songlink.length > 0
-              ? `duration-700 flex  rounded-full sm:rounded-none sm:rounded-t-[20%] gap-3 items-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600  `
+              ? `duration-700 flex fixed z-[99] bottom-0    gap-3 items-center  w-full py-2 sm:h-[30vh] max-h-[30vh] backdrop-blur-xl `
               : "block"
           }
         >
