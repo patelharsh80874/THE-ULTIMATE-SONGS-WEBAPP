@@ -33,6 +33,7 @@ const Home = () => {
   var [page, setpage] = useState(1);
   var [page2, setpage2] = useState(Math.floor(Math.random() * 50));
   const audioRef = useRef();
+  const [audiocheck, setaudiocheck] = useState(true);
 
   const options = [
     // "hindi",
@@ -106,10 +107,21 @@ const Home = () => {
   };
 
   function audioseter(i) {
-    setindex(i);
-    setsonglink([details[i]]);
-    // audioRef.current.play()
-    // initializeMediaSession();
+    if (songlink[0]?.id === details[i].id) {
+      const audio = audioRef.current;
+      if (!audio.paused) {
+        audio.pause();
+        setaudiocheck(false);
+      } else {
+        setaudiocheck(true);
+        audio.play().catch((error) => {
+          console.error("Playback failed:", error);
+        });
+      }
+    } else {
+      setindex(i);
+      setsonglink([details[i]]);
+    }
   }
 
   function likeset(e) {
@@ -424,7 +436,7 @@ const Home = () => {
   // console.log(songlink);
   // console.log(index)
   return details.length > 0 ? (
-    <div className="w-full h-screen overflow-hidden overflow-y-auto bg-slate-800">
+    <div className="w-full h-screen  bg-slate-800">
       <Toaster position="top-center" reverseOrder={false} />
       <motion.div
         initial={{ opacity: 0, y: -50 }}
@@ -434,7 +446,7 @@ const Home = () => {
       >
         <div className="flex   items-center sm:justify-center sm:pt-2 gap-3">
           <img className="w-[5vw] sm:w-[10vw] rounded-full" src={logo} alt="" />
-          <h1 className="text-2xl text-zinc-400 sm:text-xl  font-black">
+          <h1 className="text-2xl text-slate-900 p-2 rounded-full bg-neutral-500 sm:text-xl  font-black">
             THE ULTIMATE SONGS
           </h1>
         </div>
@@ -446,7 +458,7 @@ const Home = () => {
         >
           <h3 className="inline text-xl sm:hidden">Search : </h3>
           <Link
-            className=" text-xl sm:text-sm ml-3 sm:font-bold h-fit w-fit p-1 rounded-md  hover:bg-slate-500 duration-300 bg-slate-400 text-blue-900 font-semibold " 
+            className=" text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold " 
             to={"/songs"}
           >
             Songs
@@ -458,33 +470,33 @@ const Home = () => {
             Download Songs
           </Link> */}
           <Link
-            className=" text-xl sm:text-sm ml-3 sm:font-bold h-fit w-fit p-1 rounded-md hover:bg-slate-500 duration-300 bg-slate-400 text-blue-900 font-semibold "
+            className="  text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold "
             to={"/playlist"}
           >
             PlayLists
           </Link>
           <Link
-            className=" text-xl sm:text-sm ml-3 h-fit w-fit p-1 rounded-md hover:bg-slate-500 duration-300 bg-slate-400 sm:font-bold text-blue-900 font-semibold "
+            className="  text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold"
             to={"/artists"}
           >
             Artists
           </Link>
           <Link
-            className=" text-xl sm:text-sm ml-3 h-fit w-fit p-1 rounded-md hover:bg-slate-500 duration-300 bg-slate-400 sm:font-bold text-blue-900 font-semibold "
+            className="  text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold "
             to={"/album"}
           >
             Album
           </Link>
           <Link
-            className=" text-xl sm:text-sm ml-3 h-fit w-fit p-1 rounded-md hover:bg-slate-500 duration-300 bg-slate-400 sm:font-bold text-blue-900 font-semibold "
-            to={"likes"}
+            className=" text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold"
+            to={"/likes"}
           >
             Likes
           </Link>
-          <a target="_blank"  href={"https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP"} className="ml-4 cursor-pointer  text-3xl bg-zinc-900  p-1  sm:p-0 rounded-full ri-github-fill"></a>
+          <a target="_blank"  href={"https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP"} className="ml-4 sm:ml-2 cursor-pointer  text-3xl  text-zinc-500   ri-github-fill"></a>
         </motion.div>
       </motion.div>
-      <div className="w-full bg-slate-800  min-h-[63vh] pt-[20vh]   text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
+      <div className="w-full  bg-slate-800  min-h-[63vh] pt-[20vh] pb-[25vh]   text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
         <div className="w-full   flex justify-end ">
           <Dropdown
             className="w-[15%] text-sm sm:w-[50%]"
@@ -508,6 +520,7 @@ const Home = () => {
                 key={i}
                 className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
               >
+                
                 <motion.img
                   className="relative w-full  rounded-md"
                   // src={t.image[2].link}
@@ -521,6 +534,11 @@ const Home = () => {
                   src={wavs}
                   alt=""
                 />
+                 {songlink.length>0 && <i className={`absolute top-20 sm:top-16 w-full  flex items-center justify-center text-5xl  opacity-80  duration-300 rounded-md ${
+                      t.id === songlink[0]?.id ? "block" : "hidden"
+                    } ${audiocheck ? "ri-pause-circle-fill" :"ri-play-circle-fill" }`}></i>}
+               
+                
                 <motion.div
                   //  initial={{ y: 50, scale:0}}
                   //  whileInView={{ y: 0,scale: 1 }}
@@ -631,7 +649,7 @@ const Home = () => {
         </div>
         <div className="albums w-full flex flex-col gap-3 ">
           <h3 className="text-xl h-[5vh] font-semibold">Albums</h3>
-          <div className="albumsdata mb-[20vh] sm:mb-[25vh] px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
+          <div className="albumsdata  px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {home?.albums?.map((a, i) => (
               <motion.div
                 initial={{ y: -100, scale: 0.5 }}
@@ -747,6 +765,8 @@ const Home = () => {
               </button>
               <audio
                 ref={audioRef}
+                onPause={()=>setaudiocheck(false)}
+                onPlay={()=>setaudiocheck(true)}
                 className="w-[80%]"
                 controls
                 autoPlay

@@ -32,6 +32,7 @@ const AlbumDetails = () => {
   const [like2, setlike2] = useState(false);
   const [existingData, setexistingData] = useState(null);
   const audioRef = useRef();
+  const [audiocheck, setaudiocheck] = useState(true);
 
   const Getdetails = async () => {
     try {
@@ -47,8 +48,21 @@ const AlbumDetails = () => {
   };
 
   function audioseter(i) {
-    setindex(i);
-    setsonglink([details[i]]);
+    if (songlink[0]?.id === details[i].id) {
+      const audio = audioRef.current;
+      if (!audio.paused) {
+        audio.pause();
+        setaudiocheck(false);
+      } else {
+        setaudiocheck(true);
+        audio.play().catch((error) => {
+          console.error("Playback failed:", error);
+        });
+      }
+    } else {
+      setindex(i);
+      setsonglink([details[i]]);
+    }
   }
 
   function likeset(e) {
@@ -484,6 +498,9 @@ const AlbumDetails = () => {
                 src={wavs}
                 alt=""
               />
+               {songlink.length>0 && <i className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-70  duration-300 rounded-md ${
+                      d.id === songlink[0]?.id ? "block" : "hidden"
+                    } ${audiocheck ? "ri-pause-circle-fill" :"ri-play-circle-fill" }`}></i>}
               <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
                 <div className="flex flex-col">
                   <h3
@@ -624,6 +641,8 @@ const AlbumDetails = () => {
               <audio
                 className="w-[80%] "
                 ref={audioRef}
+                onPause={()=>setaudiocheck(false)}
+                onPlay={()=>setaudiocheck(true)}
                 controls
                 autoPlay
                 onEnded={() => next()}

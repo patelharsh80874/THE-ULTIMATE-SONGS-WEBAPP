@@ -22,7 +22,7 @@ const App = () => {
     <div className="w-full h-screen">
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="songs" element={<Songs />} />
+        <Route path="/songs" element={<Songs />} />
         <Route path="/songs/details/:id" element={<SongDetails />} />
         <Route path="/album" element={<Album />} />
         <Route path="/albums/details/:id" element={<AlbumDetails />} />
@@ -31,7 +31,7 @@ const App = () => {
         <Route path="/playlist/details/:id" element={<PlaylistDetails />} />
         <Route path="/artists" element={<Artists />} />
         <Route path="/artists/details/:id" element={<ArtistsDetails />} />
-        <Route path="likes" element={<Likes/>} />
+        <Route path="/likes" element={<Likes/>} />
       </Routes>
     </div>
   );

@@ -32,6 +32,8 @@ const Songs = () => {
   const [existingData, setexistingData] = useState(null);
   const audioRef = useRef();
   const [hasMore, sethasMore] = useState(true);
+  const [audiocheck, setaudiocheck] = useState(true);
+
 
   // const Getsearch = async () => {
   //   try {
@@ -85,8 +87,21 @@ const Songs = () => {
   }
 
   function audioseter(i) {
-    setindex(i);
-    setsonglink([search[i]]);
+    if (songlink[0]?.id === search[i].id) {
+      const audio = audioRef.current;
+      if (!audio.paused) {
+        audio.pause();
+        setaudiocheck(false);
+      } else {
+        setaudiocheck(true);
+        audio.play().catch((error) => {
+          console.error("Playback failed:", error);
+        });
+      }
+    } else {
+      setindex(i);
+      setsonglink([search[i]]);
+    }
   }
 
   function likeset(e) {
@@ -349,10 +364,9 @@ const Songs = () => {
     }
   };
 
-
   // const initializeMediaSession = () => {
   //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
   //   if ("mediaSession" in navigator) {
   //     navigator.mediaSession.metadata = new MediaMetadata({
   //       title: songlink[0]?.name || "",
@@ -365,7 +379,7 @@ const Songs = () => {
   //         },
   //       ],
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("play", function () {
   //       // Handle play action
   //       if (audioRef.current) {
@@ -374,7 +388,7 @@ const Songs = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("pause", function () {
   //       // Handle pause action
   //       if (audioRef.current) {
@@ -383,14 +397,14 @@ const Songs = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("previoustrack", function () {
   //       pre();
   //       audioRef.play();
   //       audioRef.current.play();
   //       audioset();
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("nexttrack", function () {
   //       next();
   //       audioRef.play();
@@ -400,7 +414,7 @@ const Songs = () => {
   //   } else {
   //     console.warn("MediaSession API is not supported.");
   //   }
-  
+
   //   if (isIOS) {
   //     // Enable background audio playback for iOS
   //     document.addEventListener("visibilitychange", () => {
@@ -420,7 +434,7 @@ const Songs = () => {
   //         }
   //       }
   //     });
-  
+
   //     // Handle iOS background audio restrictions
   //     document.addEventListener("pause", () => {
   //       if (audioRef.current && !audioRef.current.paused) {
@@ -430,7 +444,7 @@ const Songs = () => {
   //         });
   //       }
   //     });
-  
+
   //     document.addEventListener("resume", () => {
   //       if (audioRef.current && audioRef.current.paused) {
   //         // Resume playing when app returns from background
@@ -441,36 +455,27 @@ const Songs = () => {
   //     });
   //   }
   // };
-  
 
   function next() {
     if (index < search.length - 1) {
       setindex(index++);
       audioseter(index);
-      audioRef.play();
       audioRef.current.play();
-      audioset();
     } else {
       setindex(0);
       setsonglink([search[0]]);
-      audioRef.play();
       audioRef.current.play();
-      audioset();
     }
   }
   function pre() {
     if (index > 0) {
       setindex(index--);
       audioseter(index);
-      audioRef.play();
       audioRef.current.play();
-      audioset();
     } else {
       setindex(search.length - 1);
       setsonglink([search[search.length - 1]]);
-      audioRef.play();
       audioRef.current.play();
-      audioset();
     }
   }
 
@@ -545,13 +550,6 @@ const Songs = () => {
       Getsearch();
     }, 1000);
   }
-
-  function audioset() {
-    setTimeout(() => {
-      audioRef.current.play();
-      audioRef.play();
-    }, 1000);
-  }
   // const fetchMoreData = () => {
   //   console.log("Fetching more data...");
   //   Getsearch();
@@ -608,16 +606,19 @@ const Songs = () => {
     }
   }, [songlink]);
 
+
+  
+
   // useEffect(() => {
   //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
   //   if (songlink.length > 0) {
   //     // Check if the current environment is iOS
   //     if (isIOS) {
   //       // On iOS, audio cannot be played without user interaction due to autoplay restrictions
   //       // We need to rely on user interaction to start playing audio
   //       // You might want to display a play button or some user interaction element to trigger audio playback
-  
+
   //       // Initialize media session regardless of playback
   //       initializeMediaSession();
   //     } else {
@@ -627,7 +628,7 @@ const Songs = () => {
   //       audioRef.current.play().catch((error) => {
   //         console.error("Play error:", error);
   //       });
-  
+
   //       // Initialize media session if not on iOS
   //       initializeMediaSession();
   //       audioRef.play();
@@ -636,7 +637,6 @@ const Songs = () => {
   //     }
   //   }
   // }, [songlink]);
-  
 
   var title = songlink[0]?.name;
 
@@ -773,6 +773,22 @@ const Songs = () => {
                     src={wavs}
                     alt=""
                   />
+                  {songlink.length>0 && <i className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-70  duration-300 rounded-md ${
+                      d.id === songlink[0]?.id ? "block" : "hidden"
+                    } ${audiocheck ? "ri-pause-circle-fill" :"ri-play-circle-fill" }`}></i>}
+
+                  {/* { audiocheck ?  <i
+                      className={`absolute top-0 w-[10vw] h-full flex items-center justify-center text-5xl sm:w-full opacity-0 hover:opacity-70 duration-300 rounded-md ri-pause-circle-fill ${
+                        d.id === songlink[0]?.id ? "block" : "hidden"
+                      } `}
+                    ></i> :  <i
+                    className={`absolute top-0 w-[10vw] h-full flex items-center justify-center text-5xl sm:w-full opacity-0 hover:opacity-70 duration-300 rounded-md ri-play-circle-fill ${
+                      d.id === songlink[0]?.id ? "block" : "hidden"
+                    } `}
+                  ></i> } */}
+                   
+                  
+
                   <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
                     <div className="flex flex-col">
                       <h3
@@ -909,6 +925,8 @@ const Songs = () => {
               <audio
                 className="w-[80%]"
                 ref={audioRef}
+                onPause={()=>setaudiocheck(false)}
+                onPlay={()=>setaudiocheck(true)}
                 controls
                 autoPlay
                 onEnded={next}
