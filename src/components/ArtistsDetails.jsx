@@ -34,6 +34,7 @@ const ArtistsDetails = () => {
   const [like2, setlike2] = useState(false);
   const [existingData, setexistingData] = useState(null);
   const audioRef = useRef();
+  const [hasMore, sethasMore] = useState(true);
 
   const Getdetails = async () => {
     try {
@@ -43,7 +44,16 @@ const ArtistsDetails = () => {
         `https://jiosaavan-api-2-harsh-patel.vercel.app/api/artists/${finalid}/songs?page=${page}`
       );
       // setdetails(data?.data?.songs);
-      setdetails((prevState) => [...prevState, ...data.data.songs]);
+      // setdetails((prevState) => [...prevState, ...data.data.songs]);
+      const newData = data.data.songs.filter(
+        (newItem) => !details.some((prevItem) => prevItem.id === newItem.id)
+      );
+      setdetails((prevState) => [...prevState, ...newData]);
+      sethasMore(newData.length > 0);
+      setpage(page + 1);
+      if (page>=5 && details.length===0) {
+        navigate(-1);
+      }
     } catch (error) {
       console.log("error", error);
     }
@@ -201,8 +211,6 @@ const ArtistsDetails = () => {
     }
   }
 
-
-
   // const initializeMediaSession = () => {
   //   if ("mediaSession" in navigator) {
   //     navigator.mediaSession.metadata = new MediaMetadata({
@@ -216,7 +224,7 @@ const ArtistsDetails = () => {
   //         },
   //       ],
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("play", function () {
   //       // Handle play action
   //       if (audioRef.current) {
@@ -225,7 +233,7 @@ const ArtistsDetails = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("pause", function () {
   //       // Handle pause action
   //       if (audioRef.current) {
@@ -234,11 +242,11 @@ const ArtistsDetails = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("previoustrack", function () {
   //       pre();
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("nexttrack", function () {
   //       next();
   //     });
@@ -249,7 +257,7 @@ const ArtistsDetails = () => {
 
   const initializeMediaSession = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if (!isIOS && "mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
@@ -262,7 +270,7 @@ const ArtistsDetails = () => {
           },
         ],
       });
-  
+
       navigator.mediaSession.setActionHandler("play", function () {
         // Handle play action
         if (audioRef.current) {
@@ -271,7 +279,7 @@ const ArtistsDetails = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("pause", function () {
         // Handle pause action
         if (audioRef.current) {
@@ -280,11 +288,11 @@ const ArtistsDetails = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("previoustrack", function () {
         pre();
       });
-  
+
       navigator.mediaSession.setActionHandler("nexttrack", function () {
         next();
       });
@@ -292,7 +300,6 @@ const ArtistsDetails = () => {
       console.warn("MediaSession API is not supported or the device is iOS.");
     }
   };
-  
 
   function next() {
     if (index < details.length - 1) {
@@ -334,19 +341,35 @@ const ArtistsDetails = () => {
 
   function seccall() {
     const intervalId = setInterval(() => {
-      if (details.length >= 0 && page < 20) {
-        setpage(page + 1);
+      if (!details.length>0) {
         Getdetails();
       }
-    }, 5000);
+    }, 2000);
     return intervalId;
+  }
+
+  function newdata() {
+    // if (page>=30) {
+    //   sethasMore(false);
+    // }
+    // else{
+    //   setTimeout(() => {
+    //     Getsearch();
+    // }, 1000);
+    // }
+    setTimeout(() => {
+      Getdetails();
+    }, 1000);
   }
 
   useEffect(() => {
     var interval = seccall();
 
     return () => clearInterval(interval);
-  }, [details, page]);
+  }, [details]);
+
+
+  
 
   useEffect(() => {
     likeset(songlink[0]);
@@ -370,7 +393,7 @@ const ArtistsDetails = () => {
 
   useEffect(() => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if (!isIOS && songlink.length > 0) {
       audioRef.current.play();
       initializeMediaSession();
@@ -380,9 +403,10 @@ const ArtistsDetails = () => {
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
   // console.log(details);
-  // console.log(details.songs);
-
+  // console.log(details);
   // console.log(page)
+  // console.log(hasMore)
+
 
   return details.length ? (
     <motion.div
@@ -392,7 +416,7 @@ const ArtistsDetails = () => {
       className=" w-full h-screen  bg-slate-700"
     >
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="w-full flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
+      <div className="w-full fixed z-[99] backdrop-blur-xl flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
           className="text-3xl cursor-pointer ml-5 bg-green-500 rounded-full ri-arrow-left-line"
@@ -448,78 +472,87 @@ const ArtistsDetails = () => {
           </a>
         </div>
       </div> */}
-
-      <div className="flex w-full text-white p-10 sm:p-3 sm:gap-3 h-[65vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
-        {details?.map((d, i) => (
-          <div
-            title="click on song image or name to play the song"
-            key={i}
-            className="items-center justify-center relative hover:scale-95 sm:hover:scale-100 duration-150 w-[40%] flex mb-3 sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[10vw] sm:h-[15vh] cursor-pointer bg-slate-600  "
-          >
+      <InfiniteScroll
+        dataLength={details.length}
+        next={newdata}
+        hasMore={hasMore}
+        loader={
+          page > 2 && <h1 className="bg-slate-700 text-zinc-300">Loading...</h1>
+        }
+        endMessage={<p className="bg-slate-700 text-zinc-300">No more items</p>}
+        // endMessage={()=>nomoredata()}
+      >
+        <div className="flex w-full pt-[15vh] sm:pt-[10vh] pb-[30vh] sm:pb-[35vh] text-white p-10 sm:p-3 sm:gap-3 bg-slate-700 min-h-[65vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
+          {details?.map((d, i) => (
             <div
-              onClick={() => audioseter(i)}
-              className="flex w-[80%] items-center"
+              title="click on song image or name to play the song"
+              key={i}
+              className="items-center justify-center relative hover:scale-95 sm:hover:scale-100 duration-150 w-[40%] flex mb-3 sm:mb-3 sm:w-full sm:flex sm:items-center sm:gap-3  rounded-md h-[10vw] sm:h-[15vh] cursor-pointer bg-slate-600  "
             >
-              <motion.img
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.7 }}
-                viewport={{ once: true }}
-                className="w-[10vw] h-[10vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
-                src={d.image[2].url}
-                alt=""
-              />
-              <img
-                className={`absolute top-0 w-[8%] sm:w-[10%] rounded-md ${
-                  d.id === songlink[0]?.id ? "block" : "hidden"
-                } `}
-                src={wavs}
-                alt=""
-              />
-              <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
-                <div className="flex flex-col">
-                  <h3
-                    className={`text-sm sm:text-xs leading-none  font-bold ${
-                      d.id === songlink[0]?.id && "text-green-300"
-                    }`}
-                  >
-                    {d.name}
-                  </h3>
-                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
-                    {d.album.name}
-                  </h4>
+              <div
+                onClick={() => audioseter(i)}
+                className="flex w-[80%] items-center"
+              >
+                <motion.img
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.7 }}
+                  viewport={{ once: true }}
+                  className="w-[10vw] h-[10vw] sm:h-[15vh] sm:w-[15vh] rounded-md"
+                  src={d.image[2].url}
+                  alt=""
+                />
+                <img
+                  className={`absolute top-0 w-[8%] sm:w-[10%] rounded-md ${
+                    d.id === songlink[0]?.id ? "block" : "hidden"
+                  } `}
+                  src={wavs}
+                  alt=""
+                />
+                <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
+                  <div className="flex flex-col">
+                    <h3
+                      className={`text-sm sm:text-xs leading-none  font-bold ${
+                        d.id === songlink[0]?.id && "text-green-300"
+                      }`}
+                    >
+                      {d.name}
+                    </h3>
+                    <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                      {d.album.name}
+                    </h4>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {existingData?.find((element) => element?.id == d?.id) ? (
-              <i
-                onClick={() => likehandle2(d)}
-                className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]    duration-300 cursor-pointer text-red-500  ri-heart-3-fill`}
-              ></i>
-            ) : (
-              <i
-                onClick={() => likehandle2(d)}
-                className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]   duration-300 cursor-pointer text-zinc-300  ri-heart-3-fill`}
-              ></i>
-            )}
+              {existingData?.find((element) => element?.id == d?.id) ? (
+                <i
+                  onClick={() => likehandle2(d)}
+                  className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]    duration-300 cursor-pointer text-red-500  ri-heart-3-fill`}
+                ></i>
+              ) : (
+                <i
+                  onClick={() => likehandle2(d)}
+                  className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]   duration-300 cursor-pointer text-zinc-300  ri-heart-3-fill`}
+                ></i>
+              )}
 
-            {/* <i
+              {/* <i
                 onClick={() => likehandle(d)}
                 className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]  bg-red-500   text-zinc-300 hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
                   like ? "text-red-500" : "text-zinc-300"
                 }  ri-heart-3-fill`}
               ></i> */}
 
-            {/* <i
+              {/* <i
               title="Remove Song "
               onClick={() => removehandle(d.id)}
               className="m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw] text-xl bg-red-500  duration-300 cursor-pointer text-zinc-300 ri-dislike-fill"
             ></i> */}
-          </div>
-        ))}
+            </div>
+          ))}
 
-        {/* <div className="flex gap-3 text-2xl  ">
+          {/* <div className="flex gap-3 text-2xl  ">
           <h1>MADE BY ❤️ HARSH PATEL</h1>
           <a
             target="_blank"
@@ -528,12 +561,13 @@ const ArtistsDetails = () => {
             <i className=" ri-instagram-fill"></i>
           </a>
         </div> */}
-      </div>
+        </div>
+      </InfiniteScroll>
 
       <motion.div
         className={
           songlink.length > 0
-            ? `duration-700 flex  rounded-full sm:rounded-none sm:rounded-t-[20%] gap-3 items-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600  `
+            ? `duration-700 flex  fixed z-[99] bottom-0  gap-3 items-center  w-full backdrop-blur-xl  py-3 sm:h-[30vh] max-h-[30vh]  `
             : "block"
         }
       >
@@ -696,7 +730,7 @@ const ArtistsDetails = () => {
       </motion.div>
     </motion.div>
   ) : (
-    <Loading />
+    <Loading page={page} />
   );
 };
 

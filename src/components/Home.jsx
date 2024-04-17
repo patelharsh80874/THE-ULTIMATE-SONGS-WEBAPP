@@ -424,17 +424,17 @@ const Home = () => {
   // console.log(songlink);
   // console.log(index)
   return details.length > 0 ? (
-    <div className="w-full h-screen  bg-slate-800">
+    <div className="w-full h-screen overflow-hidden overflow-y-auto bg-slate-800">
       <Toaster position="top-center" reverseOrder={false} />
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ease: Circ.easeIn, duration: 0.5 }}
-        className="logo duration-700 rounded-b-full sm:rounded-b-[10%] h-[15vh] sm:h-[10vh] flex sm:block bg-gray-500 px-10 sm:px-5  items-center  gap-3 "
+        className="logo fixed  z-[99] top-0 w-full  duration-700  max-h-[20vh]  flex sm:block backdrop-blur-xl py-3  px-10 sm:px-5  items-center gap-3 "
       >
-        <div className="flex items-center sm:justify-center sm:pt-2 gap-3">
+        <div className="flex   items-center sm:justify-center sm:pt-2 gap-3">
           <img className="w-[5vw] sm:w-[10vw] rounded-full" src={logo} alt="" />
-          <h1 className="text-2xl sm:text-xl  font-black">
+          <h1 className="text-2xl text-zinc-400 sm:text-xl  font-black">
             THE ULTIMATE SONGS
           </h1>
         </div>
@@ -442,11 +442,11 @@ const Home = () => {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ease: Circ.easeIn, duration: 1 }}
-          className="sm:flex   sm:justify-center"
+          className="sm:flex sm:pt-3 text-zinc-500   sm:justify-center"
         >
-          <h3 className="inline text-xl sm:text-sm">Search : </h3>
+          <h3 className="inline text-xl sm:hidden">Search : </h3>
           <Link
-            className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
+            className=" text-xl sm:text-sm ml-3 sm:font-bold h-fit w-fit p-1 rounded-md  hover:bg-slate-500 duration-300 bg-slate-400 text-blue-900 font-semibold " 
             to={"/songs"}
           >
             Songs
@@ -458,32 +458,33 @@ const Home = () => {
             Download Songs
           </Link> */}
           <Link
-            className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
+            className=" text-xl sm:text-sm ml-3 sm:font-bold h-fit w-fit p-1 rounded-md hover:bg-slate-500 duration-300 bg-slate-400 text-blue-900 font-semibold "
             to={"/playlist"}
           >
             PlayLists
           </Link>
           <Link
-            className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
+            className=" text-xl sm:text-sm ml-3 h-fit w-fit p-1 rounded-md hover:bg-slate-500 duration-300 bg-slate-400 sm:font-bold text-blue-900 font-semibold "
             to={"/artists"}
           >
             Artists
           </Link>
           <Link
-            className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
+            className=" text-xl sm:text-sm ml-3 h-fit w-fit p-1 rounded-md hover:bg-slate-500 duration-300 bg-slate-400 sm:font-bold text-blue-900 font-semibold "
             to={"/album"}
           >
             Album
           </Link>
           <Link
-            className=" text-xl sm:text-sm ml-3 sm:font-bold text-blue-900 font-semibold "
+            className=" text-xl sm:text-sm ml-3 h-fit w-fit p-1 rounded-md hover:bg-slate-500 duration-300 bg-slate-400 sm:font-bold text-blue-900 font-semibold "
             to={"likes"}
           >
             Likes
           </Link>
+          <a target="_blank"  href={"https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP"} className="ml-4 cursor-pointer  text-3xl bg-zinc-900  p-1  sm:p-0 rounded-full ri-github-fill"></a>
         </motion.div>
       </motion.div>
-      <div className="w-full h-[63vh]  text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
+      <div className="w-full bg-slate-800  min-h-[63vh] pt-[20vh]   text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
         <div className="w-full   flex justify-end ">
           <Dropdown
             className="w-[15%] text-sm sm:w-[50%]"
@@ -630,7 +631,7 @@ const Home = () => {
         </div>
         <div className="albums w-full flex flex-col gap-3 ">
           <h3 className="text-xl h-[5vh] font-semibold">Albums</h3>
-          <div className="albumsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
+          <div className="albumsdata mb-[20vh] sm:mb-[25vh] px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {home?.albums?.map((a, i) => (
               <motion.div
                 initial={{ y: -100, scale: 0.5 }}
@@ -662,7 +663,7 @@ const Home = () => {
       <motion.div
         className={
           songlink.length > 0
-            ? `duration-700 rounded-full  sm:rounded-none sm:rounded-t-[30%]  flex  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[27vh] bg-gray-700  `
+            ? `duration-700 fixed  z-[99] bottom-0  flex  gap-3 items-center  w-full max-h-[30vh] py-3  backdrop-blur-xl `
             : "block"
         }
       >

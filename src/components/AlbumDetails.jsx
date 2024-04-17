@@ -395,7 +395,7 @@ const AlbumDetails = () => {
       className=" w-full h-screen  bg-slate-700"
     >
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="w-full flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
+      <div className="w-full fixed z-[99] backdrop-blur-xl flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
         <i
           onClick={() => navigate(-1)}
           className="text-3xl cursor-pointer ml-5 bg-green-500 rounded-full ri-arrow-left-line"
@@ -457,7 +457,7 @@ const AlbumDetails = () => {
           </div>
       </div> */}
 
-      <div className="flex w-full text-white p-10 sm:p-3 sm:gap-3 h-[65vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
+      <div className="flex w-full bg-slate-700 pt-[15vh] sm:pt-[10vh] pb-[25vh] sm:pb-[35vh] text-white p-10 sm:p-3 sm:gap-3 min-h-[65vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
         {details?.map((d, i) => (
           <div
             title="click on song image or name to play the song"
@@ -541,7 +541,7 @@ const AlbumDetails = () => {
       <motion.div
         className={
           songlink.length > 0
-            ? ` duration-700 flex  rounded-full sm:rounded-none sm:rounded-t-[30%]  gap-3 items-center  w-full min-h-[20vh] sm:min-h-[28vh] bg-slate-600  `
+            ? ` duration-700 flex fixed z-[99] bottom-0     gap-3 items-center  w-full py-3 sm:h-[30vh] h-[20vh] backdrop-blur-xl  `
             : "block"
         }
       >
