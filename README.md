@@ -1,5 +1,6 @@
 
- <img width="959" alt="the ultimate songs" src="https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP/assets/110234600/4950e39a-9f33-418d-87cc-76672ca5430c">
+![Screenshot 2024-04-18 152255](https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP/assets/110234600/32e480ff-caf7-447b-979c-49c64ba80f50)
+
 
  Project Summary : The Ultimate Songs Webapp
  Developed a React.js web app with Tailwind CSS and
