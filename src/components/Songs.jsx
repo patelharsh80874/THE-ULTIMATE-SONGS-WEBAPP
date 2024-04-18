@@ -25,7 +25,7 @@ const Songs = () => {
   const [search, setsearch] = useState([]);
   var [index, setindex] = useState("");
   const [songlink, setsonglink] = useState([]);
-  var [page, setpage] = useState(1);
+  var [page, setpage] = useState(0);
   const [searchclick, setsearchclick] = useState(false);
   const [like, setlike] = useState(false);
   const [like2, setlike2] = useState(false);
@@ -33,7 +33,6 @@ const Songs = () => {
   const audioRef = useRef();
   const [hasMore, sethasMore] = useState(true);
   const [audiocheck, setaudiocheck] = useState(true);
-
 
   // const Getsearch = async () => {
   //   try {
@@ -50,17 +49,39 @@ const Songs = () => {
 
   const Getsearch = async () => {
     try {
+      if(hasMore===false){
+        setpage(page + 1);
+      }
       const { data } = await axios.get(
         `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${requery}&page=${page}&limit=40`
       );
       // setsearch((prevState) => [...prevState, ...data.data.results]);
-      const newData = data.data.results.filter(
-        (newItem) => !search.some((prevItem) => prevItem.id === newItem.id)
-      );
-      setsearch((prevState) => [...prevState, ...newData]);
-      setpage(page + 1);
-      sethasMore(newData.length > 0);
-      // sethasMore(true);
+      if (hasMore) {
+        const newData = data.data.results.filter(
+          (newItem) => !search.some((prevItem) => prevItem.id === newItem.id)
+        );
+        setsearch((prevState) => [...prevState, ...newData]);
+        sethasMore(newData.length > 0);
+        setpage(page + 1);
+      } else {
+        if(data?.data?.results.length > 0 ){
+          setsearch((prevState) => [...prevState, ...data?.data?.results]);
+          // setpage(page + 1);
+          // sethasMore(true);
+        }
+        else{
+          toast(`NO MORE DATA FOUND`, {
+            icon: "⚠️",
+            duration: 1500,
+            style: {
+              borderRadius: "10px",
+              background: "rgb(115 115 115)",
+              color: "#fff",
+            },
+          });
+        }
+        
+      }
     } catch (error) {
       console.log("error", error);
     }
@@ -77,6 +98,7 @@ const Songs = () => {
       toast.success(`Searching ${query} , Wait For Results`);
       setsearch([]);
       setsonglink([]);
+      sethasMore(true);
       setindex("");
       setpage(1);
       setrequery(query);
@@ -534,7 +556,6 @@ const Songs = () => {
   //   }
   // };
 
-  
   const handleDownloadSong = (url, name, poster) => {
     return toast.promise(
       new Promise(async (resolve, reject) => {
@@ -543,19 +564,19 @@ const Songs = () => {
           // toast.loading(`Song ${name} Downloading...`, {
           //   id: 'loading-toast' // Set a unique ID for the loading toast
           // });
-  
+
           // Perform the download
           const res = await fetch(url);
           const blob = await res.blob();
           const link = document.createElement("a");
           link.href = URL.createObjectURL(blob);
           link.download = `${name}.mp3`;
-  
+
           document.body.appendChild(link);
           link.click();
-  
+
           document.body.removeChild(link);
-  
+
           resolve(); // Resolve the promise once the download is complete
         } catch (error) {
           console.log("Error fetching or downloading files", error);
@@ -565,15 +586,10 @@ const Songs = () => {
       {
         loading: `Song ${name} Downloading...`, // Loading message
         success: `Song Downloaded ✅`, // Success message
-        error: <b>Error downloading song.</b> // Error message
+        error: <b>Error downloading song.</b>, // Error message
       }
     );
   };
-  
-  
-  
-  
-  
 
   // function seccall() {
   //   const intervalId = setInterval(
@@ -682,9 +698,6 @@ const Songs = () => {
       initializeMediaSession();
     }
   }, [songlink]);
-
-
-  
 
   // useEffect(() => {
   //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
@@ -822,7 +835,7 @@ const Songs = () => {
         endMessage={<p className="bg-slate-700 text-zinc-300">No more items</p>}
         // endMessage={()=>nomoredata()}
       >
-        <div className="mt-8 mb-12 sm:mt-[9vh] overflow-hidden overflow-y-auto">
+        <div className="pt-[10vh] pb-[30vh]  overflow-hidden overflow-y-auto">
           <div className="flex w-full bg-slate-700  text-white p-10 sm:p-3 sm:gap-3  sm:block flex-wrap gap-5 justify-center ">
             {search?.map((d, i) => (
               <div
@@ -850,9 +863,17 @@ const Songs = () => {
                     src={wavs}
                     alt=""
                   />
-                  {songlink.length>0 && <i className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-90  duration-300 rounded-md ${
-                      d.id === songlink[0]?.id ? "block" : "hidden"
-                    } ${audiocheck ? "ri-pause-circle-fill" :"ri-play-circle-fill" }`}></i>}
+                  {songlink.length > 0 && (
+                    <i
+                      className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-90  duration-300 rounded-md ${
+                        d.id === songlink[0]?.id ? "block" : "hidden"
+                      } ${
+                        audiocheck
+                          ? "ri-pause-circle-fill"
+                          : "ri-play-circle-fill"
+                      }`}
+                    ></i>
+                  )}
 
                   {/* { audiocheck ?  <i
                       className={`absolute top-0 w-[10vw] h-full flex items-center justify-center text-5xl sm:w-full opacity-0 hover:opacity-70 duration-300 rounded-md ri-pause-circle-fill ${
@@ -863,8 +884,6 @@ const Songs = () => {
                       d.id === songlink[0]?.id ? "block" : "hidden"
                     } `}
                   ></i> } */}
-                   
-                  
 
                   <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
                     <div className="flex flex-col">
@@ -918,6 +937,19 @@ const Songs = () => {
             <i className=" ri-instagram-fill"></i>
           </a>
         </div> */}
+            {hasMore ? (
+              ""
+            ) : (
+              <div className={`w-full flex flex-col items-center  justify-center`}>
+                <button
+                  onClick={newdata}
+                  className={` bg-red-400 shadow-2xl py-2 px-1 rounded-md`}
+                >
+                  Load more 
+                </button>
+                <span>wait for some seconds after click</span>
+              </div>
+            )}
           </div>
         </div>
       </InfiniteScroll>
@@ -1002,8 +1034,8 @@ const Songs = () => {
               <audio
                 className="w-[80%]"
                 ref={audioRef}
-                onPause={()=>setaudiocheck(false)}
-                onPlay={()=>setaudiocheck(true)}
+                onPause={() => setaudiocheck(false)}
+                onPlay={() => setaudiocheck(true)}
                 controls
                 autoPlay
                 onEnded={next}
