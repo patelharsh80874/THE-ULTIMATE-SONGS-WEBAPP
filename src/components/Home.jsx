@@ -98,9 +98,11 @@ const Home = () => {
         // `https://jiosaavan-harsh-patel.vercel.app/search/songs?query=${language}&page=${page2}&limit=10`
       );
       // setdetails((prevState) => [...prevState, ...data.data.results]);
-      const newData = data.data.results.filter(newItem => !details.some(prevItem => prevItem.id === newItem.id));
+      const newData = data.data.results.filter(
+        (newItem) => !details.some((prevItem) => prevItem.id === newItem.id)
+      );
 
-      setdetails(prevState => [...prevState, ...newData]);
+      setdetails((prevState) => [...prevState, ...newData]);
     } catch (error) {
       console.log("error", error);
     }
@@ -158,7 +160,16 @@ const Home = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike(true);
-      toast.success(`Song (${i?.name}) added to Likes section ✅`);
+      // toast.success(`Song (${i?.name}) added to Likes section ✅`);
+      toast(`Song (${i?.name}) added to Likes section`, {
+        icon: "✅",
+        duration: 1500,
+        style: {
+          borderRadius: "10px",
+          background: "rgb(115 115 115)",
+          color: "#fff",
+        },
+      });
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -186,7 +197,20 @@ const Home = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success(`Song (${i?.name}) removed successfully. 🚮`);
+        // toast.success(`Song (${i?.name}) removed successfully. 🚮`);
+        // toast(`Song (${i?.name}) removed successfully. 🚮`, {
+        //   icon: '⚠️',
+        // });
+
+        toast(`Song (${i?.name}) removed successfully.`, {
+          icon: "⚠️",
+          duration: 1500,
+          style: {
+            borderRadius: "10px",
+            background: "rgb(115 115 115)",
+            color: "#fff",
+          },
+        });
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
@@ -211,7 +235,6 @@ const Home = () => {
   //   console.log(isLiked);
   // }
 
-
   // const initializeMediaSession = () => {
   //   if ("mediaSession" in navigator) {
   //     navigator.mediaSession.metadata = new MediaMetadata({
@@ -225,7 +248,7 @@ const Home = () => {
   //         },
   //       ],
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("play", function () {
   //       // Handle play action
   //       if (audioRef.current) {
@@ -234,7 +257,7 @@ const Home = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("pause", function () {
   //       // Handle pause action
   //       if (audioRef.current) {
@@ -243,11 +266,11 @@ const Home = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("previoustrack", function () {
   //       pre();
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("nexttrack", function () {
   //       next();
   //     });
@@ -257,7 +280,7 @@ const Home = () => {
   // };
   const initializeMediaSession = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if (!isIOS && "mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
@@ -270,7 +293,7 @@ const Home = () => {
           },
         ],
       });
-  
+
       navigator.mediaSession.setActionHandler("play", function () {
         // Handle play action
         if (audioRef.current) {
@@ -279,7 +302,7 @@ const Home = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("pause", function () {
         // Handle pause action
         if (audioRef.current) {
@@ -288,11 +311,11 @@ const Home = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("previoustrack", function () {
         pre();
       });
-  
+
       navigator.mediaSession.setActionHandler("nexttrack", function () {
         next();
       });
@@ -300,8 +323,6 @@ const Home = () => {
       console.warn("MediaSession API is not supported or the device is iOS.");
     }
   };
-  
-  
 
   function next() {
     if (index < details.length - 1) {
@@ -330,24 +351,60 @@ const Home = () => {
     }
   }
 
-  const handleDownloadSong = async (url, name) => {
-    try {
-      toast.success(`Song ${name} Downloading...`);
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${name}.mp3`;
+  // const handleDownloadSong = async (url, name) => {
+  //   try {
+  //     toast.success(`Song ${name} Downloading...`);
+  //     const res = await fetch(url);
+  //     const blob = await res.blob();
+  //     const link = document.createElement("a");
+  //     link.href = URL.createObjectURL(blob);
+  //     link.download = `${name}.mp3`;
 
-      document.body.appendChild(link);
-      link.click();
+  //     document.body.appendChild(link);
+  //     link.click();
 
-      document.body.removeChild(link);
-      toast.success("Song Downloaded ✅");
-    } catch (error) {
-      console.log("Error fetching or downloading files", error);
-    }
+  //     document.body.removeChild(link);
+  //     toast.success("Song Downloaded ✅");
+  //   } catch (error) {
+  //     console.log("Error fetching or downloading files", error);
+  //   }
+  // };
+
+  const handleDownloadSong = (url, name, poster) => {
+    return toast.promise(
+      new Promise(async (resolve, reject) => {
+        try {
+          // Display loading message
+          // toast.loading(`Song ${name} Downloading...`, {
+          //   id: 'loading-toast' // Set a unique ID for the loading toast
+          // });
+
+          // Perform the download
+          const res = await fetch(url);
+          const blob = await res.blob();
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = `${name}.mp3`;
+
+          document.body.appendChild(link);
+          link.click();
+
+          document.body.removeChild(link);
+
+          resolve(); // Resolve the promise once the download is complete
+        } catch (error) {
+          console.log("Error fetching or downloading files", error);
+          reject("Error downloading song");
+        }
+      }),
+      {
+        loading: `Song ${name} Downloading...`, // Loading message
+        success: `Song Downloaded ✅`, // Success message
+        error: <b>Error downloading song.</b>, // Error message
+      }
+    );
   };
+
   function detailsseter() {
     setpage(1);
     setindex("");
@@ -365,13 +422,16 @@ const Home = () => {
     return intervalId;
   }
   function seccall2() {
-    const intervalId2 = setInterval(() => {
-      if (details.length >= 0 && page < 20) {
-        setpage2(Math.floor(Math.random() * 42.78 + Math.random()*10.365));
-        setpage(page + 1);
-        Getdetails();
-      }
-    }, page<=2 ? 500 : 2000);
+    const intervalId2 = setInterval(
+      () => {
+        if (details.length >= 0 && page < 20) {
+          setpage2(Math.floor(Math.random() * 42.78 + Math.random() * 10.365));
+          setpage(page + 1);
+          Getdetails();
+        }
+      },
+      page <= 2 ? 500 : 2000
+    );
     return intervalId2;
   }
 
@@ -398,13 +458,12 @@ const Home = () => {
 
   useEffect(() => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if (!isIOS && songlink.length > 0) {
       audioRef.current.play();
       initializeMediaSession();
     }
   }, [songlink]);
-  
 
   // useEffect(() => {
   //   initializeMediaSession();
@@ -437,7 +496,7 @@ const Home = () => {
   // console.log(index)
   return details.length > 0 ? (
     <div className="w-full h-screen  bg-slate-800">
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster position="top-center" reverseOrder={false}/>
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -458,7 +517,7 @@ const Home = () => {
         >
           <h3 className="inline text-xl sm:hidden">Search : </h3>
           <Link
-            className=" text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold " 
+            className=" text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold "
             to={"/songs"}
           >
             Songs
@@ -493,7 +552,13 @@ const Home = () => {
           >
             Likes
           </Link>
-          <a target="_blank"  href={"https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP"} className="ml-4 sm:ml-2 cursor-pointer  text-3xl  text-zinc-500   ri-github-fill"></a>
+          <a
+            target="_blank"
+            href={
+              "https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP"
+            }
+            className="ml-4 sm:ml-2 cursor-pointer  text-3xl  text-zinc-500   ri-github-fill"
+          ></a>
         </motion.div>
       </motion.div>
       <div className="w-full  bg-slate-800  min-h-[63vh] pt-[20vh] pb-[25vh]   text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
@@ -520,7 +585,6 @@ const Home = () => {
                 key={i}
                 className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
               >
-                
                 <motion.img
                   className="relative w-full  rounded-md"
                   // src={t.image[2].link}
@@ -534,11 +598,18 @@ const Home = () => {
                   src={wavs}
                   alt=""
                 />
-                 {songlink.length>0 && <i className={`absolute top-20 sm:top-16 w-full  flex items-center justify-center text-5xl  opacity-80  duration-300 rounded-md ${
+                {songlink.length > 0 && (
+                  <i
+                    className={`absolute top-20 sm:top-16 w-full  flex items-center justify-center text-5xl  opacity-90  duration-300 rounded-md  ${
                       t.id === songlink[0]?.id ? "block" : "hidden"
-                    } ${audiocheck ? "ri-pause-circle-fill" :"ri-play-circle-fill" }`}></i>}
-               
-                
+                    } ${
+                      audiocheck
+                        ? "ri-pause-circle-fill"
+                        : "ri-play-circle-fill"
+                    }`}
+                  ></i>
+                )}
+
                 <motion.div
                   //  initial={{ y: 50, scale:0}}
                   //  whileInView={{ y: 0,scale: 1 }}
@@ -765,8 +836,8 @@ const Home = () => {
               </button>
               <audio
                 ref={audioRef}
-                onPause={()=>setaudiocheck(false)}
-                onPlay={()=>setaudiocheck(true)}
+                onPause={() => setaudiocheck(false)}
+                onPlay={() => setaudiocheck(true)}
                 className="w-[80%]"
                 controls
                 autoPlay

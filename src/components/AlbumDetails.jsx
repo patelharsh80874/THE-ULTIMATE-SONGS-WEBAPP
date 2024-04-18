@@ -99,7 +99,16 @@ const AlbumDetails = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike(true);
-      toast.success(`Song (${i?.name}) added to Likes section. ✅`);
+      // toast.success(`Song (${i?.name}) added to Likes section. ✅`);
+      toast(`Song (${i?.name}) added to Likes section`, {
+        icon: "✅",
+        duration: 1500,
+        style: {
+          borderRadius: "10px",
+          background: "rgb(115 115 115)",
+          color: "#fff",
+        },
+      });
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -127,7 +136,16 @@ const AlbumDetails = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success(`Song (${i?.name}) removed successfully. 🚮`);
+        // toast.success(`Song (${i?.name}) removed successfully. 🚮`);
+        toast(`Song (${i?.name}) removed successfully.`, {
+          icon: "⚠️",
+          duration: 1500,
+          style: {
+            borderRadius: "10px",
+            background: "rgb(115 115 115)",
+            color: "#fff",
+          },
+        });
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
@@ -166,7 +184,16 @@ const AlbumDetails = () => {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       setlike2(!like2);
-      toast.success(`Song (${i?.name}) added to Likes section. ✅`);
+      // toast.success(`Song (${i?.name}) added to Likes section. ✅`);
+      toast(`Song (${i?.name}) added to Likes section`, {
+        icon: "✅",
+        duration: 1500,
+        style: {
+          borderRadius: "10px",
+          background: "rgb(115 115 115)",
+          color: "#fff",
+        },
+      });
     } else {
       // setlike(true);
       // Otherwise, inform the user that the song is already liked
@@ -194,7 +221,16 @@ const AlbumDetails = () => {
         // Store the updated data back into localStorage
         localStorage.setItem("likeData", JSON.stringify(updatedData));
         //   console.log("Song removed successfully.");
-        toast.success(`Song (${i?.name}) removed successfully. 🚮`);
+        // toast.success(`Song (${i?.name}) removed successfully. 🚮`);
+        toast(`Song (${i?.name}) removed successfully.`, {
+          icon: "⚠️",
+          duration: 1500,
+          style: {
+            borderRadius: "10px",
+            background: "rgb(115 115 115)",
+            color: "#fff",
+          },
+        });
 
         // if (index>0 && details.length>=0) {
         //     setrerender(!rerender)
@@ -324,23 +360,58 @@ const AlbumDetails = () => {
     }
   }
 
-  const handleDownloadSong = async (url, name) => {
-    try {
-      toast.success(`Song ${name} Downloading...`);
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${name}.mp3`;
+  // const handleDownloadSong = async (url, name) => {
+  //   try {
+  //     toast.success(`Song ${name} Downloading...`);
+  //     const res = await fetch(url);
+  //     const blob = await res.blob();
+  //     const link = document.createElement("a");
+  //     link.href = URL.createObjectURL(blob);
+  //     link.download = `${name}.mp3`;
 
-      document.body.appendChild(link);
-      link.click();
+  //     document.body.appendChild(link);
+  //     link.click();
 
-      document.body.removeChild(link);
-      toast.success("Song Downloaded ✅");
-    } catch (error) {
-      console.log("Error fetching or downloading files", error);
-    }
+  //     document.body.removeChild(link);
+  //     toast.success("Song Downloaded ✅");
+  //   } catch (error) {
+  //     console.log("Error fetching or downloading files", error);
+  //   }
+  // };
+
+  const handleDownloadSong = (url, name, poster) => {
+    return toast.promise(
+      new Promise(async (resolve, reject) => {
+        try {
+          // Display loading message
+          // toast.loading(`Song ${name} Downloading...`, {
+          //   id: 'loading-toast' // Set a unique ID for the loading toast
+          // });
+  
+          // Perform the download
+          const res = await fetch(url);
+          const blob = await res.blob();
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = `${name}.mp3`;
+  
+          document.body.appendChild(link);
+          link.click();
+  
+          document.body.removeChild(link);
+  
+          resolve(); // Resolve the promise once the download is complete
+        } catch (error) {
+          console.log("Error fetching or downloading files", error);
+          reject("Error downloading song");
+        }
+      }),
+      {
+        loading: `Song ${name} Downloading...`, // Loading message
+        success: `Song Downloaded ✅`, // Success message
+        error: <b>Error downloading song.</b> // Error message
+      }
+    );
   };
 
   function seccall() {
@@ -498,7 +569,7 @@ const AlbumDetails = () => {
                 src={wavs}
                 alt=""
               />
-               {songlink.length>0 && <i className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-70  duration-300 rounded-md ${
+               {songlink.length>0 && <i className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-90  duration-300 rounded-md ${
                       d.id === songlink[0]?.id ? "block" : "hidden"
                     } ${audiocheck ? "ri-pause-circle-fill" :"ri-play-circle-fill" }`}></i>}
               <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">

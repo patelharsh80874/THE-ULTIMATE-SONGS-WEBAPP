@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Loading from "./Loading";
 import wavs from "../../public/wavs.gif";
-import empty from "../../public/empty2.gif";
+import empty from "../../public/empty3.gif";
 import {
   animate,
   circIn,
@@ -57,8 +57,6 @@ function Likes() {
       setsonglink([details[i]]);
     }
   }
-
-
 
   // function likeset(e) {
   //   // console.log(e);
@@ -149,7 +147,7 @@ function Likes() {
   //   }
   // }
 
-  function removehandle(i,ind) {
+  function removehandle(i, ind) {
     setlike(false);
     let existingData = localStorage.getItem("likeData");
 
@@ -171,12 +169,21 @@ function Likes() {
       // Store the updated data back into localStorage
       localStorage.setItem("likeData", JSON.stringify(updatedData));
       //   console.log("Song removed successfully.");
-      toast.success("Song removed successfully. 🚮");
+      // toast.success("Song removed successfully. 🚮");
+      toast(`Song removed successfully.`, {
+        icon: "✅",
+        duration: 1500,
+        style: {
+          borderRadius: "10px",
+          background: "rgb(115 115 115)",
+          color: "#fff",
+        },
+      });
       setrerender(!rerender);
       if (songlink[0].id != i) {
         setrerender(!rerender);
-        if(index > ind){
-          setindex(index-1)
+        if (index > ind) {
+          setindex(index - 1);
         }
         // else{
         //   setindex(details.findIndex((item) => item.id === songlink[0].id)+1)
@@ -209,8 +216,6 @@ function Likes() {
     toast.error("it's empty, liked songs will be shown in this page 👇");
   }
 
-
-
   // const initializeMediaSession = () => {
   //   if ("mediaSession" in navigator) {
   //     navigator.mediaSession.metadata = new MediaMetadata({
@@ -224,7 +229,7 @@ function Likes() {
   //         },
   //       ],
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("play", function () {
   //       // Handle play action
   //       if (audioRef.current) {
@@ -233,7 +238,7 @@ function Likes() {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("pause", function () {
   //       // Handle pause action
   //       if (audioRef.current) {
@@ -242,11 +247,11 @@ function Likes() {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("previoustrack", function () {
   //       pre();
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("nexttrack", function () {
   //       next();
   //     });
@@ -254,10 +259,10 @@ function Likes() {
   //     console.warn("MediaSession API is not supported.");
   //   }
   // };
-  
+
   const initializeMediaSession = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if (!isIOS && "mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
@@ -270,7 +275,7 @@ function Likes() {
           },
         ],
       });
-  
+
       navigator.mediaSession.setActionHandler("play", function () {
         // Handle play action
         if (audioRef.current) {
@@ -279,7 +284,7 @@ function Likes() {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("pause", function () {
         // Handle pause action
         if (audioRef.current) {
@@ -288,11 +293,11 @@ function Likes() {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("previoustrack", function () {
         pre();
       });
-  
+
       navigator.mediaSession.setActionHandler("nexttrack", function () {
         next();
       });
@@ -320,23 +325,58 @@ function Likes() {
     }
   }
 
-  const handleDownloadSong = async (url, name, img) => {
-    try {
-      toast.success(`Song ${name} Downloading...`);
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${name}.mp3`;
+  // const handleDownloadSong = async (url, name, img) => {
+  //   try {
+  //     toast.success(`Song ${name} Downloading...`);
+  //     const res = await fetch(url);
+  //     const blob = await res.blob();
+  //     const link = document.createElement("a");
+  //     link.href = URL.createObjectURL(blob);
+  //     link.download = `${name}.mp3`;
 
-      document.body.appendChild(link);
-      link.click();
+  //     document.body.appendChild(link);
+  //     link.click();
 
-      document.body.removeChild(link);
-      toast.success("Song Downloaded ✅");
-    } catch (error) {
-      console.log("Error fetching or downloading files", error);
-    }
+  //     document.body.removeChild(link);
+  //     toast.success("Song Downloaded ✅");
+  //   } catch (error) {
+  //     console.log("Error fetching or downloading files", error);
+  //   }
+  // };
+
+  const handleDownloadSong = (url, name, poster) => {
+    return toast.promise(
+      new Promise(async (resolve, reject) => {
+        try {
+          // Display loading message
+          // toast.loading(`Song ${name} Downloading...`, {
+          //   id: 'loading-toast' // Set a unique ID for the loading toast
+          // });
+
+          // Perform the download
+          const res = await fetch(url);
+          const blob = await res.blob();
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = `${name}.mp3`;
+
+          document.body.appendChild(link);
+          link.click();
+
+          document.body.removeChild(link);
+
+          resolve(); // Resolve the promise once the download is complete
+        } catch (error) {
+          console.log("Error fetching or downloading files", error);
+          reject("Error downloading song");
+        }
+      }),
+      {
+        loading: `Song ${name} Downloading...`, // Loading message
+        success: <b>Song Downloaded ✅</b>, // Success message
+        error: <b>Error downloading song.</b>, // Error message
+      }
+    );
   };
 
   useEffect(() => {
@@ -367,53 +407,110 @@ function Likes() {
 
   useEffect(() => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if (!isIOS && songlink.length > 0) {
       audioRef.current.play();
       initializeMediaSession();
     }
   }, [songlink]);
 
+  // const downloadSongs = () => {
+  //   if (songs.length > 0) {
+  //     setdownload(true);
+  //     toast.success("Downloading songs");
+  //     // Create a zip file
+  //     const zip = new JSZip();
+  //     const promises = [];
+
+  //     // Add each song to the zip file
+  //     songs.forEach((song) => {
+  //       const { title, url } = song;
+  //       // toast.success(`Song ${title} Downloading...`);
+  //       const promise = fetch(url)
+  //         .then((response) => response.blob())
+  //         .then((blob) => {
+  //           zip.file(`${title} (320kbps).mp3`, blob, { binary: true });
+  //         })
+  //         .catch((error) => toast.error("Error downloading song:", error));
+  //       promises.push(promise);
+  //       // toast.success(`Song ${title} Downloaded ✅`);
+  //     });
+
+  //     // Wait for all promises to resolve before generating the zip file
+  //     Promise.all(promises).then(() => {
+  //       // Generate the zip file and initiate download
+  //       zip.generateAsync({ type: "blob" }).then((content) => {
+  //         const zipUrl = window.URL.createObjectURL(content);
+  //         const link = document.createElement("a");
+  //         link.href = zipUrl;
+  //         link.download = "songs.zip";
+  //         document.body.appendChild(link);
+  //         link.click();
+  //         document.body.removeChild(link);
+  //         setdownload(false);
+  //         toast.success("Download songs completed successfully");
+  //       });
+  //     });
+  //   } else {
+  //     toast.error("No songs available to download");
+  //   }
+  // };
 
   const downloadSongs = () => {
     if (songs.length > 0) {
-      setdownload(true);
-      toast.success("Downloading songs");
-      // Create a zip file
-      const zip = new JSZip();
-      const promises = [];
+      return toast.promise(
+        new Promise(async (resolve, reject) => {
+          try {
+            // Display initial message
 
-      // Add each song to the zip file
-      songs.forEach((song) => {
-        const { title, url } = song;
-        // toast.success(`Song ${title} Downloading...`);
-        const promise = fetch(url)
-          .then((response) => response.blob())
-          .then((blob) => {
-            zip.file(`${title} (320kbps).mp3`, blob, { binary: true });
-          })
-          .catch((error) => toast.error("Error downloading song:", error));
-        promises.push(promise);
-        // toast.success(`Song ${title} Downloaded ✅`);
-      });
+            // Create a zip file
+            const zip = new JSZip();
+            const promises = [];
 
-      // Wait for all promises to resolve before generating the zip file
-      Promise.all(promises).then(() => {
-        // Generate the zip file and initiate download
-        zip.generateAsync({ type: "blob" }).then((content) => {
-          const zipUrl = window.URL.createObjectURL(content);
-          const link = document.createElement("a");
-          link.href = zipUrl;
-          link.download = "songs.zip";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          setdownload(false);
-          toast.success("Download songs completed successfully");
-        });
-      });
+            // Add each song to the zip file
+            songs.forEach((song) => {
+              const { title, url } = song;
+              const promise = fetch(url)
+                .then((response) => response.blob())
+                .then((blob) => {
+                  zip.file(`${title} (320kbps).mp3`, blob, { binary: true });
+                })
+                .catch((error) => {
+                  // Display error message for individual song download
+                  toast.error(`Error downloading ${title}: ${error}`);
+                });
+              promises.push(promise);
+            });
+
+            // Wait for all promises to resolve before generating the zip file
+            await Promise.all(promises);
+
+            // Generate the zip file and initiate download
+            const content = await zip.generateAsync({ type: "blob" });
+            const zipUrl = window.URL.createObjectURL(content);
+            const link = document.createElement("a");
+            link.href = zipUrl;
+            link.download = "songs.zip";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Resolve the promise after successful download
+            resolve();
+          } catch (error) {
+            // Reject the promise if any error occurs
+            reject("Error downloading songs");
+          }
+        }),
+        {
+          loading: `Downloading songs`, // Loading message
+          success: "Download songs completed successfully ✅", // Success message
+          error: "Error downloading songs", // Error message
+        }
+      );
     } else {
-      toast.error("No songs available to download");
+      // Display error message if no songs available
+      return toast.error("No songs available to download");
     }
   };
 
@@ -421,7 +518,7 @@ function Likes() {
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
   //   console.log(details);
   //   console.log(rerender);
-    // console.log(index);
+  // console.log(index);
   // console.log(download);
   // console.log(songlink);
 
@@ -431,23 +528,24 @@ function Likes() {
       <Toaster position="top-center" reverseOrder={false} />
       <div className="w-full justify-between px-3 fixed z-[99] backdrop-blur-xl flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
         <div className="flex items-center gap-3">
-        <i
-          onClick={() => navigate(-1)}
-          className="text-3xl cursor-pointer  bg-green-500 rounded-full ri-arrow-left-line"
-        ></i>
-         <h1 className="text-xl text-zinc-300 sm:text-sm font-black">THE ULTIMATE SONGS</h1>
+          <i
+            onClick={() => navigate(-1)}
+            className="text-3xl cursor-pointer  bg-green-500 rounded-full ri-arrow-left-line"
+          ></i>
+          <h1 className="text-xl text-zinc-300 sm:text-sm font-black">
+            THE ULTIMATE SONGS
+          </h1>
         </div>
         <div className="w-fit">
-        <button
-          className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-1 font-semibold bg-slate-400 "
-          onClick={downloadSongs}
-          disabled={download}
-        >
-          {download ? "downloading..." : "Download All Songs"}
-        </button>
+          <button
+            className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-1 font-semibold bg-slate-400 "
+            onClick={downloadSongs}
+            disabled={download}
+          >
+            {download ? "downloading..." : "Download All Songs"}
+          </button>
+        </div>
       </div>
-      </div>
-      
 
       {details.length > 0 ? (
         <div className="flex w-full text-white p-10 pt-[15vh] pb-[30vh] sm:pt-[10vh] sm:pb-[35vh] sm:p-3 sm:gap-3 bg-slate-700 min-h-[60vh] overflow-y-auto  sm:block flex-wrap gap-5 justify-center ">
@@ -477,9 +575,17 @@ function Likes() {
                   src={wavs}
                   alt=""
                 />
-                 {songlink.length>0 && <i className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-70  duration-300 rounded-md ${
+                {songlink.length > 0 && (
+                  <i
+                    className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-90  duration-300 rounded-md ${
                       d.id === songlink[0]?.id ? "block" : "hidden"
-                    } ${audiocheck ? "ri-pause-circle-fill" :"ri-play-circle-fill" }`}></i>}
+                    } ${
+                      audiocheck
+                        ? "ri-pause-circle-fill"
+                        : "ri-play-circle-fill"
+                    }`}
+                  ></i>
+                )}
                 <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
                   <div className="flex flex-col">
                     <h3
@@ -498,7 +604,7 @@ function Likes() {
 
               <i
                 title="Remove Song "
-                onClick={() => removehandle(d.id,i)}
+                onClick={() => removehandle(d.id, i)}
                 className="m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw] text-xl bg-red-500  duration-300 cursor-pointer text-zinc-300 ri-dislike-fill"
               ></i>
             </div>
@@ -515,11 +621,15 @@ function Likes() {
         </div> */}
         </div>
       ) : (
-        <img
-          onClick={() => emptyfile()}
-          className="max-w-[30%] cursor-pointer rounded-md sm:max-w-[80%] max-h-[50%] sm:max-h-[30%] m-auto sm:m-10 mt-5"
-          src={empty}
-        />
+        <div 
+        onClick={() => emptyfile()}
+        className="absolute w-[25%] sm:w-[60%] left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2  cursor-pointer">
+          <img
+            className="rounded-md "
+            src={empty}
+          />
+          <p className=" text-base font-bold text-zinc-300">it's empty , liked songs will be shown in this page</p>
+        </div>
       )}
       {songlink !== null ? (
         <motion.div
@@ -589,8 +699,8 @@ function Likes() {
                 <audio
                   className="w-[80%] "
                   ref={audioRef}
-                  onPause={()=>setaudiocheck(false)}
-                  onPlay={()=>setaudiocheck(true)}
+                  onPause={() => setaudiocheck(false)}
+                  onPlay={() => setaudiocheck(true)}
                   controls
                   autoPlay
                   onEnded={next}
