@@ -1,5 +1,6 @@
 
-![Screenshot 2024-04-18 151940](https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP/assets/110234600/952b4834-dc10-4636-9492-094033a73e8e)
+![Screenshot 2024-04-18 152255](https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP/assets/110234600/32e480ff-caf7-447b-979c-49c64ba80f50)
+
 
  Project Summary : The Ultimate Songs Webapp
  Developed a React.js web app with Tailwind CSS and
