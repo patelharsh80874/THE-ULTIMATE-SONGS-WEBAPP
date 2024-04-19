@@ -568,6 +568,7 @@ function Likes() {
                   src={d.image[2].url}
                   alt=""
                 />
+                 <p className="pl-1 text-green-400">{i + 1}</p>
                 <img
                   className={`absolute top-0 w-[8%] sm:w-[10%] rounded-md ${
                     d.id === songlink[0]?.id ? "block" : "hidden"
@@ -651,6 +652,7 @@ function Likes() {
                 animate={{ x: 0, opacity: 1, scale: 1 }}
                 className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]"
               >
+                <p className=" text-green-400">{index+1}</p>
                 <motion.img
                   initial={{ x: -50, opacity: 0, scale: 0 }}
                   animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -658,6 +660,7 @@ function Likes() {
                   src={e?.image[2]?.url}
                   alt=""
                 />
+               
                 <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
                   {e?.name}
                 </h3>

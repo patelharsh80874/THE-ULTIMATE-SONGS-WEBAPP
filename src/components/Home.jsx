@@ -583,7 +583,7 @@ const Home = () => {
                 transition={{ ease: Circ.easeIn, duration: 0.05 }}
                 onClick={() => audioseter(i)}
                 key={i}
-                className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
+                className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-1 py-4 cursor-pointer"
               >
                 <motion.img
                   className="relative w-full  rounded-md"
@@ -591,6 +591,10 @@ const Home = () => {
                   src={t.image[2].url}
                   alt=""
                 />
+                <div className="flex  items-center ">
+                <p className=" text-green-400">{i + 1}</p>
+                </div>
+                
                 <img
                   className={`absolute top-4 w-[20%] sm:w-[25%] rounded-md ${
                     i === index ? "block" : "hidden"
@@ -771,6 +775,7 @@ const Home = () => {
 
               className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]"
             >
+              <p className=" text-green-400">{index+1}</p>
               <motion.img
                 initial={{ x: -100, opacity: 0, scale: 0 }}
                 animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -780,6 +785,7 @@ const Home = () => {
                 src={e?.image[2]?.url}
                 alt=""
               />
+              
               <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
                 {e?.name}
               </h3>

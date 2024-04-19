@@ -49,8 +49,17 @@ const Songs = () => {
 
   const Getsearch = async () => {
     try {
-      if(hasMore===false){
+      if (hasMore === false) {
         setpage(page + 1);
+        toast(`SEARCHING NEW SONGS IN PAGE ${page} `, {
+          icon: "🔃",
+          duration: 1000,
+          style: {
+            borderRadius: "10px",
+            background: "rgb(115 115 115)",
+            color: "#fff",
+          },
+        });
       }
       const { data } = await axios.get(
         `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${requery}&page=${page}&limit=40`
@@ -64,23 +73,27 @@ const Songs = () => {
         sethasMore(newData.length > 0);
         setpage(page + 1);
       } else {
-        if(data?.data?.results.length > 0 ){
-          setsearch((prevState) => [...prevState, ...data?.data?.results]);
+        const newData = data.data.results.filter(
+          (newItem) => !search.some((prevItem) => prevItem.id === newItem.id)
+        );
+        if (newData.length > 0) {
+          setsearch((prevState) => [...prevState, ...newData]);
           // setpage(page + 1);
           // sethasMore(true);
+        } else {
+          toast(
+            `NO MORE NEW SONGS FOUND IN PAGE ${page} , CLICK ON (LOAD MORE) AGAIN TO CHECK NEXT PAGE `,
+            {
+              icon: "⚠️",
+              duration: 2000,
+              style: {
+                borderRadius: "10px",
+                background: "rgb(115 115 115)",
+                color: "#fff",
+              },
+            }
+          );
         }
-        else{
-          toast(`NO MORE DATA FOUND`, {
-            icon: "⚠️",
-            duration: 1500,
-            style: {
-              borderRadius: "10px",
-              background: "rgb(115 115 115)",
-              color: "#fff",
-            },
-          });
-        }
-        
       }
     } catch (error) {
       console.log("error", error);
@@ -856,6 +869,7 @@ const Songs = () => {
                     src={d.image[2].url}
                     alt=""
                   />
+                  <p className="pl-1 text-green-400">{i + 1}</p>
                   <img
                     className={`absolute top-0 w-[8%] sm:w-[10%] rounded-md ${
                       d.id === songlink[0]?.id ? "block" : "hidden"
@@ -937,15 +951,15 @@ const Songs = () => {
             <i className=" ri-instagram-fill"></i>
           </a>
         </div> */}
-            {hasMore ? (
-              ""
-            ) : (
-              <div className={`w-full flex flex-col items-center  justify-center`}>
+            {search.length > 0 && !hasMore && (
+              <div
+                className={`w-full flex flex-col items-center  justify-center`}
+              >
                 <button
                   onClick={newdata}
                   className={` bg-red-400 shadow-2xl py-2 px-1 rounded-md`}
                 >
-                  Load more 
+                  Load more
                 </button>
                 <span>wait for some seconds after click</span>
               </div>
@@ -968,11 +982,13 @@ const Songs = () => {
             key={i}
             className="flex  sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3"
           >
+            
             <motion.div
               initial={{ x: -50, opacity: 0, scale: 0 }}
               animate={{ x: 0, opacity: 1, scale: 1 }}
               className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]"
             >
+              <p className=" text-green-400">{index+1}</p>
               <motion.img
                 initial={{ x: -50, opacity: 0, scale: 0 }}
                 animate={{ x: 0, opacity: 1, scale: 1 }}
