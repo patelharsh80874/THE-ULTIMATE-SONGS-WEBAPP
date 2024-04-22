@@ -1,5 +1,5 @@
 
-![Screenshot 2024-04-18 152255](https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP/assets/110234600/32e480ff-caf7-447b-979c-49c64ba80f50)
+![Screenshot 2024-04-21 161657](https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP/assets/110234600/a3ebe5a5-c50c-48ea-b4de-5531846ffeb9)
 
 
  Project Summary : The Ultimate Songs Webapp
