@@ -425,7 +425,7 @@ const Home = () => {
     const intervalId2 = setInterval(
       () => {
         if (details.length >= 0 && page < 20) {
-          setpage2(Math.floor(Math.random() * 42.78 + Math.random() * 10.365));
+          setpage2(Math.floor(Math.random() * 50));
           setpage(page + 1);
           Getdetails();
         }
@@ -576,7 +576,7 @@ const Home = () => {
           <motion.div className="songs px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
             {details?.map((t, i) => (
               <motion.div
-                //  whileHover={{ scale: 1.2 }}
+                //  whileHover={{  y: 0,scale: 0.9 }}
                 //  viewport={{ once: true }}
                 initial={{ y: -100, scale: 0.5 }}
                 whileInView={{ y: 0, scale: 1 }}

@@ -16,8 +16,6 @@ import SongDetails from "./components/SongDetails";
 
 
 const App = () => {
-  
-
   return (
     <div className="w-full h-screen">
       <Routes>
