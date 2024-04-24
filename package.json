@@ -10,12 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@gsap/react": "^2.1.0",
     "adm-zip": "^0.5.12",
     "axios": "^1.6.7",
     "browser-id3-writer": "^6.1.0",
+    "express": "^4.19.2",
     "file-saver": "^2.0.5",
+    "fluent-ffmpeg": "^2.1.2",
     "framer-motion": "^11.0.22",
     "fs": "^0.0.1-security",
     "gsap": "^3.12.5",
@@ -23,7 +26,9 @@
     "jsmediatags": "^3.9.7",
     "jszip": "^3.10.1",
     "locomotive-scroll": "^5.0.0-beta.11",
+    "multer": "^1.4.5-lts.1",
     "music-metadata": "^7.14.0",
+    "node-fetch": "^3.3.2",
     "node-id3": "^0.2.6",
     "node-lame": "^1.3.2",
     "react": "^18.2.0",
@@ -45,5 +50,9 @@
     "postcss": "^8.4.34",
     "tailwindcss": "^3.4.1",
     "vite": "^5.0.8"
-  }
+  },
+  "description": "![Screenshot 2024-04-21 161657](https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP/assets/110234600/a3ebe5a5-c50c-48ea-b4de-5531846ffeb9)",
+  "main": "index.html",
+  "author": "HARSH PATEL",
+  "license": "ISC"
 }

@@ -25,7 +25,7 @@ const Songs = () => {
   const [search, setsearch] = useState([]);
   var [index, setindex] = useState("");
   const [songlink, setsonglink] = useState([]);
-  var [page, setpage] = useState(0);
+  const [page, setpage] = useState(null);
   const [searchclick, setsearchclick] = useState(false);
   const [like, setlike] = useState(false);
   const [like2, setlike2] = useState(false);
@@ -630,14 +630,14 @@ const Songs = () => {
   // }, [searchclick, search, page]);
 
   // useEffect(() => {
-  //   if (query.length > 0) {
+  //   if (requery.length > 0) {
   //     Getsearch();
   //   }
   // }, [searchclick]);
 
   useEffect(() => {
     setTimeout(() => {
-      if (query.length > 0) {
+      if (requery.length > 0) {
         Getsearch();
       }
     }, 1000);
@@ -652,9 +652,11 @@ const Songs = () => {
     //     Getsearch();
     // }, 1000);
     // }
-    setTimeout(() => {
-      Getsearch();
-    }, 1000);
+    if (page>=2) {
+      setTimeout(() => {
+        Getsearch();
+      }, 1000);
+    }
   }
   // const fetchMoreData = () => {
   //   console.log("Fetching more data...");
