@@ -11,6 +11,7 @@ import Album from "./components/Album";
 import Songs from "./components/Songs";
 import Likes from "./components/Likes";
 import SongDetails from "./components/SongDetails";
+import Import from "./components/Import";
 
 
 
@@ -30,6 +31,7 @@ const App = () => {
         <Route path="/artists" element={<Artists />} />
         <Route path="/artists/details/:id" element={<ArtistsDetails />} />
         <Route path="/likes" element={<Likes/>} />
+        <Route path="/import" element={<Import/>} />
       </Routes>
     </div>
   );

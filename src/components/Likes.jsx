@@ -58,6 +58,64 @@ function Likes() {
     }
   }
 
+  const downloadSongsfile = () => {
+    if (details.length>0) {
+      
+      toast(`Exporting...`, {
+        icon: "✅",
+        duration: 1500,
+        style: {
+          borderRadius: "10px",
+          background: "rgb(115 115 115)",
+          color: "#fff",
+        },
+      });
+    // Convert array to JSON string
+    const json = JSON.stringify(details);
+
+    // Create Blob object
+    const blob = new Blob([json], { type: 'application/json' });
+
+    // Create temporary URL for the Blob
+    const url = URL.createObjectURL(blob);
+
+    // Create a link element
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${details.length} songs.json`; // File name
+    document.body.appendChild(a);
+
+    // Click the link to initiate download
+    a.click();
+
+    // Remove the link element
+    document.body.removeChild(a);
+
+    // Revoke the temporary URL
+    URL.revokeObjectURL(url);
+    toast(`Exported successfully.`, {
+      icon: "✅",
+      duration: 1500,
+      style: {
+        borderRadius: "10px",
+        background: "rgb(115 115 115)",
+        color: "#fff",
+      },
+    });
+    }
+    else{
+      toast(`No songs available to Export`, {
+        icon: "❌",
+        duration: 1500,
+        style: {
+          borderRadius: "10px",
+          background: "rgb(115 115 115)",
+          color: "#fff",
+        },
+      });
+    }
+};
+
   // function likeset(e) {
   //   // console.log(e);
   //   var tf =
@@ -529,20 +587,37 @@ function Likes() {
       <div className="w-full justify-between px-3 fixed z-[99] backdrop-blur-xl flex items-center gap-3 sm:h-[7vh]  h-[10vh]">
         <div className="flex items-center gap-3">
           <i
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="text-3xl cursor-pointer  bg-green-500 rounded-full ri-arrow-left-line"
           ></i>
-          <h1 className="text-xl text-zinc-300 sm:text-sm font-black">
+          <h1 className="text-xl text-zinc-300 sm:text-xs font-black">
             THE ULTIMATE SONGS
           </h1>
         </div>
-        <div className="w-fit">
+        <div className="w-fit flex gap-3">
+        
           <button
-            className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-1 font-semibold bg-slate-400 "
+            className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-0.5 font-semibold bg-slate-400 "
             onClick={downloadSongs}
             disabled={download}
           >
             {download ? "downloading..." : "Download All Songs"}
+          </button>
+          <button
+            className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-0.5 font-semibold bg-slate-400 "
+            onClick={()=>navigate("/import")}
+            // disabled={download}
+          >
+            Import songs 
+            {/* {download ? "downloading..." : "Download All Songs"} */}
+          </button>
+          <button
+            className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-0.5 font-semibold bg-slate-400 "
+            onClick={downloadSongsfile}
+            // disabled={download}
+          >
+            Export songs 
+            {/* {download ? "downloading..." : "Download All Songs"} */}
           </button>
         </div>
       </div>
