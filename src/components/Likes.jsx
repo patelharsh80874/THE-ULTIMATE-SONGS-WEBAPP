@@ -119,7 +119,8 @@ function Likes() {
 
 const downloadSongsfile = () => {
   if (details.length > 0) {
-      const password = prompt("Please enter your password:");
+      const password = prompt(`Create A Password For Your File Protection 🔑 , Note : This Password Is Required At The Time Of Import Songs
+      Please Enter Your Password 👇:`);
       if (!password) return; // Cancelled or empty password
       
       // Convert array to JSON string
