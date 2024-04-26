@@ -16,6 +16,7 @@
     "adm-zip": "^0.5.12",
     "axios": "^1.6.7",
     "browser-id3-writer": "^6.1.0",
+    "crypto-js": "^4.2.0",
     "express": "^4.19.2",
     "file-saver": "^2.0.5",
     "fluent-ffmpeg": "^2.1.2",

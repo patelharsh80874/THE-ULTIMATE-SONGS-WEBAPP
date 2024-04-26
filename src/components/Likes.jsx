@@ -19,6 +19,7 @@ import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
 import JSZip from "jszip";
+import CryptoJS from 'crypto-js';
 // import { saveAs } from 'file-saver';
 // import { ID3Writer } from 'browser-id3-writer';
 // import AdmZip from 'adm-zip';
@@ -58,63 +59,119 @@ function Likes() {
     }
   }
 
-  const downloadSongsfile = () => {
-    if (details.length>0) {
+//   const downloadSongsfile = () => {
+//     if (details.length>0) {
       
-      toast(`Exporting...`, {
-        icon: "✅",
-        duration: 1500,
-        style: {
-          borderRadius: "10px",
-          background: "rgb(115 115 115)",
-          color: "#fff",
-        },
+//       toast(`Exporting...`, {
+//         icon: "✅",
+//         duration: 1500,
+//         style: {
+//           borderRadius: "10px",
+//           background: "rgb(115 115 115)",
+//           color: "#fff",
+//         },
+//       });
+//     // Convert array to JSON string
+//     const json = JSON.stringify(details);
+
+//     // Create Blob object
+//     const blob = new Blob([json], { type: 'application/json' });
+
+//     // Create temporary URL for the Blob
+//     const url = URL.createObjectURL(blob);
+
+//     // Create a link element
+//     const a = document.createElement('a');
+//     a.href = url;
+//     a.download = `${details.length} songs.json`; // File name
+//     document.body.appendChild(a);
+
+//     // Click the link to initiate download
+//     a.click();
+
+//     // Remove the link element
+//     document.body.removeChild(a);
+
+//     // Revoke the temporary URL
+//     URL.revokeObjectURL(url);
+//     toast(`Exported successfully.`, {
+//       icon: "✅",
+//       duration: 1500,
+//       style: {
+//         borderRadius: "10px",
+//         background: "rgb(115 115 115)",
+//         color: "#fff",
+//       },
+//     });
+//     }
+//     else{
+//       toast(`No songs available to Export`, {
+//         icon: "❌",
+//         duration: 1500,
+//         style: {
+//           borderRadius: "10px",
+//           background: "rgb(115 115 115)",
+//           color: "#fff",
+//         },
+//       });
+//     }
+// };
+
+const downloadSongsfile = () => {
+  if (details.length > 0) {
+      const password = prompt("Please enter your password:");
+      if (!password) return; // Cancelled or empty password
+      
+      // Convert array to JSON string
+      const json = JSON.stringify(details);
+
+      // Encrypt the JSON data with the password
+      const encryptedData = CryptoJS.AES.encrypt(json, password).toString();
+
+      // Create Blob object
+      const blob = new Blob([encryptedData], { type: 'text/plain' });
+
+      // Create temporary URL for the Blob
+      const url = URL.createObjectURL(blob);
+
+      // Create a link element
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${details.length} songs.json`; // File name
+      document.body.appendChild(a);
+
+      // Click the link to initiate download
+      a.click();
+
+      // Remove the link element
+      document.body.removeChild(a);
+
+      // Revoke the temporary URL
+      URL.revokeObjectURL(url);
+
+      toast(`Exported successfully.`, {
+          icon: "✅",
+          duration: 1500,
+          style: {
+              borderRadius: "10px",
+              background: "rgb(115 115 115)",
+              color: "#fff",
+          },
       });
-    // Convert array to JSON string
-    const json = JSON.stringify(details);
-
-    // Create Blob object
-    const blob = new Blob([json], { type: 'application/json' });
-
-    // Create temporary URL for the Blob
-    const url = URL.createObjectURL(blob);
-
-    // Create a link element
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${details.length} songs.json`; // File name
-    document.body.appendChild(a);
-
-    // Click the link to initiate download
-    a.click();
-
-    // Remove the link element
-    document.body.removeChild(a);
-
-    // Revoke the temporary URL
-    URL.revokeObjectURL(url);
-    toast(`Exported successfully.`, {
-      icon: "✅",
-      duration: 1500,
-      style: {
-        borderRadius: "10px",
-        background: "rgb(115 115 115)",
-        color: "#fff",
-      },
-    });
-    }
-    else{
+  } else {
       toast(`No songs available to Export`, {
-        icon: "❌",
-        duration: 1500,
-        style: {
-          borderRadius: "10px",
-          background: "rgb(115 115 115)",
-          color: "#fff",
-        },
+          icon: "❌",
+          duration: 1500,
+          style: {
+              borderRadius: "10px",
+              background: "rgb(115 115 115)",
+              color: "#fff",
+          },
       });
-    }
+  }
 };
+
+
 
   // function likeset(e) {
   //   // console.log(e);

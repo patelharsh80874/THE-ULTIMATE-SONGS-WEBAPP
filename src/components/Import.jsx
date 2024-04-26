@@ -1,9 +1,45 @@
 import React, { useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import CryptoJS from 'crypto-js';
 
 const Import = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  // const handleFileUpload = (event) => {
+  //   const file = event.target.files[0];
+  //   if (!file) return;
+
+  //   const reader = new FileReader();
+
+  //   reader.onload = (e) => {
+  //     try {
+  //       const uploadedSongs = JSON.parse(e.target.result);
+  //       const existingSongs =
+  //         JSON.parse(localStorage.getItem("likeData")) || [];
+
+  //       // Filter out songs that already exist in local storage
+  //       const newSongs = uploadedSongs.filter(
+  //         (song) =>
+  //           !existingSongs.some((existingSong) => existingSong.id === song.id)
+  //       );
+
+  //       // Merge new songs with existing data
+  //       const mergedData = [...existingSongs, ...newSongs.reverse()]; // Reverse order
+
+  //       // Store merged data in local storage
+  //       localStorage.setItem("likeData", JSON.stringify(mergedData));
+
+  //       alert("Songs imported successfully!");
+  //       navi();
+  //     } catch (error) {
+  //       alert("Error parsing file. Please make sure the file is valid JSON.");
+  //     }
+  //   };
+
+  //   reader.readAsText(file);
+  // };
+
+
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -11,32 +47,41 @@ const Import = () => {
     const reader = new FileReader();
 
     reader.onload = (e) => {
-      try {
-        const uploadedSongs = JSON.parse(e.target.result);
-        const existingSongs =
-          JSON.parse(localStorage.getItem("likeData")) || [];
+        try {
+            const password = prompt("Please enter your password:");
+            if (!password) return; // Cancelled or empty password
 
-        // Filter out songs that already exist in local storage
-        const newSongs = uploadedSongs.filter(
-          (song) =>
-            !existingSongs.some((existingSong) => existingSong.id === song.id)
-        );
+            // Decrypt the file using the provided password
+            const decryptedData = CryptoJS.AES.decrypt(e.target.result, password).toString(CryptoJS.enc.Utf8);
+            const uploadedSongs = JSON.parse(decryptedData);
 
-        // Merge new songs with existing data
-        const mergedData = [...existingSongs, ...newSongs.reverse()]; // Reverse order
+            const existingSongs = JSON.parse(localStorage.getItem("likeData")) || [];
 
-        // Store merged data in local storage
-        localStorage.setItem("likeData", JSON.stringify(mergedData));
+            // Filter out songs that already exist in local storage
+            const newSongs = uploadedSongs.filter(
+                (song) => !existingSongs.some((existingSong) => existingSong.id === song.id)
+            );
 
-        alert("Songs imported successfully!");
-        navi();
-      } catch (error) {
-        alert("Error parsing file. Please make sure the file is valid JSON.");
-      }
+            // Merge new songs with existing data
+            const mergedData = [...existingSongs, ...newSongs.reverse()]; // Reverse order
+
+            // Store merged data in local storage
+            localStorage.setItem("likeData", JSON.stringify(mergedData));
+
+            alert("Songs imported successfully!");
+            navi();
+        } catch (error) {
+            alert("Error decrypting file or parsing data. Please make sure the password is correct and the file is valid JSON.");
+        } finally {
+            // Reset the file input
+            event.target.value = '';
+        }
     };
 
     reader.readAsText(file);
-  };
+};
+
+
 
   function navi() {
     navigate("/likes");
