@@ -919,13 +919,15 @@ const Songs = () => {
 
                 {existingData?.find((element) => element?.id == d?.id) ? (
                   <i
+                  title="Unlike"
                     onClick={() => likehandle2(d)}
-                    className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]    duration-300 cursor-pointer text-red-500  ri-heart-3-fill`}
+                    className={` text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]   duration-300 cursor-pointer text-red-500  ri-heart-3-fill`}
                   ></i>
                 ) : (
                   <i
+                  title="Like"
                     onClick={() => likehandle2(d)}
-                    className={`text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]   duration-300 cursor-pointer text-zinc-300  ri-heart-3-fill`}
+                    className={` text-xl m-auto flex w-[3vw] sm:w-[9vw] rounded-full justify-center items-center h-[3vw] sm:h-[9vw]   duration-300 cursor-pointer text-zinc-300  ri-heart-3-fill`}
                   ></i>
                 )}
 

@@ -496,7 +496,7 @@ const Home = () => {
   // console.log(index)
   return details.length > 0 ? (
     <div className="w-full h-screen  bg-slate-800">
-      <Toaster position="top-center" reverseOrder={false}/>
+      <Toaster position="top-center" reverseOrder={false} />
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -561,7 +561,7 @@ const Home = () => {
           ></a>
         </motion.div>
       </motion.div>
-      <div className="w-full  bg-slate-800  min-h-[63vh] pt-[20vh] pb-[25vh]   text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
+      <div className="w-full  bg-slate-800  min-h-[63vh] pt-[20vh] pb-[30vh]   text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
         <div className="w-full   flex justify-end ">
           <Dropdown
             className="w-[15%] text-sm sm:w-[50%]"
@@ -592,9 +592,9 @@ const Home = () => {
                   alt=""
                 />
                 <div className="flex  items-center ">
-                <p className=" text-green-400">{i + 1}</p>
+                  <p className=" text-green-400">{i + 1}</p>
                 </div>
-                
+
                 <img
                   className={`absolute top-4 w-[20%] sm:w-[25%] rounded-md ${
                     i === index ? "block" : "hidden"
@@ -752,6 +752,14 @@ const Home = () => {
             ))}
           </div>
         </div>
+        <div>
+          <p className="font-semibold text-neutral-400 sm:text-sm">
+           <b>THE ULTIMATE SONGS</b> is not affiliated with JioSaavn. All trademarks and
+            copyrights belong to their respective owners. All media, images, and
+            songs are the property of their respective owners. This site is for
+            educational purposes only.
+          </p>
+        </div>
       </div>
       <motion.div
         className={
@@ -775,7 +783,7 @@ const Home = () => {
 
               className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]"
             >
-              <p className=" text-green-400">{index+1}</p>
+              <p className=" text-green-400">{index + 1}</p>
               <motion.img
                 initial={{ x: -100, opacity: 0, scale: 0 }}
                 animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -785,7 +793,7 @@ const Home = () => {
                 src={e?.image[2]?.url}
                 alt=""
               />
-              
+
               <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
                 {e?.name}
               </h3>
