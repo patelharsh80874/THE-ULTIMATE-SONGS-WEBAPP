@@ -28,12 +28,17 @@ const Home = () => {
   const [language, setlanguage] = useState("hindi");
   const [details, setdetails] = useState([]);
   const [songlink, setsonglink] = useState([]);
+  const [songlink2, setsonglink2] = useState([]);
+  // const [songlinkchecker, setsonglinkchecker] = useState(null);
   const [like, setlike] = useState(false);
   var [index, setindex] = useState("");
+  var [index2, setindex2] = useState("");
   var [page, setpage] = useState(1);
   var [page2, setpage2] = useState(Math.floor(Math.random() * 50));
   const audioRef = useRef();
   const [audiocheck, setaudiocheck] = useState(true);
+  // const [selectedSongIds, setSelectedSongIds] = useState([]);
+  const [suggSong, setsuggSong] = useState([]);
 
   const options = [
     // "hindi",
@@ -121,10 +126,117 @@ const Home = () => {
         });
       }
     } else {
+      setindex2(null);
+      // setsonglinkchecker(1);
+      setsonglink2([]);
       setindex(i);
       setsonglink([details[i]]);
     }
   }
+
+  function audioseter2(i) {
+    if (songlink2[0]?.id === suggSong[i].id) {
+      const audio = audioRef.current;
+      if (!audio.paused) {
+        audio.pause();
+        setaudiocheck(false);
+      } else {
+        setaudiocheck(true);
+        audio.play().catch((error) => {
+          console.error("Playback failed:", error);
+        });
+      }
+    } else {
+      setindex(null);
+      // setsonglinkchecker(2);
+      setsonglink([]);
+      setindex2(i);
+      setsonglink2([suggSong[i]]);
+    }
+  }
+
+  // Function to get a random subset of IDs without duplicates
+  function getRandomIds(ids, num) {
+    let shuffled = ids.sort(() => 0.5 - Math.random()); // Shuffle the array
+    return shuffled.slice(0, num); // Return a subset of the shuffled array
+  }
+
+  // Main function to handle liked song IDs
+  function processLikedSongIds() {
+    // Get liked songs from localStorage
+    const likedSongs = JSON.parse(localStorage.getItem("likeData")) || [];
+
+    // Extract song IDs
+    const songIds = likedSongs.map((song) => song.id);
+
+    // Remove duplicates by converting to Set and back to Array
+    const uniqueSongIds = Array.from(new Set(songIds));
+
+    let selectedIds;
+
+    if (uniqueSongIds.length <= 10) {
+      // If less than or equal to 10 liked songs, select all IDs
+      selectedIds = uniqueSongIds;
+    } else {
+      // If more than 10 liked songs, randomly select 10 IDs
+      selectedIds = getRandomIds(uniqueSongIds, 10);
+    }
+
+    // Store selected IDs back to localStorage
+    localStorage.setItem("selectedSongIds", JSON.stringify(selectedIds));
+    fetchAllSongs();
+    return selectedIds;
+  }
+
+  // // Function to handle fetching data for all IDs
+  // const fetchAllSongs = async () => {
+  //   const storedSelectedSongIds =
+  //     JSON.parse(localStorage.getItem("selectedSongIds")) || [];
+  //   console.log(storedSelectedSongIds);
+  //   // const fetchedSongs = [];
+
+  //   for (const id of storedSelectedSongIds) {
+  //     try {
+  //       const response = await axios.get(
+  //         `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${id}/suggestions`
+  //       );
+  //       setsuggSong((prevState) => [...prevState, ...response.data.data]);
+  //     } catch (error) {
+  //       console.error(`Error fetching data for ID ${id}:`, error);
+  //     }
+  //   }
+  // };
+
+  const fetchAllSongs = async () => {
+    const storedSelectedSongIds =
+      JSON.parse(localStorage.getItem("selectedSongIds")) || [];
+    // console.log(storedSelectedSongIds);
+  
+    // Use a Set to keep track of unique songs
+    const seenSongs = new Set();
+    
+    for (const id of storedSelectedSongIds) {
+      try {
+        const response = await axios.get(
+          `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${id}/suggestions`
+        );
+  
+        const newSongs = response.data.data.filter(song => {
+          if (seenSongs.has(song.id)) {
+            return false; // Song is a duplicate
+          } else {
+            seenSongs.add(song.id);
+            return true; // Song is unique
+          }
+        });
+  
+        setsuggSong(prevState => [...prevState, ...newSongs]);
+      } catch (error) {
+        console.error(`Error fetching data for ID ${id}:`, error);
+      }
+    }
+  };
+  
 
   function likeset(e) {
     // console.log(e);
@@ -337,6 +449,20 @@ const Home = () => {
       // initializeMediaSession();
     }
   }
+  function next2() {
+    if (index2 < suggSong.length - 1) {
+      setindex2(index2++);
+      audioseter2(index2);
+      // audioRef.current.play()
+      // initializeMediaSession();
+    } else {
+      setindex2(0);
+      setsonglink2([suggSong[0]]);
+      // audioRef.current.play()
+      // initializeMediaSession();
+    }
+  }
+
   function pre() {
     if (index > 0) {
       setindex(index--);
@@ -346,6 +472,19 @@ const Home = () => {
     } else {
       setindex(details.length - 1);
       setsonglink([details[details.length - 1]]);
+      // audioRef.current.play()
+      // initializeMediaSession();
+    }
+  }
+  function pre2() {
+    if (index2 > 0) {
+      setindex2(index2--);
+      audioseter2(index2);
+      // audioRef.current.play()
+      // initializeMediaSession();
+    } else {
+      setindex2(suggSong.length - 1);
+      setsonglink2([suggSong[suggSong.length - 1]]);
       // audioRef.current.play()
       // initializeMediaSession();
     }
@@ -408,8 +547,11 @@ const Home = () => {
   function detailsseter() {
     setpage(1);
     setindex("");
+    setindex2("");
     setsonglink([]);
+    setsonglink2([]);
     setdetails([]);
+    setsuggSong([]);
   }
 
   function seccall() {
@@ -457,6 +599,10 @@ const Home = () => {
   }, [songlink]);
 
   useEffect(() => {
+    likeset(songlink2[0]);
+  }, [songlink2]);
+
+  useEffect(() => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
 
     if (!isIOS && songlink.length > 0) {
@@ -464,6 +610,12 @@ const Home = () => {
       initializeMediaSession();
     }
   }, [songlink]);
+
+  useEffect(() => {
+    // Call the function to process liked song IDs
+    processLikedSongIds();
+    // console.log('Selected Song IDs:', selectedIds);
+  }, [language]);
 
   // useEffect(() => {
   //   initializeMediaSession();
@@ -494,6 +646,9 @@ const Home = () => {
   // console.log(page2);
   // console.log(songlink);
   // console.log(index)
+  // console.log(suggSong);
+  // console.log(songlinkchecker);
+
   return details.length > 0 ? (
     <div className="w-full h-screen  bg-slate-800">
       <Toaster position="top-center" reverseOrder={false} />
@@ -640,6 +795,72 @@ const Home = () => {
             />
           </motion.div>
         </div>
+        {suggSong.length > 0 && (
+          <div className="trending songs flex flex-col gap-3 w-full ">
+            <h3 className="text-xl h-[5vh] font-semibold">Songs for you <sub className="text-gray-400">(based on your liked songs)</sub></h3>
+            <motion.div className="songs px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
+              {suggSong?.map((t, i) => (
+                <motion.div
+                  //  whileHover={{  y: 0,scale: 0.9 }}
+                  //  viewport={{ once: true }}
+                  initial={{ y: -100, scale: 0.5 }}
+                  whileInView={{ y: 0, scale: 1 }}
+                  transition={{ ease: Circ.easeIn, duration: 0.05 }}
+                  onClick={() => audioseter2(i)}
+                  key={i}
+                  className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-1 py-4 cursor-pointer"
+                >
+                  <motion.img
+                    className="relative w-full  rounded-md"
+                    // src={t.image[2].link}
+                    src={t.image[2].url}
+                    alt=""
+                  />
+                  <div className="flex  items-center ">
+                    <p className=" text-green-400">{i + 1}</p>
+                  </div>
+
+                  <img
+                    className={`absolute top-4 w-[20%] sm:w-[25%] rounded-md ${
+                      i === index2 ? "block" : "hidden"
+                    } `}
+                    src={wavs}
+                    alt=""
+                  />
+                  {songlink2.length > 0 && (
+                    <i
+                      className={`absolute top-20 sm:top-16 w-full  flex items-center justify-center text-5xl  opacity-90  duration-300 rounded-md  ${
+                        t.id === songlink2[0]?.id ? "block" : "hidden"
+                      } ${
+                        audiocheck
+                          ? "ri-pause-circle-fill"
+                          : "ri-play-circle-fill"
+                      }`}
+                    ></i>
+                  )}
+
+                  <motion.div
+                    //  initial={{ y: 50, scale:0}}
+                    //  whileInView={{ y: 0,scale: 1 }}
+                    //  transition={{ease:Circ.easeIn,duration:0.05}}
+                    className="flex flex-col"
+                  >
+                    <h3
+                      className={`text-sm sm:text-xs leading-none  font-bold ${
+                        t.id === songlink2[0]?.id && "text-green-300"
+                      }`}
+                    >
+                      {t.name}
+                    </h3>
+                    <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">
+                      {t.album.name}
+                    </h4>
+                  </motion.div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        )}
 
         {/* <div className="trending flex flex-col gap-3 w-full ">
           <h3 className="text-xl h-[5vh] font-semibold">Trending Albums</h3>
@@ -754,14 +975,15 @@ const Home = () => {
         </div>
         <div>
           <p className="font-semibold text-neutral-400 sm:text-sm">
-           <b>THE ULTIMATE SONGS</b> is not affiliated with JioSaavn. All trademarks and
-            copyrights belong to their respective owners. All media, images, and
-            songs are the property of their respective owners. This site is for
-            educational purposes only.
+            <b>THE ULTIMATE SONGS</b> is not affiliated with JioSaavn. All
+            trademarks and copyrights belong to their respective owners. All
+            media, images, and songs are the property of their respective
+            owners. This site is for educational purposes only.
           </p>
         </div>
       </div>
-      <motion.div
+
+     <motion.div
         className={
           songlink.length > 0
             ? `duration-700 fixed  z-[99] bottom-0  flex  gap-3 items-center  w-full max-h-[30vh] py-3  backdrop-blur-xl `
@@ -774,7 +996,7 @@ const Home = () => {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             transition={{ ease: Circ.easeIn, duration: 0.7 }}
             key={i}
-            className=" flex sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3"
+            className={`flex sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3`}
           >
             <motion.div
               initial={{ x: -100, opacity: 0, scale: 0 }}
@@ -928,6 +1150,176 @@ const Home = () => {
           </motion.div>
         ))}
       </motion.div>
+
+
+      <motion.div
+        className={
+          songlink2.length > 0
+            ? `duration-700 fixed  z-[99] bottom-0  flex  gap-3 items-center  w-full max-h-[30vh] py-3  backdrop-blur-xl `
+            : "block"
+        }
+      >
+        {songlink2?.map((e, i) => (
+          <motion.div
+            initial={{ y: 100, opacity: 0, scale: 0 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ ease: Circ.easeIn, duration: 0.7 }}
+            key={i}
+            className={`flex sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3`}
+          >
+            <motion.div
+              initial={{ x: -100, opacity: 0, scale: 0 }}
+              animate={{ x: 0, opacity: 1, scale: 1 }}
+              // transition={{ease:Circ.easeIn,duration:1}}
+
+              className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]"
+            >
+              <p className=" text-green-400">{index2 + 1}</p>
+              <motion.img
+                initial={{ x: -100, opacity: 0, scale: 0 }}
+                animate={{ x: 0, opacity: 1, scale: 1 }}
+                // transition={{ease:Circ.easeIn,duration:1}}
+
+                className={`rounded-md h-[7vw] sm:h-[25vw]`}
+                src={e?.image[2]?.url}
+                alt=""
+              />
+
+              <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
+                {e?.name}
+              </h3>
+              <i
+                onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
+                className="hidden sm:visible sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
+              ></i>
+              <i
+                onClick={() => likehandle(e)}
+                className={`text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
+                  like ? "text-red-500" : "text-zinc-300"
+                }  ri-heart-3-fill`}
+              ></i>
+              {/* <i onClick={()=>navigate(`songs/details/${e.id}`)} className="text-zinc-300 text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ri-information-fill"></i> */}
+
+              {/* {localStorage.getItem("likeData") &&
+              JSON.parse(localStorage.getItem("likeData")).some(
+                (item) => item.id === e.id
+              ) ? (
+                <i
+                  onClick={() => likehandle(e)}
+                  className={`text-xl cursor-pointer text-red-500 ri-heart-3-fill`}
+                ></i>
+              ) : (
+                <i
+                  onClick={() => likehandle(e)}
+                  className={`text-xl cursor-pointer text-zinc-300 ri-heart-3-fill`}
+                ></i>
+              )} */}
+
+              {/* {like ? (
+                <i
+                  onClick={() => likehandle(e)}
+                  className="text-xl cursor-pointer text-red-500 ri-heart-3-fill"
+                ></i>
+              ) : (
+                <i
+                  onClick={() => likehandle(e)}
+                  className="text-xl cursor-pointer text-zinc-300  ri-heart-3-fill"
+                ></i>
+              )} */}
+            </motion.div>
+            <motion.div
+              initial={{ y: 100, opacity: 0, scale: 0 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              // transition={{ease:Circ.easeIn,duration:1}}
+              className="w-[35%]  sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center"
+            >
+              <button
+                onClick={pre2}
+                className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
+              >
+                <i className="ri-skip-back-mini-fill"></i>
+              </button>
+              <audio
+                ref={audioRef}
+                onPause={() => setaudiocheck(false)}
+                onPlay={() => setaudiocheck(true)}
+                className="w-[80%]"
+                controls
+                autoPlay
+                onEnded={next2}
+                src={e?.downloadUrl[4]?.url}
+              ></audio>
+              <button
+                onClick={next2}
+                className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
+              >
+                <i className="ri-skip-right-fill"></i>
+              </button>
+            </motion.div>
+            <div className="sm:hidden flex flex-col text-[1vw] items-center  gap-2">
+              <div>
+                <h3 className="font-bold text-sm text-slate-400">
+                  Download Options
+                </h3>
+              </div>
+              <div className="flex flex-row-reverse gap-2 ">
+                <p
+                  onClick={() =>
+                    handleDownloadSong(e.downloadUrl[0].url, e.name + " 12kbps")
+                  }
+                  className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  12kbps <br />
+                  <p className="text-xs">Very low quality</p>
+                </p>
+                <p
+                  onClick={() =>
+                    handleDownloadSong(e.downloadUrl[1].url, e.name + " 48kbps")
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  48kbps <br />
+                  <p className="text-xs">Low quality</p>
+                </p>
+                <p
+                  onClick={() =>
+                    handleDownloadSong(e.downloadUrl[2].url, e.name + " 96kbps")
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  96kbps <br />
+                  <p className="text-xs">Fair quality</p>
+                </p>
+                <p
+                  onClick={() =>
+                    handleDownloadSong(
+                      e.downloadUrl[3].url,
+                      e.name + " 160kbps"
+                    )
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  160kbps <br />
+                  <p className="text-xs">Good quality</p>
+                </p>
+                <p
+                  onClick={() =>
+                    handleDownloadSong(
+                      e.downloadUrl[4].url,
+                      e.name + " 320kbps"
+                    )
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  320kbps <br />
+                  <p className="text-xs"> High quality</p>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+
     </div>
   ) : (
     <Loading />
