@@ -436,6 +436,52 @@ const Home = () => {
     }
   };
 
+  const initializeMediaSession2 = () => {
+    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+
+    if (!isIOS && "mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: songlink2[0]?.name || "",
+        artist: songlink2[0]?.album?.name || "",
+        artwork: [
+          {
+            src: songlink2[0]?.image[2]?.url || "",
+            sizes: "512x512",
+            type: "image/jpeg",
+          },
+        ],
+      });
+
+      navigator.mediaSession.setActionHandler("play", function () {
+        // Handle play action
+        if (audioRef.current) {
+          audioRef.current.play().catch((error) => {
+            console.error("Play error:", error);
+          });
+        }
+      });
+
+      navigator.mediaSession.setActionHandler("pause", function () {
+        // Handle pause action
+        if (audioRef.current) {
+          audioRef.current.pause().catch((error) => {
+            console.error("Pause error:", error);
+          });
+        }
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", function () {
+        pre2();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", function () {
+        next2();
+      });
+    } else {
+      console.warn("MediaSession API is not supported or the device is iOS.");
+    }
+  };
+
   function next() {
     if (index < details.length - 1) {
       setindex(index++);
@@ -610,6 +656,15 @@ const Home = () => {
       initializeMediaSession();
     }
   }, [songlink]);
+
+  useEffect(() => {
+    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+
+    if (!isIOS && songlink2.length > 0) {
+      audioRef.current.play();
+      initializeMediaSession2();
+    }
+  }, [songlink2]);
 
   useEffect(() => {
     // Call the function to process liked song IDs
