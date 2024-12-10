@@ -844,8 +844,7 @@ const Songs = () => {
         dataLength={search.length}
         next={newdata}
         hasMore={hasMore}
-        loader={
-          page > 2 && <h1 className="bg-slate-700 text-zinc-300">Loading...</h1>
+        loader={  page > 2 && <h1 className="bg-slate-700 text-zinc-300">Loading...</h1>
         }
         endMessage={<p className="bg-slate-700 text-zinc-300">No more items</p>}
         // endMessage={()=>nomoredata()}
@@ -975,7 +974,7 @@ const Songs = () => {
       <motion.div
         className={
           songlink.length > 0
-            ? ` duration-700 fixed z-[99] bottom-0    gap-3 items-center justify-center py-3 sm:h-[30vh]  w-full max-h-[30vh]     backdrop-blur-xl`
+            ? ` duration-700 fixed z-[99] bottom-0    gap-3 items-center justify-center py-3 w-full  backdrop-blur-xl`
             : "block"
         }
       >
@@ -1003,12 +1002,13 @@ const Songs = () => {
               <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
                 {e?.name}
               </h3>
-              <i
-                onClick={() =>
-                  handleDownloadSong(e?.downloadUrl[4].url, e.name)
-                }
+              {/* <i
+                // onClick={() =>
+                //   handleDownloadSong(e?.downloadUrl[4].url, e.name)
+                // }
+                onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
                 className="hidden sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
-              ></i>
+              ></i> */}
 
               <i
                 onClick={() => likehandle(e)}
@@ -1068,53 +1068,57 @@ const Songs = () => {
                 <i className="ri-skip-right-fill"></i>
               </button>
             </motion.div>
-            <div className="sm:hidden flex flex-col text-[1vw] items-center  gap-2">
+            <div className=" flex flex-col text-[1vw] items-center  gap-2">
               <div>
                 <h3 className="font-bold text-sm text-slate-400">
                   Download Options
                 </h3>
               </div>
               <div className="flex flex-row-reverse gap-2 ">
-                <p
-                  onClick={() =>
-                    handleDownloadSong(e.downloadUrl[0].url, e.name + " 12kbps")
-                  }
+                {/* <p
+                  // onClick={() =>
+                  //   handleDownloadSong(e.downloadUrl[0].url, e.name + " 12kbps")
+                  // }
+                  onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[0].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 12kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
                   className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                 >
                   12kbps <br />
                   <p className="text-xs">Very low quality</p>
                 </p>
                 <p
-                  onClick={() =>
-                    handleDownloadSong(e.downloadUrl[1].url, e.name + " 48kbps")
-                  }
+                  // onClick={() =>
+                  //   handleDownloadSong(e.downloadUrl[1].url, e.name + " 48kbps")
+                  // }
+                  onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[1].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 48kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
                   className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                 >
                   48kbps <br />
                   <p className="text-xs">Low quality</p>
                 </p>
                 <p
-                  onClick={() =>
-                    handleDownloadSong(e.downloadUrl[2].url, e.name + " 96kbps")
-                  }
+                  // onClick={() =>
+                  //   handleDownloadSong(e.downloadUrl[2].url, e.name + " 96kbps")
+                  // }
+                  onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[2].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 96kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
                   className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                 >
                   96kbps <br />
                   <p className="text-xs">Fair quality</p>
                 </p>
                 <p
-                  onClick={() =>
-                    handleDownloadSong(
-                      e.downloadUrl[3].url,
-                      e.name + " 160kbps"
-                    )
-                  }
+                  // onClick={() =>
+                  //   handleDownloadSong(
+                  //     e.downloadUrl[3].url,
+                  //     e.name + " 160kbps"
+                  //   )
+                  // }
+                  onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[3].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 160kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
                   className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                 >
                   160kbps <br />
                   <p className="text-xs">Good quality</p>
-                </p>
-                <p
+                </p> */}
+                 <p
                   onClick={() =>
                     handleDownloadSong(
                       e.downloadUrl[4].url,
@@ -1122,11 +1126,29 @@ const Songs = () => {
                       e?.image[2]?.url
                     )
                   }
-                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                  // onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                 >
                   320kbps <br />
-                  <p className="text-xs"> High quality</p>
+                  <p className="text-xs text-center"> High quality without poster</p>
                 </p>
+                <p
+                  // onClick={() =>
+                  //   handleDownloadSong(
+                  //     e.downloadUrl[4].url,
+                  //     e.name + " 320kbps",
+                  //     e?.image[2]?.url
+                  //   )
+                  // }
+                  onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  320kbps <br />
+                  <p className="text-xs text-center">High quality with poster embedded<br/>(some time this will not work)</p>
+                </p>
+               
               </div>
             </div>
           </motion.div>

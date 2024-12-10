@@ -211,17 +211,17 @@ const Home = () => {
     const storedSelectedSongIds =
       JSON.parse(localStorage.getItem("selectedSongIds")) || [];
     // console.log(storedSelectedSongIds);
-  
+
     // Use a Set to keep track of unique songs
     const seenSongs = new Set();
-    
+
     for (const id of storedSelectedSongIds) {
       try {
         const response = await axios.get(
           `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${id}/suggestions`
         );
-  
-        const newSongs = response.data.data.filter(song => {
+
+        const newSongs = response.data.data.filter((song) => {
           if (seenSongs.has(song.id)) {
             return false; // Song is a duplicate
           } else {
@@ -229,14 +229,13 @@ const Home = () => {
             return true; // Song is unique
           }
         });
-  
-        setsuggSong(prevState => [...prevState, ...newSongs]);
+
+        setsuggSong((prevState) => [...prevState, ...newSongs]);
       } catch (error) {
         console.error(`Error fetching data for ID ${id}:`, error);
       }
     }
   };
-  
 
   function likeset(e) {
     // console.log(e);
@@ -852,7 +851,10 @@ const Home = () => {
         </div>
         {suggSong.length > 0 && (
           <div className="trending songs flex flex-col gap-3 w-full ">
-            <h3 className="text-xl h-[5vh] font-semibold">Songs for you <sub className="text-gray-400">(based on your liked songs)</sub></h3>
+            <h3 className="text-xl h-[5vh] font-semibold">
+              Songs for you{" "}
+              <sub className="text-gray-400">(based on your liked songs)</sub>
+            </h3>
             <motion.div className="songs px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
               {suggSong?.map((t, i) => (
                 <motion.div
@@ -1038,10 +1040,10 @@ const Home = () => {
         </div>
       </div>
 
-     <motion.div
+      <motion.div
         className={
           songlink.length > 0
-            ? `duration-700 fixed  z-[99] bottom-0  flex  gap-3 items-center  w-full max-h-[30vh] py-3  backdrop-blur-xl `
+            ? `duration-700 fixed  z-[99] bottom-0  flex  gap-3 items-center  w-full  py-3  backdrop-blur-xl `
             : "block"
         }
       >
@@ -1074,10 +1076,10 @@ const Home = () => {
               <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
                 {e?.name}
               </h3>
-              <i
+              {/* <i
                 onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
                 className="hidden sm:visible sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
-              ></i>
+              ></i> */}
               <i
                 onClick={() => likehandle(e)}
                 className={`text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
@@ -1142,14 +1144,14 @@ const Home = () => {
                 <i className="ri-skip-right-fill"></i>
               </button>
             </motion.div>
-            <div className="sm:hidden flex flex-col text-[1vw] items-center  gap-2">
+            <div className=" flex flex-col text-[1vw] items-center  gap-2">
               <div>
                 <h3 className="font-bold text-sm text-slate-400">
                   Download Options
                 </h3>
               </div>
               <div className="flex flex-row-reverse gap-2 ">
-                <p
+                {/* <p
                   onClick={() =>
                     handleDownloadSong(e.downloadUrl[0].url, e.name + " 12kbps")
                   }
@@ -1199,6 +1201,36 @@ const Home = () => {
                 >
                   320kbps <br />
                   <p className="text-xs"> High quality</p>
+                </p> */}
+                 <p
+                  onClick={() =>
+                    handleDownloadSong(
+                      e.downloadUrl[4].url,
+                      e.name + " 320kbps",
+                      e?.image[2]?.url
+                    )
+                  }
+                  // onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  320kbps <br />
+                  <p className="text-xs text-center"> High quality without poster</p>
+                </p>
+                <p
+                  // onClick={() =>
+                  //   handleDownloadSong(
+                  //     e.downloadUrl[4].url,
+                  //     e.name + " 320kbps",
+                  //     e?.image[2]?.url
+                  //   )
+                  // }
+                  onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  320kbps <br />
+                  <p className="text-xs text-center">High quality with poster embedded<br/>(some time this will not work)</p>
                 </p>
               </div>
             </div>
@@ -1206,11 +1238,10 @@ const Home = () => {
         ))}
       </motion.div>
 
-
       <motion.div
         className={
           songlink2.length > 0
-            ? `duration-700 fixed  z-[99] bottom-0  flex  gap-3 items-center  w-full max-h-[30vh] py-3  backdrop-blur-xl `
+            ? `duration-700 fixed  z-[99] bottom-0  flex  gap-3 items-center  w-full py-3  backdrop-blur-xl `
             : "block"
         }
       >
@@ -1243,10 +1274,10 @@ const Home = () => {
               <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
                 {e?.name}
               </h3>
-              <i
+              {/* <i
                 onClick={() => handleDownloadSong(e.downloadUrl[4].url, e.name)}
                 className="hidden sm:visible sm:flex cursor-pointer  items-center justify-center bg-green-700 sm:w-[9vw] sm:h-[9vw] w-[3vw] h-[3vw]   rounded-full text-2xl ri-download-line"
-              ></i>
+              ></i> */}
               <i
                 onClick={() => likehandle(e)}
                 className={`text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
@@ -1311,14 +1342,14 @@ const Home = () => {
                 <i className="ri-skip-right-fill"></i>
               </button>
             </motion.div>
-            <div className="sm:hidden flex flex-col text-[1vw] items-center  gap-2">
+            <div className="flex flex-col text-[1vw] items-center  gap-2">
               <div>
                 <h3 className="font-bold text-sm text-slate-400">
                   Download Options
                 </h3>
               </div>
               <div className="flex flex-row-reverse gap-2 ">
-                <p
+                {/* <p
                   onClick={() =>
                     handleDownloadSong(e.downloadUrl[0].url, e.name + " 12kbps")
                   }
@@ -1368,13 +1399,58 @@ const Home = () => {
                 >
                   320kbps <br />
                   <p className="text-xs"> High quality</p>
+                </p> */}
+
+                <p
+                  onClick={() =>
+                    handleDownloadSong(
+                      e.downloadUrl[4].url,
+                      e.name + " 320kbps",
+                      e?.image[2]?.url
+                    )
+                  }
+                  // onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  320kbps <br />
+                  <p className="text-xs text-center">
+                    {" "}
+                    High quality without poster
+                  </p>
+                </p>
+                <p
+                  // onClick={() =>
+                  //   handleDownloadSong(
+                  //     e.downloadUrl[4].url,
+                  //     e.name + " 320kbps",
+                  //     e?.image[2]?.url
+                  //   )
+                  // }
+                  onClick={() =>
+                    window.open(
+                      `https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${
+                        e.downloadUrl[4].url
+                      }&imageUrl=${e?.image[2]?.url}&songName=${
+                        e.name + " 320kbps"
+                      }&year=${e.year}&album=${e.album.name}`,
+                      "_blank"
+                    )
+                  }
+                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                >
+                  320kbps <br />
+                  <p className="text-xs text-center">
+                    High quality with poster embedded
+                    <br />
+                    (some time this will not work)
+                  </p>
                 </p>
               </div>
             </div>
           </motion.div>
         ))}
       </motion.div>
-
     </div>
   ) : (
     <Loading />
