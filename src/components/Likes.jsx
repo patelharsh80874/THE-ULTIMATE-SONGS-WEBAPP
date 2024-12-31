@@ -19,7 +19,7 @@ import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
 import JSZip from "jszip";
-import CryptoJS from 'crypto-js';
+import CryptoJS from "crypto-js";
 // import { saveAs } from 'file-saver';
 // import { ID3Writer } from 'browser-id3-writer';
 // import AdmZip from 'adm-zip';
@@ -59,70 +59,71 @@ function Likes() {
     }
   }
 
-//   const downloadSongsfile = () => {
-//     if (details.length>0) {
-      
-//       toast(`Exporting...`, {
-//         icon: "✅",
-//         duration: 1500,
-//         style: {
-//           borderRadius: "10px",
-//           background: "rgb(115 115 115)",
-//           color: "#fff",
-//         },
-//       });
-//     // Convert array to JSON string
-//     const json = JSON.stringify(details);
+  //   const downloadSongsfile = () => {
+  //     if (details.length>0) {
 
-//     // Create Blob object
-//     const blob = new Blob([json], { type: 'application/json' });
+  //       toast(`Exporting...`, {
+  //         icon: "✅",
+  //         duration: 1500,
+  //         style: {
+  //           borderRadius: "10px",
+  //           background: "rgb(115 115 115)",
+  //           color: "#fff",
+  //         },
+  //       });
+  //     // Convert array to JSON string
+  //     const json = JSON.stringify(details);
 
-//     // Create temporary URL for the Blob
-//     const url = URL.createObjectURL(blob);
+  //     // Create Blob object
+  //     const blob = new Blob([json], { type: 'application/json' });
 
-//     // Create a link element
-//     const a = document.createElement('a');
-//     a.href = url;
-//     a.download = `${details.length} songs.json`; // File name
-//     document.body.appendChild(a);
+  //     // Create temporary URL for the Blob
+  //     const url = URL.createObjectURL(blob);
 
-//     // Click the link to initiate download
-//     a.click();
+  //     // Create a link element
+  //     const a = document.createElement('a');
+  //     a.href = url;
+  //     a.download = `${details.length} songs.json`; // File name
+  //     document.body.appendChild(a);
 
-//     // Remove the link element
-//     document.body.removeChild(a);
+  //     // Click the link to initiate download
+  //     a.click();
 
-//     // Revoke the temporary URL
-//     URL.revokeObjectURL(url);
-//     toast(`Exported successfully.`, {
-//       icon: "✅",
-//       duration: 1500,
-//       style: {
-//         borderRadius: "10px",
-//         background: "rgb(115 115 115)",
-//         color: "#fff",
-//       },
-//     });
-//     }
-//     else{
-//       toast(`No songs available to Export`, {
-//         icon: "❌",
-//         duration: 1500,
-//         style: {
-//           borderRadius: "10px",
-//           background: "rgb(115 115 115)",
-//           color: "#fff",
-//         },
-//       });
-//     }
-// };
+  //     // Remove the link element
+  //     document.body.removeChild(a);
 
-const downloadSongsfile = () => {
-  if (details.length > 0) {
-      const password = prompt(`Create A Password For Your File Protection 🔑 , Note : This Password Is Required At The Time Of Import Songs
+  //     // Revoke the temporary URL
+  //     URL.revokeObjectURL(url);
+  //     toast(`Exported successfully.`, {
+  //       icon: "✅",
+  //       duration: 1500,
+  //       style: {
+  //         borderRadius: "10px",
+  //         background: "rgb(115 115 115)",
+  //         color: "#fff",
+  //       },
+  //     });
+  //     }
+  //     else{
+  //       toast(`No songs available to Export`, {
+  //         icon: "❌",
+  //         duration: 1500,
+  //         style: {
+  //           borderRadius: "10px",
+  //           background: "rgb(115 115 115)",
+  //           color: "#fff",
+  //         },
+  //       });
+  //     }
+  // };
+
+  const downloadSongsfile = () => {
+    if (details.length > 0) {
+      const password =
+        prompt(`Create A Password For Your File Protection 🔑 , Note : This Password Is Required At The Time Of Import Songs
       Please Enter Your Password 👇:`);
       if (!password) return; // Cancelled or empty password
-      
+
       // Convert array to JSON string
       const json = JSON.stringify(details);
 
@@ -130,13 +131,13 @@ const downloadSongsfile = () => {
       const encryptedData = CryptoJS.AES.encrypt(json, password).toString();
 
       // Create Blob object
-      const blob = new Blob([encryptedData], { type: 'text/plain' });
+      const blob = new Blob([encryptedData], { type: "text/plain" });
 
       // Create temporary URL for the Blob
       const url = URL.createObjectURL(blob);
 
       // Create a link element
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${details.length} songs.json`; // File name
       document.body.appendChild(a);
@@ -151,28 +152,26 @@ const downloadSongsfile = () => {
       URL.revokeObjectURL(url);
 
       toast(`Exported successfully.`, {
-          icon: "✅",
-          duration: 1500,
-          style: {
-              borderRadius: "10px",
-              background: "rgb(115 115 115)",
-              color: "#fff",
-          },
+        icon: "✅",
+        duration: 1500,
+        style: {
+          borderRadius: "10px",
+          background: "rgb(115 115 115)",
+          color: "#fff",
+        },
       });
-  } else {
+    } else {
       toast(`No songs available to Export`, {
-          icon: "❌",
-          duration: 1500,
-          style: {
-              borderRadius: "10px",
-              background: "rgb(115 115 115)",
-              color: "#fff",
-          },
+        icon: "❌",
+        duration: 1500,
+        style: {
+          borderRadius: "10px",
+          background: "rgb(115 115 115)",
+          color: "#fff",
+        },
       });
-  }
-};
-
-
+    }
+  };
 
   // function likeset(e) {
   //   // console.log(e);
@@ -630,9 +629,47 @@ const downloadSongsfile = () => {
     }
   };
 
+  const handleGenerateAudio = async (data) => {
+    try {
+      toast.loading(`Processing your audio ${data.songName}. Please wait...`);
+
+      const response = await axios.get(
+        "https://the-ultimate-songs-download-server.up.railway.app/generate-audio",
+        {
+          params: data,
+          responseType: "blob", // Important to receive the file as a blob
+        }
+      );
+
+      if (response.status === 200) {
+        // Create a link to download the file
+        const blob = new Blob([response.data], { type: "audio/mp3" });
+        const downloadLink = document.createElement("a");
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = `${data.songName || "your_audio"}.mp3`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        toast.dismiss(); // Dismiss the loading toast
+        toast.success(
+          `Your audio file ${data.songName} is ready and downloaded!`
+        );
+      } else {
+        throw new Error("Failed to generate the audio.");
+      }
+    } catch (error) {
+      toast.dismiss(); // Dismiss the loading toast
+      toast.error(
+        "An error occurred. Please check the audio or image URLs and try again."
+      );
+      console.error("Error generating audio:", error);
+    }
+  };
+
   var title = songlink[0]?.name;
   document.title = `${title ? title : "THE ULTIMATE SONGS"}`;
-  //   console.log(details);
+  // console.log(details[1]?.artists.primary.map(artist => artist.name).join(","));
   //   console.log(rerender);
   // console.log(index);
   // console.log(download);
@@ -653,7 +690,6 @@ const downloadSongsfile = () => {
           </h1>
         </div>
         <div className="w-fit flex gap-3">
-        
           <button
             className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-0.5 font-semibold bg-slate-400 "
             onClick={downloadSongs}
@@ -663,10 +699,10 @@ const downloadSongsfile = () => {
           </button>
           <button
             className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-0.5 font-semibold bg-slate-400 "
-            onClick={()=>navigate("/import")}
+            onClick={() => navigate("/import")}
             // disabled={download}
           >
-            Import songs 
+            Import songs
             {/* {download ? "downloading..." : "Download All Songs"} */}
           </button>
           <button
@@ -674,7 +710,7 @@ const downloadSongsfile = () => {
             onClick={downloadSongsfile}
             // disabled={download}
           >
-            Export songs 
+            Export songs
             {/* {download ? "downloading..." : "Download All Songs"} */}
           </button>
         </div>
@@ -701,7 +737,7 @@ const downloadSongsfile = () => {
                   src={d.image[2].url}
                   alt=""
                 />
-                 <p className="pl-1 text-green-400">{i + 1}</p>
+                <p className="pl-1 text-green-400">{i + 1}</p>
                 <img
                   className={`absolute top-0 w-[8%] sm:w-[10%] rounded-md ${
                     d.id === songlink[0]?.id ? "block" : "hidden"
@@ -755,14 +791,14 @@ const downloadSongsfile = () => {
         </div> */}
         </div>
       ) : (
-        <div 
-        onClick={() => emptyfile()}
-        className="absolute w-[25%] sm:w-[60%] left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2  cursor-pointer">
-          <img
-            className="rounded-md "
-            src={empty}
-          />
-          <p className=" text-base font-bold text-zinc-300">it's empty , liked songs will be shown in this page</p>
+        <div
+          onClick={() => emptyfile()}
+          className="absolute w-[25%] sm:w-[60%] left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2  cursor-pointer"
+        >
+          <img className="rounded-md " src={empty} />
+          <p className=" text-base font-bold text-zinc-300">
+            it's empty , liked songs will be shown in this page
+          </p>
         </div>
       )}
       {songlink !== null ? (
@@ -785,7 +821,7 @@ const downloadSongsfile = () => {
                 animate={{ x: 0, opacity: 1, scale: 1 }}
                 className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]"
               >
-                <p className=" text-green-400">{index+1}</p>
+                <p className=" text-green-400">{index + 1}</p>
                 <motion.img
                   initial={{ x: -50, opacity: 0, scale: 0 }}
                   animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -793,7 +829,7 @@ const downloadSongsfile = () => {
                   src={e?.image[2]?.url}
                   alt=""
                 />
-               
+
                 <h3 className=" sm:w-[30%] text-white text-xs font-semibold">
                   {e?.name}
                 </h3>
@@ -914,36 +950,56 @@ const downloadSongsfile = () => {
                     320kbps <br />
                     <p className="text-xs"> High quality</p>
                   </p> */}
-                   <p
-                  onClick={() =>
-                    handleDownloadSong(
-                      e.downloadUrl[4].url,
-                      e.name + " 320kbps",
-                      e?.image[2]?.url
-                    )
-                  }
-                  // onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+                  <p
+                    onClick={() =>
+                      handleDownloadSong(
+                        e.downloadUrl[4].url,
+                        e.name + " 320kbps",
+                        e?.image[2]?.url
+                      )
+                    }
+                    // onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
 
-                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
-                >
-                  320kbps <br />
-                  <p className="text-xs text-center"> High quality without poster</p>
-                </p>
-                <p
-                  // onClick={() =>
-                  //   handleDownloadSong(
-                  //     e.downloadUrl[4].url,
-                  //     e.name + " 320kbps",
-                  //     e?.image[2]?.url
-                  //   )
-                  // }
-                  onClick={() => window.open(`https://the-ultimate-songs-download-server.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+                    className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                  >
+                    320kbps <br />
+                    <p className="text-xs text-center">
+                      {" "}
+                      High quality without poster
+                    </p>
+                  </p>
+                  <p
+                    // onClick={() =>
+                    //   handleDownloadSong(
+                    //     e.downloadUrl[4].url,
+                    //     e.name + " 320kbps",
+                    //     e?.image[2]?.url
+                    //   )
+                    // }
 
-                  className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
-                >
-                  320kbps <br />
-                  <p className="text-xs text-center">High quality with poster embedded<br/>(some time this will not work)</p>
-                </p>
+                    // onClick={() => window.open(`https://the-ultimate-songs-download-server.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+
+                    onClick={() =>
+                      handleGenerateAudio({
+                        audioUrl:e?.downloadUrl[4].url,
+                        imageUrl:e?.image[2]?.url,
+                        songName:e?.name,
+                        year:e?.year,
+                        album:e?.album.name,
+                        artist:e?.artists.primary
+                          .map((artist) => artist.name)
+                          .join(","),
+                      })
+                    }
+                    className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
+                  >
+                    320kbps <br />
+                    <p className="text-xs text-center">
+                      High quality with poster embedded
+                      <br />
+                      (some time this will not work)
+                    </p>
+                  </p>
                 </div>
               </div>
             </motion.div>
