@@ -18,6 +18,7 @@ import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
+import  handleGenerateAudio  from "./../utils/audioUtils";
 
 const ArtistsDetails = () => {
   const navigate = useNavigate();
@@ -424,38 +425,38 @@ const ArtistsDetails = () => {
     );
   };
 
-  const handleGenerateAudio = async (data) => {
-    try {
-      toast.loading(`Processing your audio (${data.songName}) Please wait...`);
+  // const handleGenerateAudio = async (data) => {
+  //   try {
+  //     toast.loading(`Processing your audio (${data.songName}) Please wait...`);
 
-      const response = await axios.get("https://the-ultimate-songs-download-server-python.vercel.app/generate-audio", {
-        params: data,
-        responseType: "blob", // Important to receive the file as a blob
-      });
+  //     const response = await axios.get("https://the-ultimate-songs-download-server-python.vercel.app/generate-audio", {
+  //       params: data,
+  //       responseType: "blob", // Important to receive the file as a blob
+  //     });
 
-      if (response.status === 200) {
-        // Create a link to download the file
-        const blob = new Blob([response.data], { type: "audio/mp3" });
-        const downloadLink = document.createElement("a");
-        downloadLink.href = URL.createObjectURL(blob);
-        downloadLink.download = `${data.songName || "your_audio"}.m4a`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+  //     if (response.status === 200) {
+  //       // Create a link to download the file
+  //       const blob = new Blob([response.data], { type: "audio/mp3" });
+  //       const downloadLink = document.createElement("a");
+  //       downloadLink.href = URL.createObjectURL(blob);
+  //       downloadLink.download = `${data.songName || "your_audio"}.m4a`;
+  //       document.body.appendChild(downloadLink);
+  //       downloadLink.click();
+  //       document.body.removeChild(downloadLink);
 
-        toast.dismiss(); // Dismiss the loading toast
-        toast.success(`Your audio file (${data.songName}) is ready and downloaded!`);
-      } else {
-        throw new Error("Failed to generate the audio.");
-      }
-    } catch (error) {
-      toast.dismiss(); // Dismiss the loading toast
-      toast.error(
-        "An error occurred. Please check the audio or image URLs and try again."
-      );
-      console.error("Error generating audio:", error);
-    }
-  };
+  //       toast.dismiss(); // Dismiss the loading toast
+  //       toast.success(`Your audio file (${data.songName}) is ready and downloaded!`);
+  //     } else {
+  //       throw new Error("Failed to generate the audio.");
+  //     }
+  //   } catch (error) {
+  //     toast.dismiss(); // Dismiss the loading toast
+  //     toast.error(
+  //       "An error occurred. Please check the audio or image URLs and try again."
+  //     );
+  //     console.error("Error generating audio:", error);
+  //   }
+  // };
 
   function seccall() {
     const intervalId = setInterval(() => {

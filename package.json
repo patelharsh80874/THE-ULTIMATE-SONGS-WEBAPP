@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/core": "^0.12.8",
+    "@ffmpeg/ffmpeg": "^0.12.13",
+    "@ffmpeg/util": "^0.12.1",
     "@gsap/react": "^2.1.0",
     "adm-zip": "^0.5.12",
     "axios": "^1.6.7",
@@ -37,7 +39,8 @@
     "react-dropdown": "^1.11.0",
     "react-hot-toast": "^2.4.1",
     "react-infinite-scroll-component": "^6.1.0",
-    "react-router-dom": "^6.22.0"
+    "react-router-dom": "^6.22.0",
+    "vite-plugin-wasm": "^3.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

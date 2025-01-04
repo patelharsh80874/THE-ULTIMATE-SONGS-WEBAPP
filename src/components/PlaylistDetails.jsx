@@ -17,6 +17,7 @@ import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
+import  handleGenerateAudio  from "./../utils/audioUtils";
 
 const PlaylistDetails = () => {
   const navigate = useNavigate();
@@ -294,19 +295,19 @@ const PlaylistDetails = () => {
           // toast.loading(`Song ${name} Downloading...`, {
           //   id: 'loading-toast' // Set a unique ID for the loading toast
           // });
-  
+
           // Perform the download
           const res = await fetch(url);
           const blob = await res.blob();
           const link = document.createElement("a");
           link.href = URL.createObjectURL(blob);
           link.download = `${name}.mp3`;
-  
+
           document.body.appendChild(link);
           link.click();
-  
+
           document.body.removeChild(link);
-  
+
           resolve(); // Resolve the promise once the download is complete
         } catch (error) {
           console.log("Error fetching or downloading files", error);
@@ -316,43 +317,44 @@ const PlaylistDetails = () => {
       {
         loading: `Song ${name} Downloading...`, // Loading message
         success: `Song Downloaded ✅`, // Success message
-        error: <b>Error downloading song.</b> // Error message
+        error: <b>Error downloading song.</b>, // Error message
       }
     );
   };
 
-  const handleGenerateAudio = async (data) => {
-    try {
-      toast.loading(`Processing your audio (${data.songName}) Please wait...`);
+  // const handleGenerateAudio = async (data) => {
+  //   try {
+  //     toast.loading(`Processing your audio (${data.songName}) Please wait...`);
 
-      const response = await axios.get("https://the-ultimate-songs-download-server-python.vercel.app/generate-audio", {
-        params: data,
-        responseType: "blob", // Important to receive the file as a blob
-      });
+  //     const response = await axios.get("https://the-ultimate-songs-download-server-python.vercel.app/generate-audio", {
+  //       params: data,
+  //       responseType: "blob", // Important to receive the file as a blob
+  //     });
 
-      if (response.status === 200) {
-        // Create a link to download the file
-        const blob = new Blob([response.data], { type: "audio/mp3" });
-        const downloadLink = document.createElement("a");
-        downloadLink.href = URL.createObjectURL(blob);
-        downloadLink.download = `${data.songName || "your_audio"}.m4a`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+  //     if (response.status === 200) {
+  //       // Create a link to download the file
+  //       const blob = new Blob([response.data], { type: "audio/mp3" });
+  //       const downloadLink = document.createElement("a");
+  //       downloadLink.href = URL.createObjectURL(blob);
+  //       downloadLink.download = `${data.songName || "your_audio"}.m4a`;
+  //       document.body.appendChild(downloadLink);
+  //       downloadLink.click();
+  //       document.body.removeChild(downloadLink);
 
-        toast.dismiss(); // Dismiss the loading toast
-        toast.success(`Your audio file (${data.songName}) is ready and downloaded!`);
-      } else {
-        throw new Error("Failed to generate the audio.");
-      }
-    } catch (error) {
-      toast.dismiss(); // Dismiss the loading toast
-      toast.error(
-        "An error occurred. Please check the audio or image URLs and try again."
-      );
-      console.error("Error generating audio:", error);
-    }
-  };
+  //       toast.dismiss(); // Dismiss the loading toast
+  //       toast.success(`Your audio file (${data.songName}) is ready and downloaded!`);
+  //     } else {
+  //       throw new Error("Failed to generate the audio.");
+  //     }
+  //   } catch (error) {
+  //     toast.dismiss(); // Dismiss the loading toast
+  //     toast.error(
+  //       "An error occurred. Please check the audio or image URLs and try again."
+  //     );
+  //     console.error("Error generating audio:", error);
+  //   }
+  // };
+  
 
   // const initializeMediaSession = () => {
   //   if ("mediaSession" in navigator) {
@@ -367,7 +369,7 @@ const PlaylistDetails = () => {
   //         },
   //       ],
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("play", function () {
   //       // Handle play action
   //       if (audioRef.current) {
@@ -376,7 +378,7 @@ const PlaylistDetails = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("pause", function () {
   //       // Handle pause action
   //       if (audioRef.current) {
@@ -385,11 +387,11 @@ const PlaylistDetails = () => {
   //         });
   //       }
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("previoustrack", function () {
   //       pre();
   //     });
-  
+
   //     navigator.mediaSession.setActionHandler("nexttrack", function () {
   //       next();
   //     });
@@ -400,7 +402,7 @@ const PlaylistDetails = () => {
 
   const initializeMediaSession = () => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if (!isIOS && "mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
@@ -413,7 +415,7 @@ const PlaylistDetails = () => {
           },
         ],
       });
-  
+
       navigator.mediaSession.setActionHandler("play", function () {
         // Handle play action
         if (audioRef.current) {
@@ -422,7 +424,7 @@ const PlaylistDetails = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("pause", function () {
         // Handle pause action
         if (audioRef.current) {
@@ -431,11 +433,11 @@ const PlaylistDetails = () => {
           });
         }
       });
-  
+
       navigator.mediaSession.setActionHandler("previoustrack", function () {
         pre();
       });
-  
+
       navigator.mediaSession.setActionHandler("nexttrack", function () {
         next();
       });
@@ -443,7 +445,6 @@ const PlaylistDetails = () => {
       console.warn("MediaSession API is not supported or the device is iOS.");
     }
   };
-  
 
   function seccall() {
     const intervalId = setInterval(() => {
@@ -486,7 +487,7 @@ const PlaylistDetails = () => {
 
   useEffect(() => {
     const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
-  
+
     if (!isIOS && songlink.length > 0) {
       audioRef.current.play();
       initializeMediaSession();
@@ -599,9 +600,15 @@ const PlaylistDetails = () => {
                 src={wavs}
                 alt=""
               />
-               {songlink.length>0 && <i className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-90  duration-300 rounded-md ${
-                      d.id === songlink[0]?.id ? "block" : "hidden"
-                    } ${audiocheck ? "ri-pause-circle-fill" :"ri-play-circle-fill" }`}></i>}
+              {songlink.length > 0 && (
+                <i
+                  className={`absolute top-0 sm:h-[15vh] w-[10vw] h-full flex items-center justify-center text-5xl sm:w-[15vh]  opacity-90  duration-300 rounded-md ${
+                    d.id === songlink[0]?.id ? "block" : "hidden"
+                  } ${
+                    audiocheck ? "ri-pause-circle-fill" : "ri-play-circle-fill"
+                  }`}
+                ></i>
+              )}
               <div className="ml-3 sm:ml-3 flex justify-center items-center gap-5 mt-2">
                 <div className="flex flex-col">
                   <h3
@@ -675,7 +682,7 @@ const PlaylistDetails = () => {
               animate={{ x: 0, opacity: 1, scale: 1 }}
               className="w-[25vw] sm:w-full  flex gap-3 items-center sm:justify-center rounded-md  h-[7vw] sm:h-[30vw]"
             >
-              <p className=" text-green-400">{index+1}</p>
+              <p className=" text-green-400">{index + 1}</p>
               <motion.img
                 initial={{ x: -50, opacity: 0, scale: 0 }}
                 animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -743,8 +750,8 @@ const PlaylistDetails = () => {
               <audio
                 className="w-[80%]"
                 ref={audioRef}
-                onPause={()=>setaudiocheck(false)}
-                onPlay={()=>setaudiocheck(true)}
+                onPause={() => setaudiocheck(false)}
+                onPlay={() => setaudiocheck(true)}
                 controls
                 autoPlay
                 onEnded={() => next()}
@@ -815,7 +822,7 @@ const PlaylistDetails = () => {
                   320kbps <br />
                   <p className="text-xs"> High quality</p>
                 </p> */}
-                 <p
+                <p
                   onClick={() =>
                     handleDownloadSong(
                       e.downloadUrl[4].url,
@@ -828,7 +835,10 @@ const PlaylistDetails = () => {
                   className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                 >
                   320kbps <br />
-                  <p className="text-xs text-center"> High quality without poster</p>
+                  <p className="text-xs text-center">
+                    {" "}
+                    High quality without poster
+                  </p>
                 </p>
                 <p
                   // onClick={() =>
@@ -842,19 +852,24 @@ const PlaylistDetails = () => {
 
                   onClick={() =>
                     handleGenerateAudio({
-                      audioUrl:  e?.downloadUrl[4].url,
+                      audioUrl: e?.downloadUrl[4].url,
                       imageUrl: e?.image[2]?.url,
-                      songName:  e?.name,
+                      songName: e?.name,
                       year: e?.year,
                       album: e?.album.name,
-                      artist:e?.artists.primary.map(artist => artist.name).join(",")
+                      artist: e?.artists.primary
+                        .map((artist) => artist.name)
+                        .join(","),
                     })
                   }
-
                   className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                 >
                   320kbps <br />
-                  <p className="text-xs text-center">High quality with poster embedded<br/>(some time this will not work)</p>
+                  <p className="text-xs text-center">
+                    High quality with poster embedded
+                    <br />
+                    (some time this will not work)
+                  </p>
                 </p>
               </div>
             </div>
@@ -868,7 +883,3 @@ const PlaylistDetails = () => {
 };
 
 export default PlaylistDetails;
-
-
-
-

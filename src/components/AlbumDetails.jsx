@@ -17,6 +17,7 @@ import { useAnimate, stagger } from "framer-motion";
 import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
+import  handleGenerateAudio  from "./../utils/audioUtils";
 
 const AlbumDetails = () => {
   const navigate = useNavigate();
@@ -33,6 +34,8 @@ const AlbumDetails = () => {
   const [existingData, setexistingData] = useState(null);
   const audioRef = useRef();
   const [audiocheck, setaudiocheck] = useState(true);
+  const [isFFmpegLoaded, setisFFmpegLoaded] = useState(false);
+
 
   const Getdetails = async () => {
     try {
@@ -414,38 +417,125 @@ const AlbumDetails = () => {
     );
   };
 
-  const handleGenerateAudio = async (data) => {
-    try {
-      toast.loading(`Processing your audio (${data.songName}) Please wait...`);
+  // const handleGenerateAudio = async (data) => {
+  //   try {
+  //     toast.loading(`Processing your audio (${data.songName}) Please wait...`);
 
-      const response = await axios.get("https://the-ultimate-songs-download-server-python.vercel.app/generate-audio", {
-        params: data,
-        responseType: "blob", // Important to receive the file as a blob
-      });
+  //     const response = await axios.get("https://the-ultimate-songs-download-server-python.vercel.app/generate-audio", {
+  //       params: data,
+  //       responseType: "blob", // Important to receive the file as a blob
+  //     });
 
-      if (response.status === 200) {
-        // Create a link to download the file
-        const blob = new Blob([response.data], { type: "audio/mp3" });
-        const downloadLink = document.createElement("a");
-        downloadLink.href = URL.createObjectURL(blob);
-        downloadLink.download = `${data.songName || "your_audio"}.m4a`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+  //     if (response.status === 200) {
+  //       // Create a link to download the file
+  //       const blob = new Blob([response.data], { type: "audio/mp3" });
+  //       const downloadLink = document.createElement("a");
+  //       downloadLink.href = URL.createObjectURL(blob);
+  //       downloadLink.download = `${data.songName || "your_audio"}.m4a`;
+  //       document.body.appendChild(downloadLink);
+  //       downloadLink.click();
+  //       document.body.removeChild(downloadLink);
 
-        toast.dismiss(); // Dismiss the loading toast
-        toast.success(`Your audio file (${data.songName}) is ready and downloaded!`);
-      } else {
-        throw new Error("Failed to generate the audio.");
-      }
-    } catch (error) {
-      toast.dismiss(); // Dismiss the loading toast
-      toast.error(
-        "An error occurred. Please check the audio or image URLs and try again."
-      );
-      console.error("Error generating audio:", error);
-    }
-  };
+  //       toast.dismiss(); // Dismiss the loading toast
+  //       toast.success(`Your audio file (${data.songName}) is ready and downloaded!`);
+  //     } else {
+  //       throw new Error("Failed to generate the audio.");
+  //     }
+  //   } catch (error) {
+  //     toast.dismiss(); // Dismiss the loading toast
+  //     toast.error(
+  //       "An error occurred. Please check the audio or image URLs and try again."
+  //     );
+  //     console.error("Error generating audio:", error);
+  //   }
+  // };
+
+  // let isFFmpegLoaded = false;
+  
+  // const handleGenerateAudio = async ({
+  //   audioUrl,
+  //   imageUrl,
+  //   songName,
+  //   year,
+  //   album,
+  //   artist,
+  // }) => {
+  //   const ffmpeg = new FFmpeg({
+  //     log: true,
+  //   });
+  
+  //   // Add toast notification for the promise
+  //   toast.promise(
+  //     (async () => {
+  //       try {
+  //         // Load FFmpeg only once
+  //         if (!isFFmpegLoaded) {
+  //           console.log("Loading FFmpeg")
+  //           const coreURL = "/ffmpeg/ffmpeg-core.js";
+  //           const wasmURL = "/ffmpeg/ffmpeg-core.wasm";
+  
+  //           await ffmpeg.load({
+  //             coreURL: await toBlobURL(coreURL, "text/javascript"),
+  //             wasmURL: await toBlobURL(wasmURL, "application/wasm"),
+  //           });
+  //           setisFFmpegLoaded(true)
+  //           console.log(isFFmpegLoaded)
+  //         }
+  //         console.log(ffmpeg)
+  
+  //         // Fetch the audio and image files
+  //         const audioBuffer = await fetchFile(audioUrl);
+  //         const imageBuffer = await fetchFile(imageUrl);
+  
+  //         // Write files to FFmpeg's virtual file system
+  //         await ffmpeg.writeFile("input.mp3", audioBuffer);
+  //         await ffmpeg.writeFile("cover.jpg", imageBuffer);
+  
+  //         // Execute FFmpeg command to embed metadata and re-encode the audio
+  //         await ffmpeg.exec([
+  //           "-i", "input.mp3", 
+  //           "-i", "cover.jpg", 
+  //           "-map", "0:0", 
+  //           "-map", "1:0", 
+  //           "-metadata", `title=${songName}`, 
+  //           "-metadata", `artist=${artist}`, 
+  //           "-metadata", `album=${album}`, 
+  //           "-metadata", `date=${year}`, 
+  //           "-id3v2_version", "3", 
+  //           "-c:a", "libmp3lame", 
+  //           "-b:a", "320k",  // Set bitrate to 320kbps
+  //           "output.mp3"
+  //         ]);
+  
+  //         // Read the output file
+  //         const output = await ffmpeg.readFile("output.mp3");
+  
+  //         if (!output || output.byteLength === 0) {
+  //           throw new Error("FFmpeg failed to generate a valid output file.");
+  //         }
+  
+  //         // Create a downloadable blob
+  //         const blob = new Blob([output.buffer], { type: "audio/mpeg" });
+  //         const url = URL.createObjectURL(blob);
+  
+  //         // Trigger file download
+  //         const link = document.createElement("a");
+  //         link.href = url;
+  //         link.download = `${songName}.mp3`;
+  //         document.body.appendChild(link);
+  //         link.click();
+  //         link.remove();
+  //       } catch (error) {
+  //         throw error;  // Throw the error to be caught by toast.promise()
+  //       }
+  //     })(),
+  //     {
+  //       loading: `Generating audio file...(${songName})`,
+  //       success: `(${songName}) has been generated successfully!`,
+  //       error: 'Error generating audio file.',
+  //     }
+  //   );
+  // };
 
   function seccall() {
     const intervalId = setInterval(() => {
@@ -852,6 +942,7 @@ const AlbumDetails = () => {
                       artist:e?.artists.primary.map(artist => artist.name).join(",")
                     })
                   }
+
 
                   className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                 >
