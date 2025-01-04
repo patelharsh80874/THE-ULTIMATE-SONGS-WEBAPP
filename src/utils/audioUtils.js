@@ -3,34 +3,18 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile } from "@ffmpeg/util";
 import { toBlobURL } from "@ffmpeg/util";
 
-let ffmpeg = null; // FFmpeg instance
-let isFFmpegLoaded = false; // Track if FFmpeg is loaded
+// Function to create and initialize a new FFmpeg instance
+const createFFmpegInstance = async () => {
+  const ffmpeg = new FFmpeg({ log: true });
+  const coreURL = "/ffmpeg/ffmpeg-core.js";
+  const wasmURL = "/ffmpeg/ffmpeg-core.wasm";
 
-// Function to initialize FFmpeg (loaded only once)
-const initializeFFmpeg = async () => {
-  if (!ffmpeg) {
-    ffmpeg = new FFmpeg({ log: true });
-    const coreURL = "/ffmpeg/ffmpeg-core.js";
-    const wasmURL = "/ffmpeg/ffmpeg-core.wasm";
+  await ffmpeg.load({
+    coreURL: await toBlobURL(coreURL, "text/javascript"),
+    wasmURL: await toBlobURL(wasmURL, "application/wasm"),
+  });
 
-    await ffmpeg.load({
-      coreURL: await toBlobURL(coreURL, "text/javascript"),
-      wasmURL: await toBlobURL(wasmURL, "application/wasm"),
-    });
-
-    isFFmpegLoaded = true;
-  }
-};
-
-// Utility function to fetch and write files to FFmpeg's virtual file system
-const fetchAndWriteFiles = async (audioUrl, imageUrl) => {
-  const [audioBuffer, imageBuffer] = await Promise.all([
-    fetchFile(audioUrl),
-    fetchFile(imageUrl),
-  ]);
-
-  await ffmpeg.writeFile("input.mp3", audioBuffer);
-  await ffmpeg.writeFile("cover.jpg", imageBuffer);
+  return ffmpeg;
 };
 
 // Main function to generate audio with metadata
@@ -44,12 +28,20 @@ const handleGenerateAudio = async ({
 }) => {
   await toast.promise(
     (async () => {
+      let ffmpeg = null;
       try {
-        // Ensure FFmpeg is initialized
-        if (!isFFmpegLoaded) await initializeFFmpeg();
+        // Create a new isolated FFmpeg instance
+        ffmpeg = await createFFmpegInstance();
 
-        // Fetch and write files to FFmpeg
-        await fetchAndWriteFiles(audioUrl, imageUrl);
+        // Fetch the audio and image files
+        const [audioBuffer, imageBuffer] = await Promise.all([
+          fetchFile(audioUrl),
+          fetchFile(imageUrl),
+        ]);
+
+        // Write files to the isolated FFmpeg's virtual file system
+        await ffmpeg.writeFile("input.mp3", audioBuffer);
+        await ffmpeg.writeFile("cover.jpg", imageBuffer);
 
         // Execute FFmpeg command
         await ffmpeg.exec([
@@ -83,8 +75,9 @@ const handleGenerateAudio = async ({
         document.body.appendChild(link);
         link.click();
         link.remove();
-      } catch (error) {
-        throw error; // Pass error to toast promise
+      } finally {
+        // Clean up FFmpeg instance to free resources
+        if (ffmpeg) ffmpeg.terminate();
       }
     })(),
     {
