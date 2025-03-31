@@ -30,7 +30,7 @@ const Album = () => {
       const { data } = await axios.get(
         // `https://saavn.dev/api/search/albums?query=${query}&page=1&limit=10`
         // `https://jiosaavan-harsh-patel.vercel.app/search/albums?query=${query}`
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/albums?query=${requery}&page=${page}&limit=40`
+        `https://jiosavan-api-with-playlist.vercel.app/api/search/albums?query=${requery}&page=${page}&limit=40`
       );
       // setalbums(data?.data?.results);
       // setalbums((prevState) => [...prevState, ...data?.data?.results]);

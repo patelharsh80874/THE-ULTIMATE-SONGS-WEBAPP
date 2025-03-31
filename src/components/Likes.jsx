@@ -21,6 +21,7 @@ import toast, { Toaster } from "react-hot-toast";
 import JSZip from "jszip";
 import CryptoJS from "crypto-js";
 import  handleGenerateAudio  from "./../utils/audioUtils";
+import  handleGenerateAudio2  from "./../utils/audioUtils2";
 
 function Likes() {
   const navigate = useNavigate();
@@ -947,22 +948,35 @@ function Likes() {
                     <p className="text-xs"> High quality</p>
                   </p> */}
                   <p
-                    onClick={() =>
-                      handleDownloadSong(
-                        e.downloadUrl[4].url,
-                        e.name + " 320kbps",
-                        e?.image[2]?.url
-                      )
-                    }
+
+                    // onClick={() =>
+                    //   handleDownloadSong(
+                    //     e.downloadUrl[4].url,
+                    //     e.name + " 320kbps",
+                    //     e?.image[2]?.url
+                    //   )
+                    // }
+
                     // onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+
+                    onClick={() =>
+                      handleGenerateAudio2({
+                        audioUrl:  e?.downloadUrl[4].url,
+                        imageUrl: e?.image[2]?.url,
+                        songName:  e?.name,
+                        year: e?.year,
+                        album: e?.album.name,
+                        artist:e?.artists.primary.map(artist => artist.name).join(",")
+                      })
+                    }
 
                     className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                   >
-                    320kbps <br />
-                    <p className="text-xs text-center">
-                      {" "}
-                      High quality without poster
-                    </p>
+                    Highest quality with <br />
+                  <p className="text-xs text-center">
+                    {" "}
+                    FLAC Format
+                  </p>
                   </p>
                   <p
                     // onClick={() =>
@@ -992,8 +1006,6 @@ function Likes() {
                     320kbps <br />
                     <p className="text-xs text-center">
                       High quality with poster embedded
-                      <br />
-                      (some time this will not work)
                     </p>
                   </p>
                 </div>

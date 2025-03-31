@@ -40,7 +40,7 @@ const SongDetails = () => {
   const Getdetails = async () => {
     try {
       const { data } = await axios.get(
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${id}/suggestions?limit=70`
+        `https://jiosavan-api-with-playlist.vercel.app/api/songs/${id}/suggestions?limit=70`
       );
       // setdetails(data.data.songs);
       setdetails(data?.data);
@@ -52,7 +52,7 @@ const SongDetails = () => {
   const Getsong = async () => {
     try {
       const { data } = await axios.get(
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${id}?lyrics=true`
+        `https://jiosavan-api-with-playlist.vercel.app/api/songs/${id}?lyrics=true`
       );
       // setdetails(data.data.songs);
       setsong(data?.data);

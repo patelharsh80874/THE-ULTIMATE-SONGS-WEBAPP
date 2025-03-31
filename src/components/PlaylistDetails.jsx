@@ -18,6 +18,7 @@ import { Bounce, Expo, Power4, Sine } from "gsap/all";
 import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
 import  handleGenerateAudio  from "./../utils/audioUtils";
+import  handleGenerateAudio2  from "./../utils/audioUtils2";
 
 const PlaylistDetails = () => {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ const PlaylistDetails = () => {
   const Getdetails = async () => {
     try {
       const { data } = await axios.get(
-        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/playlists?id=${finalid}&limit=100`
+        `https://jiosavan-api-with-playlist.vercel.app/api/playlists?id=${finalid}&limit=100`
       );
       // setdetails(data.data.songs);
       setdetails(data?.data?.songs);
@@ -823,21 +824,34 @@ const PlaylistDetails = () => {
                   <p className="text-xs"> High quality</p>
                 </p> */}
                 <p
-                  onClick={() =>
-                    handleDownloadSong(
-                      e.downloadUrl[4].url,
-                      e.name + " 320kbps",
-                      e?.image[2]?.url
-                    )
-                  }
+
+                  // onClick={() =>
+                  //   handleDownloadSong(
+                  //     e.downloadUrl[4].url,
+                  //     e.name + " 320kbps",
+                  //     e?.image[2]?.url
+                  //   )
+                  // }
+
                   // onClick={() => window.open(`https://mp3-download-server-production.up.railway.app/generate-audio?audioUrl=${e.downloadUrl[4].url}&imageUrl=${e?.image[2]?.url}&songName=${e.name + " 320kbps"}&year=${e.year}&album=${e.album.name}`, "_blank")}
+
+                  onClick={() =>
+                    handleGenerateAudio2({
+                      audioUrl:  e?.downloadUrl[4].url,
+                      imageUrl: e?.image[2]?.url,
+                      songName:  e?.name,
+                      year: e?.year,
+                      album: e?.album.name,
+                      artist:e?.artists.primary.map(artist => artist.name).join(",")
+                    })
+                  }
 
                   className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                 >
-                  320kbps <br />
+                  Highest quality with <br />
                   <p className="text-xs text-center">
                     {" "}
-                    High quality without poster
+                    FLAC Format
                   </p>
                 </p>
                 <p
@@ -867,8 +881,6 @@ const PlaylistDetails = () => {
                   320kbps <br />
                   <p className="text-xs text-center">
                     High quality with poster embedded
-                    <br />
-                    (some time this will not work)
                   </p>
                 </p>
               </div>
