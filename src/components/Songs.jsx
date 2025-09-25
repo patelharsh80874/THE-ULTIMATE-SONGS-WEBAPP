@@ -39,7 +39,7 @@ const Songs = () => {
   // const Getsearch = async () => {
   //   try {
   //     const { data } = await axios.get(
-  //       `https://jiosavan-api-with-playlist.vercel.app/api/search/songs?query=${query}&page=${page}&limit=10`
+        `https://jiosavan-api-with-playlist.vercel.app/api/search/songs?query=${query}&page=${page}&limit=10`
   //       // `https://jiosaavan-harsh-patel.vercel.app/search/songs?query=${query}&page=${page}&limit=10`
   //     );
 
@@ -64,7 +64,7 @@ const Songs = () => {
         });
       }
       const { data } = await axios.get(
-        `https://jiosavan-api-with-playlist.vercel.app/api/search/songs?query=${requery}&page=${page}&limit=40`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/search/songs?query=${requery}&page=${page}&limit=40`
       );
       // setsearch((prevState) => [...prevState, ...data.data.results]);
       if (hasMore) {
@@ -371,10 +371,76 @@ const Songs = () => {
   //   }
   // };
 
-  const initializeMediaSession = () => {
-    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  // const initializeMediaSession = () => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
 
-    if ("mediaSession" in navigator) {
+  //   if ("mediaSession" in navigator) {
+  //     navigator.mediaSession.metadata = new MediaMetadata({
+  //       title: songlink[0]?.name || "",
+  //       artist: songlink[0]?.album?.name || "",
+  //       artwork: [
+  //         {
+  //           src: songlink[0]?.image[2]?.url || "",
+  //           sizes: "512x512",
+  //           type: "image/jpeg",
+  //         },
+  //       ],
+  //     });
+
+  //     navigator.mediaSession.setActionHandler("play", function () {
+  //       // Handle play action
+  //       if (audioRef.current) {
+  //         audioRef.current.play().catch((error) => {
+  //           console.error("Play error:", error);
+  //         });
+  //       }
+  //     });
+
+  //     navigator.mediaSession.setActionHandler("pause", function () {
+  //       // Handle pause action
+  //       if (audioRef.current) {
+  //         audioRef.current.pause().catch((error) => {
+  //           console.error("Pause error:", error);
+  //         });
+  //       }
+  //     });
+
+  //     navigator.mediaSession.setActionHandler("previoustrack", function () {
+  //       pre();
+  //       audioRef.current.play();
+  //     });
+
+  //     navigator.mediaSession.setActionHandler("nexttrack", function () {
+  //       next();
+  //       audioRef.current.play();
+  //     });
+  //   } else {
+  //     console.warn("MediaSession API is not supported.");
+  //   }
+  //   if (isIOS) {
+  //     // Enable background audio playback for iOS
+  //     document.addEventListener("visibilitychange", () => {
+  //       if (document.visibilityState === "visible") {
+  //         if (audioRef.current && audioRef.current.paused) {
+  //           audioRef.current.play().catch((error) => {
+  //             console.error("Play error:", error);
+  //           });
+  //         }
+  //       } else {
+  //         if (audioRef.current && !audioRef.current.paused) {
+  //           audioRef.current.pause().catch((error) => {
+  //             console.error("Pause error:", error);
+  //           });
+  //         }
+  //       }
+  //     });
+  //   }
+  // };
+
+  const initializeMediaSession = () => {
+  if ("mediaSession" in navigator) {
+    // --- Metadata set karna ---
+    const updateMetadata = () => {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
         artist: songlink[0]?.album?.name || "",
@@ -386,56 +452,76 @@ const Songs = () => {
           },
         ],
       });
+    };
 
-      navigator.mediaSession.setActionHandler("play", function () {
-        // Handle play action
-        if (audioRef.current) {
-          audioRef.current.play().catch((error) => {
-            console.error("Play error:", error);
+    // --- Position state set karna ---
+    const updatePositionState = () => {
+      if ("setPositionState" in navigator.mediaSession && audioRef.current) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: audioRef.current.duration || 0,
+            playbackRate: audioRef.current.playbackRate || 1,
+            position: audioRef.current.currentTime || 0,
           });
+        } catch (err) {
+          console.warn("PositionState error:", err);
         }
-      });
+      }
+    };
 
-      navigator.mediaSession.setActionHandler("pause", function () {
-        // Handle pause action
-        if (audioRef.current) {
-          audioRef.current.pause().catch((error) => {
-            console.error("Pause error:", error);
-          });
-        }
-      });
+    // Initial metadata update
+    updateMetadata();
 
-      navigator.mediaSession.setActionHandler("previoustrack", function () {
-        pre();
-        audioRef.current.play();
-      });
+    // --- Play action ---
+    navigator.mediaSession.setActionHandler("play", () => {
+      if (audioRef.current) {
+        audioRef.current.play().catch((error) => {
+          console.error("Play error:", error);
+        });
+        updateMetadata();
+        updatePositionState();
+      }
+    });
 
-      navigator.mediaSession.setActionHandler("nexttrack", function () {
-        next();
-        audioRef.current.play();
-      });
-    } else {
-      console.warn("MediaSession API is not supported.");
+    // --- Pause action ---
+    navigator.mediaSession.setActionHandler("pause", () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        updateMetadata(); // pause ke time bhi metadata refresh
+        updatePositionState(); // position state bhi update
+      }
+    });
+
+    // --- Previous track ---
+    navigator.mediaSession.setActionHandler("previoustrack", () => {
+      pre();
+      updateMetadata();
+      updatePositionState();
+    });
+
+    // --- Next track ---
+    navigator.mediaSession.setActionHandler("nexttrack", () => {
+      next();
+      updateMetadata();
+      updatePositionState();
+    });
+
+    // Audio events ke saath sync
+    if (audioRef.current) {
+      audioRef.current.ontimeupdate = () => updatePositionState();
+      audioRef.current.onloadedmetadata = () => {
+        updateMetadata();
+        updatePositionState();
+      };
+      audioRef.current.onpause = () => {
+        updateMetadata();
+        updatePositionState();
+      };
     }
-    if (isIOS) {
-      // Enable background audio playback for iOS
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") {
-          if (audioRef.current && audioRef.current.paused) {
-            audioRef.current.play().catch((error) => {
-              console.error("Play error:", error);
-            });
-          }
-        } else {
-          if (audioRef.current && !audioRef.current.paused) {
-            audioRef.current.pause().catch((error) => {
-              console.error("Pause error:", error);
-            });
-          }
-        }
-      });
-    }
-  };
+  } else {
+    console.warn("MediaSession API is not supported on this device.");
+  }
+};
 
   // const initializeMediaSession = () => {
   //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
@@ -740,14 +826,34 @@ const Songs = () => {
   //   }
   // }, [query]);
 
-  useEffect(() => {
-    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  // useEffect(() => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
 
-    if (!isIOS && songlink.length > 0) {
-      audioRef.current.play();
+  //   if (!isIOS && songlink.length > 0) {
+  //     audioRef.current.play();
+  //     initializeMediaSession();
+  //   }
+  // }, [songlink]);
+
+    useEffect(() => {
+  if (songlink.length > 0 && audioRef.current) {
+    audioRef.current.play().catch((err) => console.warn("Autoplay error:", err));
+    initializeMediaSession();
+  }
+
+  // --- Visibility change listener ---
+  const handleVisibilityChange = () => {
+    if (!document.hidden) { // Screen on / tab visible
       initializeMediaSession();
     }
-  }, [songlink]);
+  };
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+  };
+}, [songlink]);
 
   // useEffect(() => {
   //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);

@@ -372,10 +372,56 @@ function Likes() {
   //   }
   // };
 
-  const initializeMediaSession = () => {
-    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  // const initializeMediaSession = () => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
 
-    if (!isIOS && "mediaSession" in navigator) {
+  //   if (!isIOS && "mediaSession" in navigator) {
+  //     navigator.mediaSession.metadata = new MediaMetadata({
+  //       title: songlink[0]?.name || "",
+  //       artist: songlink[0]?.album?.name || "",
+  //       artwork: [
+  //         {
+  //           src: songlink[0]?.image[2]?.url || "",
+  //           sizes: "512x512",
+  //           type: "image/jpeg",
+  //         },
+  //       ],
+  //     });
+
+  //     navigator.mediaSession.setActionHandler("play", function () {
+  //       // Handle play action
+  //       if (audioRef.current) {
+  //         audioRef.current.play().catch((error) => {
+  //           console.error("Play error:", error);
+  //         });
+  //       }
+  //     });
+
+  //     navigator.mediaSession.setActionHandler("pause", function () {
+  //       // Handle pause action
+  //       if (audioRef.current) {
+  //         audioRef.current.pause().catch((error) => {
+  //           console.error("Pause error:", error);
+  //         });
+  //       }
+  //     });
+
+  //     navigator.mediaSession.setActionHandler("previoustrack", function () {
+  //       pre();
+  //     });
+
+  //     navigator.mediaSession.setActionHandler("nexttrack", function () {
+  //       next();
+  //     });
+  //   } else {
+  //     console.warn("MediaSession API is not supported or the device is iOS.");
+  //   }
+  // };
+
+  const initializeMediaSession = () => {
+  if ("mediaSession" in navigator) {
+    // --- Metadata set karna ---
+    const updateMetadata = () => {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songlink[0]?.name || "",
         artist: songlink[0]?.album?.name || "",
@@ -387,36 +433,76 @@ function Likes() {
           },
         ],
       });
+    };
 
-      navigator.mediaSession.setActionHandler("play", function () {
-        // Handle play action
-        if (audioRef.current) {
-          audioRef.current.play().catch((error) => {
-            console.error("Play error:", error);
+    // --- Position state set karna ---
+    const updatePositionState = () => {
+      if ("setPositionState" in navigator.mediaSession && audioRef.current) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: audioRef.current.duration || 0,
+            playbackRate: audioRef.current.playbackRate || 1,
+            position: audioRef.current.currentTime || 0,
           });
+        } catch (err) {
+          console.warn("PositionState error:", err);
         }
-      });
+      }
+    };
 
-      navigator.mediaSession.setActionHandler("pause", function () {
-        // Handle pause action
-        if (audioRef.current) {
-          audioRef.current.pause().catch((error) => {
-            console.error("Pause error:", error);
-          });
-        }
-      });
+    // Initial metadata update
+    updateMetadata();
 
-      navigator.mediaSession.setActionHandler("previoustrack", function () {
-        pre();
-      });
+    // --- Play action ---
+    navigator.mediaSession.setActionHandler("play", () => {
+      if (audioRef.current) {
+        audioRef.current.play().catch((error) => {
+          console.error("Play error:", error);
+        });
+        updateMetadata();
+        updatePositionState();
+      }
+    });
 
-      navigator.mediaSession.setActionHandler("nexttrack", function () {
-        next();
-      });
-    } else {
-      console.warn("MediaSession API is not supported or the device is iOS.");
+    // --- Pause action ---
+    navigator.mediaSession.setActionHandler("pause", () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        updateMetadata(); // pause ke time bhi metadata refresh
+        updatePositionState(); // position state bhi update
+      }
+    });
+
+    // --- Previous track ---
+    navigator.mediaSession.setActionHandler("previoustrack", () => {
+      pre();
+      updateMetadata();
+      updatePositionState();
+    });
+
+    // --- Next track ---
+    navigator.mediaSession.setActionHandler("nexttrack", () => {
+      next();
+      updateMetadata();
+      updatePositionState();
+    });
+
+    // Audio events ke saath sync
+    if (audioRef.current) {
+      audioRef.current.ontimeupdate = () => updatePositionState();
+      audioRef.current.onloadedmetadata = () => {
+        updateMetadata();
+        updatePositionState();
+      };
+      audioRef.current.onpause = () => {
+        updateMetadata();
+        updatePositionState();
+      };
     }
-  };
+  } else {
+    console.warn("MediaSession API is not supported on this device.");
+  }
+};
 
   function next() {
     if (index < details.length - 1) {
@@ -517,14 +603,34 @@ function Likes() {
     }
   }, [rerender, songlink]);
 
-  useEffect(() => {
-    const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
+  // useEffect(() => {
+  //   const isIOS = /(iPhone|iPod|iPad)/i.test(navigator.userAgent);
 
-    if (!isIOS && songlink.length > 0) {
-      audioRef.current.play();
+  //   if (!isIOS && songlink.length > 0) {
+  //     audioRef.current.play();
+  //     initializeMediaSession();
+  //   }
+  // }, [songlink]);
+
+    useEffect(() => {
+  if (songlink.length > 0 && audioRef.current) {
+    audioRef.current.play().catch((err) => console.warn("Autoplay error:", err));
+    initializeMediaSession();
+  }
+
+  // --- Visibility change listener ---
+  const handleVisibilityChange = () => {
+    if (!document.hidden) { // Screen on / tab visible
       initializeMediaSession();
     }
-  }, [songlink]);
+  };
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+  };
+}, [songlink]);
 
   // const downloadSongs = () => {
   //   if (songs.length > 0) {

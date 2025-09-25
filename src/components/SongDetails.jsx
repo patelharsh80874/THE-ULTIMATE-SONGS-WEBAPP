@@ -52,7 +52,7 @@ const SongDetails = () => {
   const Getsong = async () => {
     try {
       const { data } = await axios.get(
-        `https://jiosavan-api-with-playlist.vercel.app/api/songs/${id}?lyrics=true`
+        `https://jiosaavan-api-2-harsh-patel.vercel.app/api/songs/${id}?lyrics=true`
       );
       // setdetails(data.data.songs);
       setsong(data?.data);
