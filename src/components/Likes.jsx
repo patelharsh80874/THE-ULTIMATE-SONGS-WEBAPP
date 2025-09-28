@@ -20,8 +20,9 @@ import { Circ } from "gsap/all";
 import toast, { Toaster } from "react-hot-toast";
 import JSZip from "jszip";
 import CryptoJS from "crypto-js";
-import  handleGenerateAudio  from "./../utils/audioUtils";
-import  handleGenerateAudio2  from "./../utils/audioUtils2";
+import handleGenerateAudio from "./../utils/audioUtils";
+import handleGenerateAudio2 from "./../utils/audioUtils2";
+import downloadSongsWithMetadataAsZip from "../utils/downloadSongsWithMetadataAsZip";
 
 function Likes() {
   const navigate = useNavigate();
@@ -419,90 +420,90 @@ function Likes() {
   // };
 
   const initializeMediaSession = () => {
-  if ("mediaSession" in navigator) {
-    // --- Metadata set karna ---
-    const updateMetadata = () => {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: songlink[0]?.name || "",
-        artist: songlink[0]?.album?.name || "",
-        artwork: [
-          {
-            src: songlink[0]?.image[2]?.url || "",
-            sizes: "512x512",
-            type: "image/jpeg",
-          },
-        ],
-      });
-    };
-
-    // --- Position state set karna ---
-    const updatePositionState = () => {
-      if ("setPositionState" in navigator.mediaSession && audioRef.current) {
-        try {
-          navigator.mediaSession.setPositionState({
-            duration: audioRef.current.duration || 0,
-            playbackRate: audioRef.current.playbackRate || 1,
-            position: audioRef.current.currentTime || 0,
-          });
-        } catch (err) {
-          console.warn("PositionState error:", err);
-        }
-      }
-    };
-
-    // Initial metadata update
-    updateMetadata();
-
-    // --- Play action ---
-    navigator.mediaSession.setActionHandler("play", () => {
-      if (audioRef.current) {
-        audioRef.current.play().catch((error) => {
-          console.error("Play error:", error);
+    if ("mediaSession" in navigator) {
+      // --- Metadata set karna ---
+      const updateMetadata = () => {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: songlink[0]?.name || "",
+          artist: songlink[0]?.album?.name || "",
+          artwork: [
+            {
+              src: songlink[0]?.image[2]?.url || "",
+              sizes: "512x512",
+              type: "image/jpeg",
+            },
+          ],
         });
+      };
+
+      // --- Position state set karna ---
+      const updatePositionState = () => {
+        if ("setPositionState" in navigator.mediaSession && audioRef.current) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: audioRef.current.duration || 0,
+              playbackRate: audioRef.current.playbackRate || 1,
+              position: audioRef.current.currentTime || 0,
+            });
+          } catch (err) {
+            console.warn("PositionState error:", err);
+          }
+        }
+      };
+
+      // Initial metadata update
+      updateMetadata();
+
+      // --- Play action ---
+      navigator.mediaSession.setActionHandler("play", () => {
+        if (audioRef.current) {
+          audioRef.current.play().catch((error) => {
+            console.error("Play error:", error);
+          });
+          updateMetadata();
+          updatePositionState();
+        }
+      });
+
+      // --- Pause action ---
+      navigator.mediaSession.setActionHandler("pause", () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          updateMetadata(); // pause ke time bhi metadata refresh
+          updatePositionState(); // position state bhi update
+        }
+      });
+
+      // --- Previous track ---
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
+        pre();
         updateMetadata();
         updatePositionState();
-      }
-    });
+      });
 
-    // --- Pause action ---
-    navigator.mediaSession.setActionHandler("pause", () => {
+      // --- Next track ---
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        next();
+        updateMetadata();
+        updatePositionState();
+      });
+
+      // Audio events ke saath sync
       if (audioRef.current) {
-        audioRef.current.pause();
-        updateMetadata(); // pause ke time bhi metadata refresh
-        updatePositionState(); // position state bhi update
+        audioRef.current.ontimeupdate = () => updatePositionState();
+        audioRef.current.onloadedmetadata = () => {
+          updateMetadata();
+          updatePositionState();
+        };
+        audioRef.current.onpause = () => {
+          updateMetadata();
+          updatePositionState();
+        };
       }
-    });
-
-    // --- Previous track ---
-    navigator.mediaSession.setActionHandler("previoustrack", () => {
-      pre();
-      updateMetadata();
-      updatePositionState();
-    });
-
-    // --- Next track ---
-    navigator.mediaSession.setActionHandler("nexttrack", () => {
-      next();
-      updateMetadata();
-      updatePositionState();
-    });
-
-    // Audio events ke saath sync
-    if (audioRef.current) {
-      audioRef.current.ontimeupdate = () => updatePositionState();
-      audioRef.current.onloadedmetadata = () => {
-        updateMetadata();
-        updatePositionState();
-      };
-      audioRef.current.onpause = () => {
-        updateMetadata();
-        updatePositionState();
-      };
+    } else {
+      console.warn("MediaSession API is not supported on this device.");
     }
-  } else {
-    console.warn("MediaSession API is not supported on this device.");
-  }
-};
+  };
 
   function next() {
     if (index < details.length - 1) {
@@ -612,25 +613,28 @@ function Likes() {
   //   }
   // }, [songlink]);
 
-    useEffect(() => {
-  if (songlink.length > 0 && audioRef.current) {
-    audioRef.current.play().catch((err) => console.warn("Autoplay error:", err));
-    initializeMediaSession();
-  }
-
-  // --- Visibility change listener ---
-  const handleVisibilityChange = () => {
-    if (!document.hidden) { // Screen on / tab visible
+  useEffect(() => {
+    if (songlink.length > 0 && audioRef.current) {
+      audioRef.current
+        .play()
+        .catch((err) => console.warn("Autoplay error:", err));
       initializeMediaSession();
     }
-  };
 
-  document.addEventListener("visibilitychange", handleVisibilityChange);
+    // --- Visibility change listener ---
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Screen on / tab visible
+        initializeMediaSession();
+      }
+    };
 
-  return () => {
-    document.removeEventListener("visibilitychange", handleVisibilityChange);
-  };
-}, [songlink]);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [songlink]);
 
   // const downloadSongs = () => {
   //   if (songs.length > 0) {
@@ -793,9 +797,16 @@ function Likes() {
           </h1>
         </div>
         <div className="w-fit flex gap-3">
-          <button
+          {/* <button
             className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-0.5 font-semibold bg-slate-400 "
             onClick={downloadSongs}
+            disabled={download}
+          >
+            {download ? "downloading..." : "Download All Songs"}
+          </button> */}
+          <button
+            className=" hover:scale-90 sm:hover:scale-100 duration-300 inline-block w-fit h-fit sm:text-sm  rounded-md p-2 sm:p-0.5 font-semibold bg-slate-400 "
+            onClick={()=>downloadSongsWithMetadataAsZip(songs,setdownload)}
             disabled={download}
           >
             {download ? "downloading..." : "Download All Songs"}
@@ -1054,7 +1065,6 @@ function Likes() {
                     <p className="text-xs"> High quality</p>
                   </p> */}
                   <p
-
                     // onClick={() =>
                     //   handleDownloadSong(
                     //     e.downloadUrl[4].url,
@@ -1067,22 +1077,20 @@ function Likes() {
 
                     onClick={() =>
                       handleGenerateAudio2({
-                        audioUrl:  e?.downloadUrl[4].url,
+                        audioUrl: e?.downloadUrl[4].url,
                         imageUrl: e?.image[2]?.url,
-                        songName:  e?.name,
+                        songName: e?.name,
                         year: e?.year,
                         album: e?.album.name,
-                        artist:e?.artists.primary.map(artist => artist.name).join(",")
+                        artist: e?.artists.primary
+                          .map((artist) => artist.name)
+                          .join(","),
                       })
                     }
-
                     className="duration-300 cursor-pointer  hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
                   >
                     Highest quality with <br />
-                  <p className="text-xs text-center">
-                    {" "}
-                    FLAC Format
-                  </p>
+                    <p className="text-xs text-center"> FLAC Format</p>
                   </p>
                   <p
                     // onClick={() =>
@@ -1097,12 +1105,12 @@ function Likes() {
 
                     onClick={() =>
                       handleGenerateAudio({
-                        audioUrl:e?.downloadUrl[4].url,
-                        imageUrl:e?.image[2]?.url,
-                        songName:e?.name,
-                        year:e?.year,
-                        album:e?.album.name,
-                        artist:e?.artists.primary
+                        audioUrl: e?.downloadUrl[4].url,
+                        imageUrl: e?.image[2]?.url,
+                        songName: e?.name,
+                        year: e?.year,
+                        album: e?.album.name,
+                        artist: e?.artists.primary
                           .map((artist) => artist.name)
                           .join(","),
                       })
