@@ -27,8 +27,8 @@ const Artists = () => {
     try {
       const { data } = await axios.get(
         // `https://saavn.dev/api/search/artists?query=${query}&limit=10`
-        // `https://jiosaavan-harsh-patel.vercel.app/search/artists?query=${query}&limit=10`
-        `https://jiosavan-api-with-playlist.vercel.app/api/search/artists?query=${query}&limit=100`
+        // `https://jio-saavan-api.vercel.app/search/artists?query=${query}&limit=10`
+        `https://jiosaavn-roan.vercel.app/api/search/artists?query=${query}&limit=100`
       );
       setartists(data?.data?.results);
       localStorage.setItem("artists", JSON.stringify(data?.data?.results));

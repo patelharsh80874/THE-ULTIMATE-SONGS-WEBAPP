@@ -29,8 +29,8 @@ const Playlist = () => {
     try {
       const { data } = await axios.get(
         // `https://saavn.dev/api/search?query=${query}&page=1&limit=10`
-        // `https://jiosaavan-harsh-patel.vercel.app/search/playlists?query=${query}`
-        `https://jiosavan-api-with-playlist.vercel.app/api/search/playlists?query=${query}&page=${page}&limit=10`
+        // `https://jio-saavan-api.vercel.app/search/playlists?query=${query}`
+        `https://jiosaavn-roan.vercel.app/api/search/playlists?query=${query}&page=${page}&limit=10`
       );
 
       // setplaylist(data?.data?.results);
