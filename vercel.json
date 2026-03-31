@@ -1,16 +1,23 @@
 {
-  "headers": [
-    {
-      "source": "/ffmpeg/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    "rewrites": [
+      {
+        "source": "/api/(.*)",
+        "destination": "/api"
+      },
+      {
+        "source": "/(.*)",
+        "destination": "/"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/ffmpeg/(.*)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      }
     ]
   }

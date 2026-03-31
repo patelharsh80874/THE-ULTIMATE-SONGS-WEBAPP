@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Circ } from "gsap/all";
 import { usePlayer } from "../context/PlayerContext";
@@ -6,8 +7,11 @@ import useLikedSongs from "../hooks/useLikedSongs";
 import handleGenerateAudio from "../utils/audioUtils";
 import handleGenerateAudio2 from "../utils/audioUtils2";
 import Queue from "./Queue";
+import AddToPlaylistModal from "./AddToPlaylistModal";
+import Tooltip from "./Tooltip";
 
 const PlayerBar = () => {
+  const navigate = useNavigate();
   const {
     songlink,
     currentIndex,
@@ -21,6 +25,7 @@ const PlayerBar = () => {
 
   const { isLiked, toggleLike } = useLikedSongs();
   const [showQueue, setShowQueue] = useState(false);
+  const [playlistModalSong, setPlaylistModalSong] = useState(null);
 
   if (songlink.length === 0) return null;
 
@@ -32,142 +37,239 @@ const PlayerBar = () => {
       </AnimatePresence>
 
       <motion.div
-        className="duration-700 fixed z-[99] bottom-0 flex gap-3 items-center w-full py-3 backdrop-blur-xl"
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ ease: Circ.easeOut, duration: 0.5 }}
+        className="fixed z-[99] bottom-0 left-0 right-0 w-full h-24 sm:h-auto bg-slate-900/98 backdrop-blur-3xl border-t border-slate-800 shadow-[0_-10px_30px_rgba(0,0,0,0.6)] flex items-center px-6 sm:px-3 sm:py-3 sm:pb-4 sm:flex-col sm:justify-start"
       >
         {songlink.map((e, i) => (
-          <motion.div
-            initial={{ y: 100, opacity: 0, scale: 0 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            transition={{ ease: Circ.easeIn, duration: 0.7 }}
-            key={e?.id || i}
-            className="flex sm:block w-full sm:w-full sm:h-full items-center justify-center gap-3"
-          >
-            {/* Song Info */}
-            <motion.div
-              initial={{ x: -100, opacity: 0, scale: 0 }}
-              animate={{ x: 0, opacity: 1, scale: 1 }}
-              className="w-[25vw] sm:w-full flex gap-3 items-center sm:justify-center rounded-md h-[7vw] sm:h-[30vw]"
-            >
-              <p className="text-green-400">{currentIndex + 1}</p>
-              <motion.img
-                initial={{ x: -100, opacity: 0, scale: 0 }}
-                animate={{ x: 0, opacity: 1, scale: 1 }}
-                className="rounded-md h-[7vw] sm:h-[25vw]"
-                src={e?.image?.[2]?.url}
-                alt=""
-              />
-              <h3 className="sm:w-[30%] text-white text-xs font-semibold">
-                {e?.name}
-              </h3>
-              <i
-                onClick={() => toggleLike(e)}
-                className={`text-xl hover:scale-150 sm:hover:scale-100 duration-300 cursor-pointer ${
-                  isLiked(e?.id) ? "text-red-500" : "text-zinc-300"
-                } ri-heart-3-fill`}
-              ></i>
-            </motion.div>
-
-            {/* Audio Controls */}
-            <motion.div
-              initial={{ y: 100, opacity: 0, scale: 0 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              className="w-[35%] sm:w-full h-[10vh] flex gap-3 sm:gap-1 items-center justify-center"
-            >
-              <button
-                onClick={previous}
-                className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
-              >
-                <i className="ri-skip-back-mini-fill"></i>
-              </button>
-              <audio
-                ref={audioRef}
-                onPause={() => setIsPlaying(false)}
-                onPlay={() => setIsPlaying(true)}
-                className="w-[80%]"
-                controls
-                autoPlay
-                onEnded={next}
-                src={e?.downloadUrl?.[4]?.url}
-              ></audio>
-              <button
-                onClick={next}
-                className="text-3xl text-white bg-zinc-800 cursor-pointer rounded-full"
-              >
-                <i className="ri-skip-right-fill"></i>
-              </button>
-            </motion.div>
-
-            {/* Queue Button + Download Options */}
-            <div className="flex items-center gap-4">
-              {/* Queue Button */}
-              <button
-                onClick={() => setShowQueue(!showQueue)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-md duration-300 cursor-pointer ${
-                  showQueue
-                    ? "bg-green-500/20 text-green-400"
-                    : "hover:bg-slate-600 text-zinc-400 hover:text-white"
-                }`}
-                title="Song Queue"
-              >
-                <i className="ri-play-list-2-line text-2xl"></i>
-                <span className="text-[10px] font-semibold">
-                  Queue ({songsList.length})
-                </span>
-              </button>
-
-              {/* Download Options */}
-              <div className="flex flex-col text-[1vw] items-center gap-2">
-                <div>
-                  <h3 className="font-bold text-sm text-slate-400">
-                    Download Options
-                  </h3>
+          <div key={e?.id || i} className="w-full h-full sm:h-auto flex sm:flex-col items-center justify-between gap-4 sm:gap-2">
+            
+            {/* 1. Left Layout: Song info + Like/Playlist */}
+            <div className="flex items-center justify-between w-[30%] min-w-[280px] sm:w-full sm:min-w-0">
+              <div className="flex items-center gap-4 min-w-0 flex-1">
+                <div 
+                  onClick={() => navigate(`/songs/details/${e.id}`)}
+                  className="relative group/img cursor-pointer flex-shrink-0"
+                >
+                  <Tooltip text="View Song Details" position="bottom">
+                    <img
+                      className="w-14 h-14 sm:w-12 sm:h-12 rounded-md object-cover shadow-lg border border-white/10 group-hover/img:brightness-75 transition-all"
+                      src={e?.image?.[2]?.url || e?.image?.[1]?.url}
+                      alt={e?.name}
+                    />
+                  </Tooltip>
+                  {isPlaying && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900 animate-pulse"></div>
+                  )}
                 </div>
-                <div className="flex flex-row-reverse gap-2">
-                  <p
-                    onClick={() =>
-                      handleGenerateAudio2({
-                        audioUrl: e?.downloadUrl?.[4]?.url,
-                        imageUrl: e?.image?.[2]?.url,
-                        songName: e?.name,
-                        year: e?.year,
-                        album: e?.album?.name,
-                        artist: e?.artists?.primary
-                          ?.map((artist) => artist.name)
-                          .join(","),
-                      })
-                    }
-                    className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
-                  >
-                    Highest quality with <br />
-                    <p className="text-xs text-center">FLAC Format</p>
-                  </p>
-                  <p
-                    onClick={() =>
-                      handleGenerateAudio({
-                        audioUrl: e?.downloadUrl?.[4]?.url,
-                        imageUrl: e?.image?.[2]?.url,
-                        songName: e?.name,
-                        year: e?.year,
-                        album: e?.album?.name,
-                        artist: e?.artists?.primary
-                          ?.map((artist) => artist.name)
-                          .join(","),
-                      })
-                    }
-                    className="duration-300 cursor-pointer hover:text-slate-400 hover:bg-slate-600 hover:scale-90 w-fit p-1 sm:text-sm font-semibold rounded-md shadow-2xl bg-slate-400 flex flex-col items-center"
-                  >
-                    320kbps <br />
-                    <p className="text-xs text-center">
-                      High quality with poster embedded
-                    </p>
+                <div className="flex flex-col min-w-0 justify-center">
+                  <Tooltip text="View Song Details" position="bottom">
+                    <h3 
+                      onClick={() => navigate(`/songs/details/${e.id}`)}
+                      className="text-white text-sm sm:text-xs font-bold truncate hover:underline cursor-pointer"
+                    >
+                      {e?.name}
+                    </h3>
+                  </Tooltip>
+                  <p className="text-zinc-400 text-xs truncate">
+                    {e?.artists?.primary?.map(a => a.name).join(", ") || e?.album?.name}
                   </p>
                 </div>
               </div>
+
+              {/* Like and Add to Playlist */}
+              <div className="flex items-center gap-1 flex-shrink-0 ml-3">
+                <Tooltip text={isLiked(e?.id) ? "Unlike" : "Like"}>
+                  <button
+                    onClick={() => toggleLike(e)}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                      isLiked(e?.id) ? "text-red-500 hover:scale-110" : "text-zinc-400 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    <i className={`text-xl ${isLiked(e?.id) ? "ri-heart-3-fill" : "ri-heart-3-line"}`}></i>
+                  </button>
+                </Tooltip>
+                <Tooltip text="Add to Playlist">
+                  <button
+                    onClick={() => setPlaylistModalSong(e)}
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-purple-400 hover:bg-white/10 transition-all"
+                  >
+                    <i className="ri-folder-add-line text-xl"></i>
+                  </button>
+                </Tooltip>
+              </div>
             </div>
-          </motion.div>
+
+            {/* 2. Center Layout: Audio Controls */}
+            <div className="flex items-center justify-center gap-4 sm:gap-2 w-[40%] sm:w-full flex-1 max-w-2xl px-4 sm:px-0">
+              <Tooltip text="Previous Song">
+                <button
+                  onClick={previous}
+                  className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                >
+                  <i className="ri-skip-back-fill text-2xl"></i>
+                </button>
+              </Tooltip>
+              
+              <div className="w-full relative group flex items-center">
+                <audio
+                  ref={audioRef}
+                  onPause={() => setIsPlaying(false)}
+                  onPlay={() => setIsPlaying(true)}
+                  className="w-full h-10 appearance-none bg-transparent outline-none rounded-full invert-[0.8] hue-rotate-180 contrast-125"
+                  controls
+                  controlsList="nodownload noplaybackrate"
+                  autoPlay
+                  onEnded={next}
+                  src={e?.downloadUrl?.[4]?.url}
+                ></audio>
+              </div>
+
+              <Tooltip text="Next Song">
+                <button
+                  onClick={next}
+                  className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                >
+                  <i className="ri-skip-forward-fill text-2xl"></i>
+                </button>
+              </Tooltip>
+            </div>
+
+            {/* 3. Right Layout: Actions (Desktop) */}
+            <div className="flex items-center justify-end gap-3 w-[30%] min-w-[220px] sm:hidden">
+              <div className="h-6 w-px bg-slate-700/50 mx-1"></div>
+              
+              {/* 320kbps Download */}
+              <div className="relative group">
+                <button
+                  onClick={() =>
+                    handleGenerateAudio({
+                      audioUrl: e?.downloadUrl?.[4]?.url,
+                      imageUrl: e?.image?.[2]?.url,
+                      songName: e?.name,
+                      year: e?.year,
+                      album: e?.album?.name,
+                      artist: e?.artists?.primary?.map((artist) => artist.name).join(","),
+                    })
+                  }
+                  className="w-10 h-10 rounded-full flex flex-col items-center justify-center text-zinc-400 hover:text-green-400 hover:bg-green-400/10 transition-all z-10 cursor-pointer"
+                >
+                  <i className="ri-download-cloud-line text-xl"></i>
+                  <span className="text-[8px] font-bold mt-[-3px]">MP3</span>
+                </button>
+                {/* Detailed Tooltip */}
+                <div className="absolute bottom-full right-1/2 translate-x-1/2 mb-3 w-48 opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-slate-800 border border-slate-600 shadow-2xl rounded-xl p-3 z-[100] text-center">
+                  <p className="text-green-400 font-bold text-sm">320kbps</p>
+                  <p className="text-zinc-300 text-xs mt-1">High quality with poster embedded</p>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-600"></div>
+                </div>
+              </div>
+
+              {/* FLAC Download */}
+              <div className="relative group">
+                <button
+                  onClick={() =>
+                    handleGenerateAudio2({
+                      audioUrl: e?.downloadUrl?.[4]?.url,
+                      imageUrl: e?.image?.[2]?.url,
+                      songName: e?.name,
+                      year: e?.year,
+                      album: e?.album?.name,
+                      artist: e?.artists?.primary?.map((artist) => artist.name).join(","),
+                    })
+                  }
+                  className="w-10 h-10 rounded-full flex flex-col items-center justify-center text-zinc-400 hover:text-blue-400 hover:bg-blue-400/10 transition-all z-10 cursor-pointer"
+                >
+                  <i className="ri-vip-diamond-line text-lg"></i>
+                  <span className="text-[8px] font-bold mt-[-2px]">FLAC</span>
+                </button>
+                {/* Detailed Tooltip */}
+                <div className="absolute bottom-full right-1/2 translate-x-1/2 mb-3 w-40 opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-slate-800 border border-slate-600 shadow-2xl rounded-xl p-3 z-[100] text-center">
+                  <p className="text-zinc-300 text-xs mb-1">Highest quality with</p>
+                  <p className="text-blue-400 font-bold text-sm">FLAC Format</p>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-600"></div>
+                </div>
+              </div>
+              
+              <div className="h-6 w-px bg-slate-700/50 mx-1"></div>
+
+              {/* Queue Toggle */}
+              <Tooltip text="Toggle Queue">
+                <button
+                  onClick={() => setShowQueue(!showQueue)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                    showQueue
+                      ? "bg-green-500 text-black font-bold shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+                      : "bg-slate-800 text-zinc-300 hover:text-white hover:bg-slate-700 border border-slate-700"
+                  }`}
+                >
+                  <i className="ri-play-list-2-fill text-sm"></i>
+                  <span className="text-xs font-semibold">{songsList.length}</span>
+                </button>
+              </Tooltip>
+            </div>
+
+            {/* Mobile Actions (Visible only on small screens) */}
+            <div className="hidden sm:flex items-center justify-around w-full mt-2 pt-3 border-t border-slate-800/80">
+              <Tooltip text="Download 320kbps MP3 with Metadata">
+                <button
+                  onClick={() =>
+                    handleGenerateAudio({
+                      audioUrl: e?.downloadUrl?.[4]?.url,
+                      imageUrl: e?.image?.[2]?.url,
+                      songName: e?.name,
+                      year: e?.year,
+                    })
+                  }
+                  className="text-zinc-400 hover:text-green-400 flex flex-col items-center gap-1 transition-colors"
+                >
+                  <i className="ri-download-cloud-line text-[22px] leading-none"></i>
+                  <span className="text-[9px] font-bold uppercase tracking-wider">320kbps MP3</span>
+                </button>
+              </Tooltip>
+              <Tooltip text="Download Premium FLAC Format">
+                <button
+                  onClick={() =>
+                    handleGenerateAudio2({
+                      audioUrl: e?.downloadUrl?.[4]?.url,
+                      imageUrl: e?.image?.[2]?.url,
+                      songName: e?.name,
+                      year: e?.year,
+                    })
+                  }
+                  className="text-zinc-400 hover:text-blue-400 flex flex-col items-center gap-1 transition-colors"
+                >
+                  <i className="ri-vip-diamond-line text-[22px] leading-none"></i>
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Flac Format</span>
+                </button>
+              </Tooltip>
+              <Tooltip text="Current Playback Queue">
+                <button
+                  onClick={() => setShowQueue(!showQueue)}
+                  className={`flex flex-col items-center gap-1 transition-colors ${showQueue ? "text-green-400" : "text-zinc-400"}`}
+                >
+                  <div className="flex items-center gap-1 leading-none">
+                    <i className="ri-play-list-2-fill text-[22px]"></i>
+                    <span className="text-[10px] font-bold bg-slate-800 px-1.5 rounded-sm">{songsList.length}</span>
+                  </div>
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Queue</span>
+                </button>
+              </Tooltip>
+            </div>
+          </div>
         ))}
       </motion.div>
+
+      {/* Add To Playlist Modal */}
+      {playlistModalSong && (
+        <AddToPlaylistModal
+          song={playlistModalSong}
+          onClose={() => setPlaylistModalSong(null)}
+        />
+      )}
     </>
   );
 };
+
 export default PlayerBar;

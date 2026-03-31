@@ -1,188 +1,166 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  animate,
-  circIn,
-  circInOut,
-  circOut,
-  easeIn,
-  easeInOut,
-  easeOut,
-  motion,
-} from "framer-motion";
-import { useAnimate, stagger } from "framer-motion";
-import { Bounce, Expo, Power4, Sine } from "gsap/all";
+import { motion, AnimatePresence } from "framer-motion";
 import { Circ } from "gsap/all";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import InfiniteScroll from "react-infinite-scroll-component";
+import Tooltip from "./Tooltip";
 
 const Album = () => {
   const navigate = useNavigate();
-  const [query, setquery] = useState("");
-  const [requery, setrequery] = useState("");
-  const [albums, setalbums] = useState([]);
-  const [search, setsearch] = useState(false)
-  var [page, setpage] = useState(1);
-  const [hasMore, sethasMore] = useState(true);
-  const Getalbums = async () => {
+  const [query, setQuery] = useState("");
+  const [requery, setRequery] = useState("");
+  const [albums, setAlbums] = useState([]);
+  const [searchClickState, setSearchClickState] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  const getAlbums = async () => {
     try {
       const { data } = await axios.get(
-        // `https://saavn.dev/api/search/albums?query=${query}&page=1&limit=10`
-        // `https://jio-saavan-api.vercel.app/search/albums?query=${query}`
-        `https://jiosaavn-roan.vercel.app/api/search/albums?query=${requery}&page=${page}&limit=40`
+        `https://jiosaavn-roan.vercel.app/api/search/albums?query=${requery}&page=${page}&limit=20`
       );
-      // setalbums(data?.data?.results);
-      // setalbums((prevState) => [...prevState, ...data?.data?.results]);
-      // setalbums((prevState) => [...prevState, ...data?.data?.results]);
-      setpage(page + 1);
-      // sethasMore(true);
-      const newData = data.data.results.filter(newItem => !albums.some(prevItem => prevItem.id === newItem.id));
-      setalbums(prevState => [...prevState, ...newData]);
-      sethasMore(newData.length>0)
-      localStorage.setItem("albums", JSON.stringify(data?.data?.results));
+      
+      const newItems = data?.data?.results || [];
+      if (newItems.length > 0) {
+        const filtered = newItems.filter(newItem => !albums.some(prevItem => prevItem.id === newItem.id));
+        setAlbums(prev => [...prev, ...filtered]);
+        setHasMore(filtered.length > 0);
+        setPage(prev => prev + 1);
+        localStorage.setItem("albums", JSON.stringify([...albums, ...filtered]));
+      } else {
+        setHasMore(false);
+      }
     } catch (error) {
-      console.log("error", error);
+      console.error(error);
     }
   };
 
-  function searchClick() {
-    if (query !== requery){
-      toast.success(`Searching ${query} , Wait For Results`);
-      setrequery(query);
-      setalbums([])
-      setpage(1);
-      setsearch(!search)
-    }
-    else{
-      toast.error(`Please Check Your Search Query , Its Same As Before `);
-    }
-  }
-
-  // function seccall() {
-  //   const intervalId = setInterval(() => {
-  //     if (albums.length >= 0 && page<20 || query.length !== requery.length ) {
-  //       setpage(page + 1)
-  //       Getalbums();
-  //     }
-  //   }, page<=2 ? 1000 : 2000);
-  //   return intervalId;
-  // }
-  // useEffect(() => {
-  //   if (query.length > 0) {
-  //     var interval = seccall();
-  //   }
-
-  //   return () => clearInterval(interval);
-  // }, [search, albums,page]);
-
-  
-  useEffect(() => {
-    setTimeout(() => {
-      if (query.length > 0) {
-        Getalbums();
-      }
-    }, 1000);
-   
-  }, [search]);
-
-  function newdata() {
-    // if (page>=25) {
-    //   sethasMore(false);
-    // }
-    // else{
-    //   setTimeout(() => {
-    //     Getalbums();
-    // }, 1000);
-    // }
-
-    setTimeout(() => {
-          Getalbums();
-      }, 1000);
+  const handleSearch = () => {
+    if (!query.trim()) return toast.error("Enter an album name");
+    if (query === requery) return toast.error("Already showing results for this search");
     
-  }
+    setRequery(query);
+    setAlbums([]);
+    setPage(1);
+    setHasMore(true);
+    setSearchClickState(!searchClickState);
+  };
 
   useEffect(() => {
-    const allData = localStorage.getItem("albums");
+    if (requery.length > 0) {
+      getAlbums();
+    }
+  }, [searchClickState]);
 
-    // Check if data exists in localStorage
-    if (allData) {
-      // Parse the JSON string to convert it into a JavaScript object
-      const parsedData = JSON.parse(allData);
-
-      // Now you can use the parsedData object
-      setalbums(parsedData);
-    } else {
-      console.log("No data found in localStorage.");
+  useEffect(() => {
+    const cached = localStorage.getItem("albums");
+    if (cached) {
+      setAlbums(JSON.parse(cached));
     }
   }, []);
 
-// console.log(albums);
-// console.log(hasMore);
-// console.log(page)
   return (
-    <InfiniteScroll
-    dataLength={albums.length}
-    next={newdata}
-    hasMore={hasMore}
-    loader={page>2 && <h1 className="bg-slate-700 text-zinc-300">Loading...</h1>}
-    endMessage={<p className="bg-slate-700 text-zinc-300">No more items</p>}
-  >
-    <motion.div
-    initial={{ opacity: 0, scale: 0 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.7 }}
-     className="w-full min-h-[100vh] bg-slate-700">
-    <Toaster position="top-center" reverseOrder={false} />
-      <motion.div className="w-full min-h-[100vh] ">
-        <motion.div
-         initial={{ y: -50, scale: 0 }}
-         animate={{ y: 0, scale: 1 }}
-         transition={{ ease: Circ.easeIn, duration: 0.7, delay: 1 }}
-         className="search fixed z-[99] bg-slate-700   gap-3 w-full   sm:w-full h-[15vh] flex items-center justify-center ">
-          <i
+    <div className="w-full min-h-screen bg-slate-900 text-zinc-300 pb-32 overflow-x-hidden">
+      
+      {/* Header / Search */}
+      <motion.div
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/40 border-b border-white/5 h-[10vh] sm:h-[8vh] px-6 sm:px-4 flex items-center gap-4"
+      >
+        <Tooltip text="Go Back" position="bottom">
+          <button 
             onClick={() => navigate(-1)}
-            className="ml-5 cursor-pointer text-3xl bg-green-500 rounded-full ri-arrow-left-line"
-          ></i>
-          {/* <i className=" text-2xl ri-search-2-line"></i> */}
+            className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-slate-900 hover:scale-110 transition-transform shadow-lg shadow-green-500/20 active:scale-95 flex-shrink-0"
+          >
+            <i className="ri-arrow-left-line text-2xl font-bold"></i>
+          </button>
+        </Tooltip>
 
+        <div className="relative flex-1 max-w-2xl">
+          <i className="ri-album-line absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-lg"></i>
           <input
-            className=" bg-black rounded-md p-3 sm:text-sm text-white border-none outline-none w-[50%] sm:h-[7vh] sm:w-[50%] h-[10vh]"
-            onChange={(e) => setquery(e.target.value)}
-            placeholder="Search Albums  "
-            type="search"
-            name=""
-            id=""
+            className="w-full bg-slate-800/50 rounded-full pl-12 pr-4 py-2.5 sm:py-2 text-white border border-white/5 focus:border-green-500/50 outline-none transition-all placeholder:text-zinc-500 sm:text-sm"
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            value={query}
+            placeholder="Search albums..."
+            type="text"
           />
-           <h3 onClick={()=>searchClick()} className="duration-300 cursor-pointer hover:text-slate-400 text-xl  bg-slate-400 p-2 rounded-md hover:bg-slate-600 hover:scale-90">Search <i  
-          className="  ri-search-2-line"></i></h3>
-        </motion.div>
-    
-        <motion.div className="w-full pt-[15vh]   overflow-hidden  min-h-[85vh]  sm:min-h-[85vh] flex flex-wrap p-5  gap-5  justify-center   bg-slate-700">
-          {albums?.map((e, i) => (
-            <motion.div
-            initial={{  scale: 0 }}
-            animate={{  scale: 1 }}
-            // transition={{delay:i*0.1 }}
-            viewport={{ once: true }}
-              key={i}
-              onClick={()=>navigate(`/albums/details/${e.id}`)}
-              className="w-[15vw] h-[30vh] sm:w-[40vw] mb-8 sm:h-[20vh] sm:mb-12 rounded-md bg-red-200 cursor-pointer"
-            >
-              <img
-                className="w-full h-full object-fill rounded-md"
-                src={e?.image[2]?.url}
-                alt=""
-              />
-              <h3 className="text-white">{e.name}</h3>
-            </motion.div>
-          ))}
-        </motion.div>
-        
-      </motion.div>
-    </motion.div>
-    </InfiniteScroll>
-  );
-}
+        </div>
 
-export default Album
+        <button
+          onClick={handleSearch}
+          className="sm:hidden px-6 py-2.5 bg-green-500 text-slate-900 rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-all shadow-lg shadow-green-500/10"
+        >
+          SEARCH
+        </button>
+      </motion.div>
+
+      {/* Grid Content */}
+      <div className="pt-[14vh] sm:pt-[10vh] px-8 sm:px-4 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8 px-2">
+            <h2 className="text-xl font-black text-white tracking-tight uppercase">
+                {requery ? `Albums for "${requery}"` : "Explore Albums"}
+            </h2>
+        </div>
+
+        <InfiniteScroll
+            dataLength={albums.length}
+            next={getAlbums}
+            hasMore={hasMore}
+            loader={
+              <div className="flex justify-center py-10 scale-75 opacity-50">
+                <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            }
+            className="overflow-visible"
+        >
+          {albums.length > 0 ? (
+            <div className="grid grid-cols-6 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-6 sm:gap-4 pb-20">
+              {albums.map((al, i) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i * 0.02, 0.4) }}
+                  key={`${al.id}-${i}`}
+                  onClick={() => navigate(`/albums/details/${al.id}`)}
+                  className="group relative bg-slate-800/30 border border-white/5 p-3 rounded-2xl cursor-pointer hover:bg-slate-800/60 hover:border-white/10 transition-all duration-300"
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-xl shadow-lg mb-3">
+                    <img
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      src={al.image[2]?.url}
+                      alt={al.name}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-slate-900 text-2xl shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                          <i className="ri-play-fill ml-1"></i>
+                       </div>
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-bold text-white truncate group-hover:text-green-400 transition-colors leading-tight mb-1" dangerouslySetInnerHTML={{ __html: al.name }}>
+                  </h3>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest line-clamp-1">
+                      {al.year || "Album"} {al.language && `· ${al.language}`}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            !requery && (
+              <div className="flex flex-col items-center justify-center py-32 text-center opacity-40">
+                 <i className="ri-album-line text-7xl mb-4"></i>
+                 <p className="font-bold uppercase tracking-widest text-xs">Search to discover albums</p>
+              </div>
+            )
+          )}
+        </InfiniteScroll>
+      </div>
+    </div>
+  );
+};
+
+export default Album;

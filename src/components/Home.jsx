@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "./../../public/logo3.jpg";
@@ -11,8 +11,106 @@ import { motion } from "framer-motion";
 import { Circ } from "gsap/all";
 import useLikedSongs from "../hooks/useLikedSongs";
 import { usePlayer } from "../context/PlayerContext";
+import { AuthContext } from "../context/AuthContext";
 import { LANGUAGE_OPTIONS } from "../constants";
 import { getHomeModules, searchSongs, getSongSuggestions } from "../services/api";
+import AddToPlaylistModal from "./AddToPlaylistModal";
+import Tooltip from "./Tooltip";
+
+// Premium Card Component for Songs (Defined OUTSIDE Home to prevent re-mounting)
+const SongCard = ({ item, index, songlink, isPlaying, onPlay, addToQueue, setPlaylistModalSong }) => {
+  const isCurrent = item.id === songlink[0]?.id;
+  return (
+    <motion.div
+      initial={{ y: -100, scale: 0.5 }}
+      whileInView={{ y: 0, scale: 1 }}
+      transition={{ ease: Circ.easeIn, duration: 0.05 }}
+      onClick={() => onPlay(index)}
+      className="group w-[160px] sm:w-[130px] flex-shrink-0 bg-slate-700/30 hover:bg-slate-700/70 p-3 sm:p-2.5 rounded-xl cursor-pointer transition-all duration-300 border border-transparent hover:border-slate-500/30 flex flex-col"
+    >
+      <div className="relative w-full aspect-square rounded-md overflow-hidden mb-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+        <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src={item.image?.[2]?.url || item.image?.[1]?.url} alt={item.name} />
+        
+        {/* Play button overlay that appears on hover */}
+        <div className={`absolute inset-0 bg-black/20 transition-opacity duration-300 flex items-center justify-center ${isCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          <button className="w-12 h-12 rounded-full bg-green-500 text-black flex items-center justify-center shadow-xl transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:scale-105 hover:bg-green-400">
+            {isCurrent && isPlaying ? (
+              <i className="ri-pause-fill text-2xl"></i>
+            ) : (
+              <i className="ri-play-fill text-2xl ml-1"></i>
+            )}
+          </button>
+        </div>
+
+        {/* Currently playing subtle animation overlay */}
+        {isCurrent && (
+          <div className="absolute top-2 left-2 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center backdrop-blur-md">
+             <img className="w-4 h-4 opacity-90" src={wavs} alt="Playing" />
+          </div>
+        )}
+      </div>
+
+      <div className="min-w-0 flex flex-col flex-1 justify-between">
+        <div>
+          <h3 className={`text-sm sm:text-xs font-bold truncate mb-1 ${isCurrent ? 'text-green-400' : 'text-white'}`}>
+            {item.name}
+          </h3>
+          <h4 className="text-xs sm:text-[10px] text-zinc-400 truncate">
+            {item.album?.name || item.subtitle || "Single"}
+          </h4>
+        </div>
+
+        {/* Action buttons under the name */}
+        <div className="flex gap-3 mt-2">
+          <Tooltip text="Add to Queue">
+            <i
+              onClick={(e) => { e.stopPropagation(); const added = addToQueue(item); if (added) toast.success(`Added to queue`, { duration: 1000 }); else toast(`Already in queue`, { icon: '⚠️', duration: 1000 }); }}
+              className="text-lg duration-300 cursor-pointer text-zinc-400 hover:text-green-400 ri-play-list-add-line"
+            ></i>
+          </Tooltip>
+          <Tooltip text="Add to Playlist">
+            <i
+              onClick={(e) => { e.stopPropagation(); setPlaylistModalSong(item); }}
+              className="text-lg duration-300 cursor-pointer text-zinc-400 hover:text-purple-400 ri-folder-add-line"
+            ></i>
+          </Tooltip>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Premium Card Component for Collections (Playlists/Albums/Charts)
+const CollectionCard = ({ item, index, pathPrefix, navigate }) => {
+  return (
+    <motion.div
+      initial={{ y: -100, scale: 0.5 }}
+      whileInView={{ y: 0, scale: 1 }}
+      transition={{ ease: Circ.easeIn, duration: 0.05 }}
+      onClick={() => navigate(`${pathPrefix}${item.id}`)}
+      className="group w-[160px] sm:w-[130px] flex-shrink-0 bg-slate-700/30 hover:bg-slate-700/70 p-3 sm:p-2.5 rounded-xl cursor-pointer transition-all duration-300 border border-transparent hover:border-slate-500/30 flex flex-col"
+    >
+      <div className="relative w-full aspect-square rounded-md overflow-hidden mb-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+        <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src={item.image?.[2]?.link || item.image?.[1]?.link} alt={item.title || item.name} />
+        
+        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <button className="w-12 h-12 rounded-full bg-green-500 text-black flex items-center justify-center shadow-xl transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:scale-105 hover:bg-green-400">
+            <i className="ri-play-fill text-2xl ml-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <div className="min-w-0 flex flex-col flex-1">
+        <h3 className="text-sm sm:text-xs font-bold text-white truncate mb-1">
+          {item.title || item.name}
+        </h3>
+        <h4 className="text-xs sm:text-[10px] text-zinc-400 truncate">
+          {item.subtitle || "Collection"}
+        </h4>
+      </div>
+    </motion.div>
+  );
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -25,6 +123,8 @@ const Home = () => {
 
   const { playSong, songlink, isPlaying, currentIndex, addToQueue } = usePlayer();
   const { isLiked, toggleLike } = useLikedSongs();
+  const { user, logout } = useContext(AuthContext);
+  const [playlistModalSong, setPlaylistModalSong] = useState(null);
 
   const getHome = async () => {
     resetState();
@@ -52,13 +152,13 @@ const Home = () => {
     }
   };
 
-  function playMainSong(i) {
+  const playMainSong = (i) => {
     playSong(details[i], i, details);
-  }
+  };
 
-  function playSuggSong(i) {
+  const playSuggSong = (i) => {
     playSong(suggSong[i], i, suggSong);
-  }
+  };
 
   function getRandomIds(ids, num) {
     const shuffled = ids.sort(() => 0.5 - Math.random());
@@ -145,180 +245,210 @@ const Home = () => {
   }, [language]);
 
   return details.length > 0 ? (
-    <div className="w-full h-screen  bg-slate-800">
+    <div className="w-full min-h-screen bg-slate-800">
+      {/* ========== UPGRADED NAVBAR ========== */}
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ease: Circ.easeIn, duration: 0.5 }}
-        className="logo fixed  z-[99] top-0 w-full  duration-700  max-h-[20vh]  flex sm:block backdrop-blur-xl py-3  px-10 sm:px-5  items-center gap-3 "
+        className="fixed z-[99] top-0 w-full min-h-[10vh] sm:min-h-0 bg-slate-800/90 backdrop-blur-xl border-b border-white/5 py-4 px-8 sm:px-4 sm:py-3 flex sm:flex-col sm:gap-4 items-center gap-6 shadow-lg"
       >
-        <div className="flex   items-center sm:justify-center sm:pt-2 gap-3">
-          <img className="w-[5vw] sm:w-[10vw] rounded-full" src={logo} alt="" />
-          <h1 className="text-2xl text-slate-900 p-2 rounded-full bg-neutral-500 sm:text-xl  font-black">
-            THE ULTIMATE SONGS
+        <div className="flex items-center gap-3">
+          <img className="w-10 h-10 sm:w-8 sm:h-8 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.3)]" src={logo} alt="Logo" />
+          <h1 className="text-xl sm:text-lg text-white font-black tracking-tight" style={{textShadow: "0 0 10px rgba(34,197,94,0.3)"}}>
+            ULTIMATE SONGS
           </h1>
         </div>
+
         <motion.div
-          initial={{ opacity: 0, y: -50 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ ease: Circ.easeIn, duration: 1 }}
-          className="sm:flex sm:pt-3 text-zinc-500   sm:justify-center"
+          transition={{ ease: Circ.easeIn, duration: 0.8 }}
+          className="flex-1 flex items-center gap-2 sm:flex-wrap sm:justify-center"
         >
-          <h3 className="inline text-xl sm:hidden">Search : </h3>
-          <Link className=" text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold " to={"/songs"}>Songs</Link>
-          <Link className="  text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold " to={"/playlist"}>PlayLists</Link>
-          <Link className="  text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold" to={"/artists"}>Artists</Link>
-          <Link className="  text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold " to={"/album"}>Album</Link>
-          <Link className=" text-xl sm:text-sm ml-3 sm:ml-0 sm:font-bold  p-1 rounded-md hover:text-black  hover:bg-neutral-500 duration-300 text-neutral-300  font-semibold" to={"/likes"}>Likes</Link>
-          <a target="_blank" href={"https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP"} className="ml-4 sm:ml-2 cursor-pointer  text-3xl  text-zinc-500   ri-github-fill"></a>
+          {/* Premium Pill Links */}
+          {[
+            { name: "Songs", path: "/songs", icon: "ri-music-2-fill" },
+            { name: "Playlists", path: "/playlist", icon: "ri-play-list-2-fill" },
+            { name: "Artists", path: "/artists", icon: "ri-mic-2-fill" },
+            { name: "Albums", path: "/album", icon: "ri-album-fill" },
+            { name: "Likes", path: "/likes", icon: "ri-heart-3-fill" },
+            ...(user ? [{ name: "My Playlists", path: "/my-playlists", icon: "ri-folder-music-fill" }] : [])
+          ].map((link, index) => (
+            <motion.div
+              key={link.name}
+              initial={{ opacity: 0, scale: 0.5, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 300, 
+                damping: 20, 
+                delay: 0.1 + (index * 0.1)
+              }}
+              whileHover={{ 
+    scale: 0.9,
+    transition: { duration: 0.2 } // 👈 no delay here
+  }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Link
+                to={link.path}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 sm:px-3 sm:py-1 rounded-full bg-slate-700/60 hover:bg-green-500 hover:text-black text-zinc-300 text-sm sm:text-xs font-bold transition-colors duration-300 border border-slate-600/50 hover:border-green-400 shadow-sm"
+              >
+                <i className={link.icon}></i>
+                <span className="sm:hidden lg:inline">{link.name}</span>
+              </Link>
+            </motion.div>
+          ))}
+          
+          <div className="w-[1px] h-6 bg-slate-600/50 mx-2 hidden md:block lg:block"></div>
+          
+          {user ? (
+            <div className="flex items-center gap-3 ml-auto sm:ml-0 sm:w-full sm:justify-center">
+              <span className="text-green-400 font-bold text-sm bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+                Hi, {user.username}
+              </span>
+              {user.role === 'admin' && (
+                <Link to="/admin" className="text-xs bg-purple-600/20 text-purple-400 border border-purple-500/30 px-3 py-1.5 rounded-full hover:bg-purple-600/40 font-bold transition-all">
+                  <i className="ri-dashboard-fill mr-1"></i> Admin
+                </Link>
+              )}
+              <button 
+                onClick={logout}
+                className="text-xs bg-slate-700 text-white hover:bg-red-500/90 px-3 py-1.5 rounded-full font-bold transition-all border border-slate-600 hover:border-red-400"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 ml-auto sm:ml-0 sm:w-full sm:justify-center">
+              <Link to="/login" className="text-sm text-zinc-300 hover:text-white font-bold px-3 py-1.5 transition-all">Log in</Link>
+              <Link to="/register" className="text-sm bg-white text-black font-black px-5 py-1.5 rounded-full hover:scale-105 transition-all shadow-md">Sign up</Link>
+            </div>
+          )}
         </motion.div>
       </motion.div>
 
-      <div className="w-full  bg-slate-800  min-h-[63vh] pt-[20vh] pb-[30vh]   text-zinc-300 p-5 flex flex-col gap-5 overflow-auto ">
-        <div className="w-full   flex justify-end ">
-          <Dropdown
-            className="w-[15%] text-sm sm:w-[50%]"
-            options={LANGUAGE_OPTIONS}
-            onChange={(e) => setLanguage(e.value)}
-            placeholder={language ? ` ${language}  ` : "Select language"}
-          />
+      {/* ========== CONTENT ========== */}
+      <div className="w-full pt-[20vh] sm:pt-[24vh] pb-[25vh] px-8 sm:px-4 flex flex-col gap-8 overflow-hidden">
+        
+        {/* Language Selector */}
+        <div className="w-full flex justify-end">
+          <div className="w-[200px] sm:w-[150px]">
+            <Dropdown
+              className="text-sm font-semibold text-black"
+              options={LANGUAGE_OPTIONS}
+              onChange={(e) => setLanguage(e.value)}
+              placeholder={language ? `${language.charAt(0).toUpperCase() + language.slice(1)}` : "Select language"}
+            />
+          </div>
         </div>
 
-        <div className="trending songs flex flex-col gap-3 w-full ">
-          <h3 className="text-xl h-[5vh] font-semibold">{language} Songs</h3>
-          <motion.div className="songs px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
+        {/* Trending Songs */}
+        <div className="flex flex-col gap-4 w-full">
+          <h2 className="text-2xl sm:text-xl font-black text-white px-2">
+            Trending <span className="text-green-400 capitalize">{language}</span>
+          </h2>
+          <div className="flex gap-4 sm:gap-3 overflow-x-auto pb-6 pt-2 px-2 scrollbar-hide snap-x">
             {details?.map((t, i) => (
-              <motion.div
-                initial={{ y: -100, scale: 0.5 }}
-                whileInView={{ y: 0, scale: 1 }}
-                transition={{ ease: Circ.easeIn, duration: 0.05 }}
-                onClick={() => playMainSong(i)}
-                key={i}
-                className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-1 py-4 cursor-pointer"
-              >
-                <motion.img className="relative w-full  rounded-md" src={t.image[2].url} alt="" />
-                <div className="flex  items-center ">
-                  <p className=" text-green-400">{i + 1}</p>
-                </div>
-                <img className={`absolute top-4 w-[20%] sm:w-[25%] rounded-md ${t.id === songlink[0]?.id ? "block" : "hidden"} `} src={wavs} alt="" />
-                {songlink.length > 0 && (
-                  <i className={`absolute top-20 sm:top-16 w-full  flex items-center justify-center text-5xl  opacity-90  duration-300 rounded-md  ${t.id === songlink[0]?.id ? "block" : "hidden"} ${isPlaying ? "ri-pause-circle-fill" : "ri-play-circle-fill"}`}></i>
-                )}
-                <motion.div className="flex flex-col">
-                  <h3 className={`text-sm sm:text-xs leading-none  font-bold ${t.id === songlink[0]?.id && "text-green-300"}`}>{t.name}</h3>
-                  <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">{t.album.name}</h4>
-                </motion.div>
-                <i
-                  title="Add to Queue"
-                  onClick={(e) => { e.stopPropagation(); const added = addToQueue(t); if (added) toast.success(`Added to queue`, { duration: 1000 }); else toast(`Already in queue`, { icon: '⚠️', duration: 1000 }); }}
-                  className="text-lg mt-1 duration-300 cursor-pointer text-zinc-400 hover:text-green-400 ri-play-list-add-line"
-                ></i>
-              </motion.div>
+              <div key={t.id || i} className="snap-start">
+                <SongCard
+                  item={t}
+                  index={i}
+                  songlink={songlink}
+                  isPlaying={isPlaying}
+                  onPlay={playMainSong}
+                  addToQueue={addToQueue}
+                  setPlaylistModalSong={setPlaylistModalSong}
+                />
+              </div>
             ))}
-            <img className={page >= 18 ? "hidden" : "w-[20%] h-[20%]"} src={wait} />
-          </motion.div>
+            {page < 18 && (
+              <div className="flex items-center justify-center w-[160px] sm:w-[130px] flex-shrink-0">
+                <img className="w-10 h-10 opacity-50" src={wait} alt="Loading..." />
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Suggested Songs */}
         {suggSong.length > 0 && (
-          <div className="trending songs flex flex-col gap-3 w-full ">
-            <h3 className="text-xl h-[5vh] font-semibold">
-              Songs for you <sub className="text-gray-400">(based on your liked songs)</sub>
-            </h3>
-            <motion.div className="songs px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
+          <div className="flex flex-col gap-4 w-full">
+            <h2 className="text-2xl sm:text-xl font-black text-white px-2 flex items-baseline gap-2">
+              Made For You
+              <span className="text-sm font-semibold text-zinc-500">Based on your likes</span>
+            </h2>
+            <div className="flex gap-4 sm:gap-3 overflow-x-auto pb-6 pt-2 px-2 scrollbar-hide snap-x">
               {suggSong?.map((t, i) => (
-                <motion.div
-                  initial={{ y: -100, scale: 0.5 }}
-                  whileInView={{ y: 0, scale: 1 }}
-                  transition={{ ease: Circ.easeIn, duration: 0.05 }}
-                  onClick={() => playSuggSong(i)}
-                  key={i}
-                  className="relative hover:scale-90 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-1 py-4 cursor-pointer"
-                >
-                  <motion.img className="relative w-full  rounded-md" src={t.image[2].url} alt="" />
-                  <div className="flex  items-center ">
-                    <p className=" text-green-400">{i + 1}</p>
-                  </div>
-                  <img className={`absolute top-4 w-[20%] sm:w-[25%] rounded-md ${t.id === songlink[0]?.id ? "block" : "hidden"} `} src={wavs} alt="" />
-                  {songlink.length > 0 && (
-                    <i className={`absolute top-20 sm:top-16 w-full  flex items-center justify-center text-5xl  opacity-90  duration-300 rounded-md  ${t.id === songlink[0]?.id ? "block" : "hidden"} ${isPlaying ? "ri-pause-circle-fill" : "ri-play-circle-fill"}`}></i>
-                  )}
-                  <motion.div className="flex flex-col">
-                    <h3 className={`text-sm sm:text-xs leading-none  font-bold ${t.id === songlink[0]?.id && "text-green-300"}`}>{t.name}</h3>
-                    <h4 className="text-xs sm:text-[2.5vw] text-zinc-300 ">{t.album.name}</h4>
-                  </motion.div>
-                  <i
-                    title="Add to Queue"
-                    onClick={(e) => { e.stopPropagation(); const added = addToQueue(t); if (added) toast.success(`Added to queue`, { duration: 1000 }); else toast(`Already in queue`, { icon: '⚠️', duration: 1000 }); }}
-                    className="text-lg mt-1 duration-300 cursor-pointer text-zinc-400 hover:text-green-400 ri-play-list-add-line"
-                  ></i>
-                </motion.div>
+                <div key={t.id || i} className="snap-start">
+                  <SongCard
+                    item={t}
+                    index={i}
+                    songlink={songlink}
+                    isPlaying={isPlaying}
+                    onPlay={playSuggSong}
+                    addToQueue={addToQueue}
+                    setPlaylistModalSong={setPlaylistModalSong}
+                  />
+                </div>
               ))}
-            </motion.div>
+            </div>
           </div>
         )}
 
-        <div className="charts w-full flex flex-col gap-3   ">
-          <h3 className="text-xl h-[5vh] font-semibold">Charts</h3>
-          <div className="chartsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
+        {/* Charts */}
+        <div className="flex flex-col gap-4 w-full">
+          <h2 className="text-2xl sm:text-xl font-black text-white px-2">Top Charts</h2>
+          <div className="flex gap-4 sm:gap-3 overflow-x-auto pb-6 pt-2 px-2 scrollbar-hide snap-x">
             {home?.charts?.map((c, i) => (
-              <motion.div
-                initial={{ y: -100, scale: 0.5 }}
-                whileInView={{ y: 0, scale: 1 }}
-                transition={{ ease: Circ.easeIn, duration: 0.05 }}
-                onClick={() => navigate(`/playlist/details/${c.id}`)}
-                key={i}
-                className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md flex flex-col gap-2 py-4 cursor-pointer"
-              >
-                <img className="w-full  rounded-md" src={c.image[2].link} alt="" />
-                <motion.h3 className="leading-none">{c.title}</motion.h3>
-              </motion.div>
+              <div key={c.id || i} className="snap-start">
+                <CollectionCard item={c} index={i} pathPrefix="/playlist/details/" navigate={navigate} />
+              </div>
             ))}
           </div>
         </div>
-        <div className="playlists w-full  flex flex-col gap-3 ">
-          <h3 className="text-xl h-[5vh] font-semibold">Playlists</h3>
-          <div className="playlistsdata px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
+
+        {/* Playlists */}
+        <div className="flex flex-col gap-4 w-full">
+          <h2 className="text-2xl sm:text-xl font-black text-white px-2">Curated Playlists</h2>
+          <div className="flex gap-4 sm:gap-3 overflow-x-auto pb-6 pt-2 px-2 scrollbar-hide snap-x">
             {home?.playlists?.map((p, i) => (
-              <motion.div
-                initial={{ y: -100, scale: 0.5 }}
-                whileInView={{ y: 0, scale: 1 }}
-                transition={{ ease: Circ.easeIn, duration: 0.05 }}
-                onClick={() => navigate(`/playlist/details/${p.id}`)}
-                key={i}
-                className="hover:scale-110  sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4 cursor-pointer"
-              >
-                <img className="w-full  rounded-md" src={p.image[2].link} alt="" />
-                <motion.h3 className="leading-none">{p.title}</motion.h3>
-              </motion.div>
+              <div key={p.id || i} className="snap-start">
+                <CollectionCard item={p} index={i} pathPrefix="/playlist/details/" navigate={navigate} />
+              </div>
             ))}
           </div>
         </div>
-        <div className="albums w-full flex flex-col gap-3 ">
-          <h3 className="text-xl h-[5vh] font-semibold">Albums</h3>
-          <div className="albumsdata  px-5 sm:px-3 flex flex-shrink  gap-5 overflow-x-auto overflow-hidden w-full ">
+
+        {/* Albums */}
+        <div className="flex flex-col gap-4 w-full">
+          <h2 className="text-2xl sm:text-xl font-black text-white px-2">Latest Albums</h2>
+          <div className="flex gap-4 sm:gap-3 overflow-x-auto pb-6 pt-2 px-2 scrollbar-hide snap-x">
             {home?.albums?.map((a, i) => (
-              <motion.div
-                initial={{ y: -100, scale: 0.5 }}
-                whileInView={{ y: 0, scale: 1 }}
-                transition={{ ease: Circ.easeIn, duration: 0.05 }}
-                onClick={() => navigate(`/albums/details/${a.id}`)}
-                key={i}
-                className="hover:scale-110 sm:hover:scale-100  duration-150 flex-shrink-0 w-[15%] sm:w-[40%] rounded-md  flex flex-col gap-2 py-4 cursor-pointer"
-              >
-                <img className="w-full  rounded-md" src={a.image[2].link} alt="" />
-                <motion.h3 className="leading-none">{a.name}</motion.h3>
-              </motion.div>
+              <div key={a.id || i} className="snap-start">
+                <CollectionCard item={a} index={i} pathPrefix="/albums/details/" navigate={navigate} />
+              </div>
             ))}
           </div>
         </div>
-        <div>
-          <p className="font-semibold text-neutral-400 sm:text-sm">
+
+        {/* Footer */}
+        <div className="mt-10 px-4 py-8 border-t border-white/5 mx-2">
+          <p className="text-xs text-zinc-500 text-center max-w-2xl mx-auto leading-relaxed">
             All trademarks and copyrights belong to their respective owners. All
             media, images, and songs are the property of their respective
             owners. This site is for educational purposes only.
           </p>
         </div>
       </div>
+
+      {/* Add to Playlist Modal */}
+      {playlistModalSong && (
+        <AddToPlaylistModal
+          song={playlistModalSong}
+          onClose={() => setPlaylistModalSong(null)}
+        />
+      )}
     </div>
   ) : (
     <Loading />

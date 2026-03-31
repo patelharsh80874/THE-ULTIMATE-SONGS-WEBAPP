@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
+import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
+import API_BASE_URL from "../config/api";
+
 
 const STORAGE_KEY = "likeData";
 const TOAST_STYLE = { borderRadius: "10px", background: "rgb(115 115 115)", color: "#fff" };
@@ -8,14 +12,34 @@ const LikedSongsContext = createContext(null);
 
 export const LikedSongsProvider = ({ children }) => {
   const [likedSongs, setLikedSongs] = useState([]);
+  const { user } = useContext(AuthContext); // Get auth state
 
-  // Load liked songs from localStorage on mount
+  // Load liked songs from backend if user exists, else clear
   useEffect(() => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      setLikedSongs(JSON.parse(data));
-    }
-  }, []);
+    const fetchLikes = async () => {
+      if (user) {
+        try {
+          const { data } = await axios.get(`${API_BASE_URL}/api/users/likes`, { withCredentials: true });
+
+          
+          if (data && data.length > 0) {
+            const idsString = data.join(',');
+            const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
+            setLikedSongs(saavnRes.data.data);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(saavnRes.data.data));
+          } else {
+            setLikedSongs([]);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+          }
+        } catch (error) {
+          console.error("Error fetching likes:", error);
+        }
+      } else {
+        setLikedSongs([]); // Clear likes if logged out
+      }
+    };
+    fetchLikes();
+  }, [user]);
 
   // Check if a song is liked
   const isLiked = useCallback(
@@ -23,67 +47,153 @@ export const LikedSongsProvider = ({ children }) => {
     [likedSongs]
   );
 
-  // Toggle like/unlike a song
+  // Toggle like/unlike a song leveraging the backend
   const toggleLike = useCallback(
-    (song) => {
+    async (song) => {
+      if (!user) {
+        toast.error("Please login to save your liked songs", {
+          style: TOAST_STYLE,
+        });
+        return;
+      }
+
       const exists = likedSongs.some((item) => item.id === song.id);
 
-      if (!exists) {
-        const updated = [...likedSongs, song];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        setLikedSongs(updated);
-        toast(`Song (${song?.name}) added to Likes section`, {
-          icon: "✅",
-          duration: 1500,
-          style: TOAST_STYLE,
-        });
-      } else {
-        const updated = likedSongs.filter((item) => item.id !== song.id);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        setLikedSongs(updated);
-        toast(`Song (${song?.name}) removed successfully.`, {
-          icon: "⚠️",
-          duration: 1500,
-          style: TOAST_STYLE,
-        });
+      try {
+        if (!exists) {
+          // Optimistic UI update
+          const updated = [...likedSongs, song];
+          setLikedSongs(updated);
+          
+          await axios.post(`${API_BASE_URL}/api/users/likes`, { id: song.id }, { withCredentials: true });
+
+          
+          toast(`Song (${song?.name}) added to your Cloud Likes`, {
+            icon: "✅",
+            duration: 1500,
+            style: TOAST_STYLE,
+          });
+        } else {
+          // Optimistic UI update
+          const updated = likedSongs.filter((item) => item.id !== song.id);
+          setLikedSongs(updated);
+          
+          await axios.delete(`${API_BASE_URL}/api/users/likes/${song.id}`, { withCredentials: true });
+
+          
+          toast(`Song (${song?.name}) removed from Cloud Likes`, {
+            icon: "⚠️",
+            duration: 1500,
+            style: TOAST_STYLE,
+          });
+        }
+      } catch (error) {
+        console.error("Like toggle failed", error);
+        toast.error("Failed to sync with cloud. Try again.");
       }
     },
-    [likedSongs]
+    [likedSongs, user]
   );
 
   // Remove a song by id (used in Likes page)
   const removeSong = useCallback(
-    (songId) => {
-      const song = likedSongs.find((item) => item.id === songId);
-      const updated = likedSongs.filter((item) => item.id !== songId);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      setLikedSongs(updated);
-      if (song) {
-        toast(`Song removed successfully.`, {
-          icon: "✅",
-          duration: 1500,
-          style: TOAST_STYLE,
-        });
-      } else {
-        toast.error("Song not found in localStorage.");
+    async (songId) => {
+      if (!user) return;
+      try {
+        const song = likedSongs.find((item) => item.id === songId);
+        const updated = likedSongs.filter((item) => item.id !== songId);
+        setLikedSongs(updated);
+        
+        await axios.delete(`${API_BASE_URL}/api/users/likes/${songId}`, { withCredentials: true });
+
+        
+        if (song) {
+          toast(`Song removed successfully.`, {
+            icon: "✅",
+            duration: 1500,
+            style: TOAST_STYLE,
+          });
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to remove song from cloud");
       }
     },
-    [likedSongs]
+    [likedSongs, user]
   );
 
-  // Reload from localStorage (used after import)
-  const loadLikedSongs = useCallback(() => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      setLikedSongs(JSON.parse(data));
-    } else {
-      setLikedSongs([]);
+  const importLikes = useCallback(async (songIds) => {
+    if (user && songIds.length > 0) {
+      try {
+        await axios.post(`${API_BASE_URL}/api/users/likes/import`, { songIds }, { withCredentials: true });
+
+        
+        toast.success(`Playlist Imported Successfully! Syncing to backend...`, {
+          style: TOAST_STYLE
+        });
+
+        // Re-fetch to merge cleanly in state
+        const { data } = await axios.get(`${API_BASE_URL}/api/users/likes`, { withCredentials: true });
+
+        if (data && data.length > 0) {
+          const idsString = data.join(',');
+          const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
+          setLikedSongs(saavnRes.data.data);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(saavnRes.data.data));
+        }
+        return true;
+      } catch (error) {
+        console.error("Import failed:", error);
+        toast.error("Failed to import playlist", { style: TOAST_STYLE });
+        return false;
+      }
     }
-  }, []);
+  }, [user]);
+
+  // Real-time backend sync explicitly called
+  const loadLikedSongs = useCallback(async () => {
+    if (user) {
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/api/users/likes`, { withCredentials: true });
+
+        
+        if (data && data.length > 0) {
+          const idsString = data.join(',');
+          const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
+          setLikedSongs(saavnRes.data.data);
+        } else {
+          setLikedSongs([]);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }, [user]);
+
+  // Reorder liked songs
+  const reorderLikes = useCallback(async (newOrderedSongs) => {
+    if (!user) return;
+    const toastId = toast.loading("Syncing likes order...", { style: TOAST_STYLE });
+    try {
+      const songIds = newOrderedSongs.map(s => s.id);
+      setLikedSongs(newOrderedSongs); // Optimistic UI update
+      
+      await axios.put(`${API_BASE_URL}/api/users/likes/reorder`, { songIds }, { withCredentials: true });
+
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrderedSongs));
+      toast.success("Likes reordered!", { id: toastId, style: TOAST_STYLE });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to sync new order", { id: toastId, style: TOAST_STYLE });
+      // Re-fetch to revert to server state
+      loadLikedSongs();
+    }
+  }, [user, loadLikedSongs]);
 
   return (
     <LikedSongsContext.Provider
-      value={{ likedSongs, isLiked, toggleLike, removeSong, loadLikedSongs }}
+      value={{ likedSongs, isLiked, toggleLike, removeSong, loadLikedSongs, importLikes, reorderLikes }}
     >
       {children}
     </LikedSongsContext.Provider>

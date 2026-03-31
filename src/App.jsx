@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { PlayerProvider } from "./context/PlayerContext";
 import { LikedSongsProvider } from "./hooks/useLikedSongs.jsx";
+import { PlaylistProvider } from "./context/PlaylistContext";
 import PlayerBar from "./components/PlayerBar";
 import Playlist from "./components/Playlist";
 import PlaylistDetails from "./components/PlaylistDetails";
@@ -16,11 +17,18 @@ import Songs from "./components/Songs";
 import Likes from "./components/Likes";
 import SongDetails from "./components/SongDetails";
 import Import from "./components/Import";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import SharedPlaylist from "./components/SharedPlaylist";
+import AdminDashboard from "./components/AdminDashboard";
+import MyPlaylists from "./components/MyPlaylists";
+import MyPlaylistDetails from "./components/MyPlaylistDetails";
 
 const App = () => {
   return (
     <PlayerProvider>
       <LikedSongsProvider>
+      <PlaylistProvider>
         <div className="w-full h-screen">
           <Toaster position="top-center" reverseOrder={false} />
           <Routes>
@@ -36,9 +44,16 @@ const App = () => {
             <Route path="/artists/details/:id" element={<ArtistsDetails />} />
             <Route path="/likes" element={<Likes />} />
             <Route path="/import" element={<Import />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/shared/:id" element={<SharedPlaylist />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/my-playlists" element={<MyPlaylists />} />
+            <Route path="/:username/:id" element={<MyPlaylistDetails />} />
           </Routes>
           <PlayerBar />
         </div>
+      </PlaylistProvider>
       </LikedSongsProvider>
     </PlayerProvider>
   );

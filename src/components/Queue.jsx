@@ -1,9 +1,13 @@
 import React, { useState, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { usePlayer } from "../context/PlayerContext";
 import wavs from "../../public/wavs.gif";
+import AddToPlaylistModal from "./AddToPlaylistModal";
+import Tooltip from "./Tooltip";
 
 const Queue = ({ onClose }) => {
+  const navigate = useNavigate();
   const {
     songsList,
     currentIndex,
@@ -18,6 +22,7 @@ const Queue = ({ onClose }) => {
   // Drag state
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [playlistModalSong, setPlaylistModalSong] = useState(null);
   const dragItem = useRef(null);
 
   const handleDragStart = (e, index) => {
@@ -52,7 +57,7 @@ const Queue = ({ onClose }) => {
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 50 }}
-      className="fixed bottom-0 left-0 right-0 z-[100] bg-slate-800 border-t border-slate-600 rounded-t-2xl shadow-2xl"
+      className="fixed bottom-0 left-0 right-0 z-[100] bg-slate-800 border-t border-slate-600 rounded-t-2xl shadow-2xl overflow-x-hidden"
       style={{ maxHeight: "70vh" }}
     >
       {/* Header */}
@@ -70,25 +75,28 @@ const Queue = ({ onClose }) => {
           <p className="text-xs text-zinc-500 sm:hidden">
             <i className="ri-drag-move-line mr-1"></i>Drag to reorder
           </p>
-          <button
-            onClick={clearQueue}
-            className="px-3 py-1 text-xs font-semibold rounded-md bg-red-500/20 text-red-400 hover:bg-red-500/40 duration-200"
-            title="Clear queue (keep current song)"
-          >
-            Clear
-          </button>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-700 text-zinc-400 hover:text-white duration-200"
-          >
-            <i className="ri-close-line text-xl"></i>
-          </button>
+          <Tooltip text="Clear queue">
+            <button
+              onClick={clearQueue}
+              className="px-3 py-1 text-xs font-semibold rounded-md bg-red-500/20 text-red-400 hover:bg-red-500/40 duration-200"
+            >
+              Clear
+            </button>
+          </Tooltip>
+          <Tooltip text="Close">
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-700 text-zinc-400 hover:text-white duration-200"
+            >
+              <i className="ri-close-line text-xl"></i>
+            </button>
+          </Tooltip>
         </div>
       </div>
 
       {/* Song List */}
       <div
-        className="overflow-y-auto px-3 py-2"
+        className="overflow-y-auto overflow-x-hidden px-3 py-2"
         style={{ maxHeight: "calc(70vh - 60px)" }}
         onDragLeave={handleDragLeave}
       >
@@ -101,7 +109,7 @@ const Queue = ({ onClose }) => {
             <div
               key={song.id + "-" + i}
               onDragOver={(e) => handleDragOver(e, i)}
-              className={`flex items-center gap-3 p-2 rounded-lg mb-1 duration-200 group select-none ${
+              className={`flex items-center gap-3 sm:gap-2 p-2 rounded-lg mb-1 duration-200 group select-none ${
                 isDragging
                   ? "opacity-40 scale-95"
                   : isDragOver
@@ -140,7 +148,10 @@ const Queue = ({ onClose }) => {
 
               {/* Song Info */}
               <div
-                onClick={() => playFromQueue(i)}
+                // onClick={() => {
+                //   navigate(`/songs/details/${song.id}`);
+                //   onClose();
+                // }}
                 className="flex-1 min-w-0 cursor-pointer"
               >
                 <h3
@@ -155,15 +166,26 @@ const Queue = ({ onClose }) => {
                 </p>
               </div>
 
+              {/* Add to Playlist Button */}
+              <Tooltip text="Add to Playlist">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setPlaylistModalSong(song); }}
+                  className="w-7 h-7 flex items-center justify-center rounded text-zinc-500 sm:opacity-100 opacity-0 group-hover:opacity-100 hover:text-purple-400 hover:bg-purple-500/10 duration-200 flex-shrink-0"
+                >
+                  <i className="ri-folder-add-line"></i>
+                </button>
+              </Tooltip>
+
               {/* Remove Button — always visible on mobile, hover on desktop */}
               {songsList.length > 1 && (
-                <button
-                  onClick={() => removeFromQueue(i)}
-                  className="w-7 h-7 flex items-center justify-center rounded text-zinc-500 sm:opacity-100 opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-500/10 duration-200 flex-shrink-0"
-                  title="Remove from queue"
-                >
-                  <i className="ri-close-line"></i>
-                </button>
+                <Tooltip text="Remove from Queue">
+                  <button
+                    onClick={() => removeFromQueue(i)}
+                    className="w-7 h-7 flex items-center justify-center rounded text-zinc-500 sm:opacity-100 opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-500/10 duration-200 flex-shrink-0"
+                  >
+                    <i className="ri-close-line"></i>
+                  </button>
+                </Tooltip>
               )}
 
               {/* Playing indicator */}
@@ -176,6 +198,14 @@ const Queue = ({ onClose }) => {
           );
         })}
       </div>
+
+      {/* Add To Playlist Modal */}
+      {playlistModalSong && (
+        <AddToPlaylistModal
+          song={playlistModalSong}
+          onClose={() => setPlaylistModalSong(null)}
+        />
+      )}
     </motion.div>
   );
 };
