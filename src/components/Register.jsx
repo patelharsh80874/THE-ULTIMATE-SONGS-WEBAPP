@@ -10,6 +10,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(null);
   const { register, user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -47,11 +48,18 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await register(username, email, password);
-    if (success) {
-      navigate("/");
+    if (usernameAvailable === false) return;
+    setIsRegistering(true);
+    try {
+      const success = await register(username, email, password);
+      if (success) {
+        navigate("/");
+      }
+    } finally {
+      setIsRegistering(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-slate-800 flex items-center justify-center p-6 relative overflow-x-hidden">
@@ -153,10 +161,20 @@ const Register = () => {
 
               <button
                 type="submit"
-                className="w-full bg-brand-primary text-black font-black py-5 rounded-2xl hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-all flex items-center justify-center gap-3 mt-4 uppercase tracking-wider hover:text-green-400"
+                disabled={isRegistering || usernameAvailable === false}
+                className={`w-full ${(isRegistering || usernameAvailable === false) ? 'bg-zinc-700 pointer-events-none' : 'bg-brand-primary'} text-black font-black py-5 rounded-2xl hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-all flex items-center justify-center gap-3 mt-4 uppercase tracking-wider hover:text-green-400`}
               >
-                Create Account <i className="ri-sparkling-fill"></i>
+                {isRegistering ? (
+                  <>
+                    CREATING ACCOUNT... <i className="ri-loader-4-line animate-spin text-xl"></i>
+                  </>
+                ) : (
+                  <>
+                    Create Account <i className="ri-sparkling-fill"></i>
+                  </>
+                )}
               </button>
+
             </form>
 
             <div className="mt-10 pt-8 border-t border-white/5 text-center">

@@ -6,6 +6,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { login, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -17,13 +18,19 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await login(email, password);
-    if (success) {
-      navigate("/");
+    setIsLoggingIn(true);
+    try {
+      const success = await login(email, password);
+      if (success) {
+        navigate("/");
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   return (
+
     <div className="min-h-screen bg-slate-800 flex items-center justify-center p-6 relative overflow-x-hidden">
       <div className="max-w-md w-full relative z-10">
         <Link 
@@ -89,10 +96,20 @@ const Login = () => {
 
               <button
                 type="submit"
-                className="w-full bg-brand-primary text-black font-black py-5 rounded-2xl hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-all flex items-center justify-center gap-3 mt-4 hover:text-green-400"
+                disabled={isLoggingIn}
+                className={`w-full ${isLoggingIn ? 'bg-zinc-700 pointer-events-none' : 'bg-brand-primary'} text-black font-black py-5 rounded-2xl hover:scale-[1.02] active:scale-[0.98] shadow-lg transition-all flex items-center justify-center gap-3 mt-4 hover:text-green-400`}
               >
-                Let's Go <i className="ri-arrow-right-line text-xl"></i>
+                {isLoggingIn ? (
+                  <>
+                    PROCESSING... <i className="ri-loader-4-line animate-spin text-xl"></i>
+                  </>
+                ) : (
+                  <>
+                    Let's Go <i className="ri-arrow-right-line text-xl"></i>
+                  </>
+                )}
               </button>
+
             </form>
 
             <div className="mt-10 pt-8 border-t border-white/5 text-center">
