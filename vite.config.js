@@ -46,6 +46,9 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ]
+      },
+      workbox: {
+        maximumFileSizeToCacheInBytes: 100000000, // 100MB limit for large WASM and media files
       }
     })
   ],
