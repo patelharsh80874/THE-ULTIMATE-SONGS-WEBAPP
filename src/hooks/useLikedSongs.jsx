@@ -11,35 +11,37 @@ const TOAST_STYLE = { borderRadius: "10px", background: "rgb(115 115 115)", colo
 const LikedSongsContext = createContext(null);
 
 export const LikedSongsProvider = ({ children }) => {
-  const [likedSongs, setLikedSongs] = useState([]);
+  const [likedSongs, setLikedSongs] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
   const { user } = useContext(AuthContext); // Get auth state
+
+  // Real-time backend sync explicitly called
+  const loadLikedSongs = useCallback(async () => {
+    if (user) {
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/api/users/likes`, { withCredentials: true });
+
+        if (data && Array.isArray(data) && data.length > 0) {
+          const idsString = data.join(',');
+          const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
+          setLikedSongs(saavnRes.data.data || []);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(saavnRes.data.data || []));
+        } else {
+          setLikedSongs([]);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }, [user]);
 
   // Load liked songs from backend if user exists, else clear
   useEffect(() => {
-    const fetchLikes = async () => {
-      if (user) {
-        try {
-          const { data } = await axios.get(`${API_BASE_URL}/api/users/likes`, { withCredentials: true });
-
-          
-          if (data && data.length > 0) {
-            const idsString = data.join(',');
-            const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
-            setLikedSongs(saavnRes.data.data);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(saavnRes.data.data));
-          } else {
-            setLikedSongs([]);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-          }
-        } catch (error) {
-          console.error("Error fetching likes:", error);
-        }
-      } else {
-        setLikedSongs([]); // Clear likes if logged out
-      }
-    };
-    fetchLikes();
-  }, [user]);
+    loadLikedSongs();
+  }, [user, loadLikedSongs]);
 
   // Check if a song is liked
   const isLiked = useCallback(
@@ -67,7 +69,6 @@ export const LikedSongsProvider = ({ children }) => {
           
           await axios.post(`${API_BASE_URL}/api/users/likes`, { id: song.id }, { withCredentials: true });
 
-          
           toast(`Song (${song?.name}) added to your Cloud Likes`, {
             icon: "✅",
             duration: 1500,
@@ -80,7 +81,6 @@ export const LikedSongsProvider = ({ children }) => {
           
           await axios.delete(`${API_BASE_URL}/api/users/likes/${song.id}`, { withCredentials: true });
 
-          
           toast(`Song (${song?.name}) removed from Cloud Likes`, {
             icon: "⚠️",
             duration: 1500,
@@ -106,7 +106,6 @@ export const LikedSongsProvider = ({ children }) => {
         
         await axios.delete(`${API_BASE_URL}/api/users/likes/${songId}`, { withCredentials: true });
 
-        
         if (song) {
           toast(`Song removed successfully.`, {
             icon: "✅",
@@ -122,25 +121,43 @@ export const LikedSongsProvider = ({ children }) => {
     [likedSongs, user]
   );
 
+  const removeSongsBulk = useCallback(
+    async (songIds) => {
+      if (!user || !Array.isArray(songIds) || songIds.length === 0) return;
+      try {
+        const updated = likedSongs.filter((item) => !songIds.includes(item.id));
+        setLikedSongs(updated);
+        
+        await axios.delete(`${API_BASE_URL}/api/users/likes-bulk`, { 
+          data: { songIds }, 
+          withCredentials: true 
+        });
+
+        toast(`${songIds.length} songs removed from favorites.`, {
+          icon: "✅",
+          duration: 1500,
+          style: TOAST_STYLE,
+        });
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to sync some unlikes with cloud");
+        loadLikedSongs();
+      }
+    },
+    [likedSongs, user, loadLikedSongs]
+  );
+
   const importLikes = useCallback(async (songIds) => {
     if (user && songIds.length > 0) {
       try {
         await axios.post(`${API_BASE_URL}/api/users/likes/import`, { songIds }, { withCredentials: true });
 
-        
         toast.success(`Playlist Imported Successfully! Syncing to backend...`, {
           style: TOAST_STYLE
         });
 
         // Re-fetch to merge cleanly in state
-        const { data } = await axios.get(`${API_BASE_URL}/api/users/likes`, { withCredentials: true });
-
-        if (data && data.length > 0) {
-          const idsString = data.join(',');
-          const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
-          setLikedSongs(saavnRes.data.data);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(saavnRes.data.data));
-        }
+        await loadLikedSongs();
         return true;
       } catch (error) {
         console.error("Import failed:", error);
@@ -148,27 +165,7 @@ export const LikedSongsProvider = ({ children }) => {
         return false;
       }
     }
-  }, [user]);
-
-  // Real-time backend sync explicitly called
-  const loadLikedSongs = useCallback(async () => {
-    if (user) {
-      try {
-        const { data } = await axios.get(`${API_BASE_URL}/api/users/likes`, { withCredentials: true });
-
-        
-        if (data && data.length > 0) {
-          const idsString = data.join(',');
-          const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
-          setLikedSongs(saavnRes.data.data);
-        } else {
-          setLikedSongs([]);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }, [user]);
+  }, [user, loadLikedSongs]);
 
   // Reorder liked songs
   const reorderLikes = useCallback(async (newOrderedSongs) => {
@@ -180,7 +177,6 @@ export const LikedSongsProvider = ({ children }) => {
       
       await axios.put(`${API_BASE_URL}/api/users/likes/reorder`, { songIds }, { withCredentials: true });
 
-      
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrderedSongs));
       toast.success("Likes reordered!", { id: toastId, style: TOAST_STYLE });
     } catch (error) {
@@ -193,7 +189,7 @@ export const LikedSongsProvider = ({ children }) => {
 
   return (
     <LikedSongsContext.Provider
-      value={{ likedSongs, isLiked, toggleLike, removeSong, loadLikedSongs, importLikes, reorderLikes }}
+      value={{ likedSongs, isLiked, toggleLike, removeSong, removeSongsBulk, loadLikedSongs, importLikes, reorderLikes }}
     >
       {children}
     </LikedSongsContext.Provider>

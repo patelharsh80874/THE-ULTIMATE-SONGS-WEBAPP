@@ -3,6 +3,7 @@ import {
   getLikedSongs,
   addLikedSong,
   removeLikedSong,
+  removeLikedSongsBulk,
   getSharedPlaylist,
   importSharedPlaylistKeys,
   reorderLikedSongs,
@@ -24,6 +25,7 @@ router.route('/likes/:id')
   .delete(protect, removeLikedSong);
 
 router.post('/likes/import', protect, importSharedPlaylistKeys);
+router.delete('/likes-bulk', protect, removeLikedSongsBulk);
 router.put('/likes/reorder', protect, reorderLikedSongs);
 router.route('/history')
   .get(protect, getHistory)

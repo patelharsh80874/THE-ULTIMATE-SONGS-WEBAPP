@@ -87,6 +87,7 @@ export const getPlaylistById = async (req, res, next) => {
       owner: playlist.owner,
       isPublic: playlist.isPublic,
       songs: paginatedSongs,
+      allSongIds: playlist.songs, // All IDs for global search
       totalSongs,
       page,
       totalPages: Math.ceil(totalSongs / limit),
@@ -211,6 +212,78 @@ export const removeSongFromPlaylist = async (req, res, next) => {
     }
 
     playlist.songs = playlist.songs.filter(id => id !== req.params.songId);
+    await playlist.save();
+
+    res.status(200).json(playlist);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Remove multiple songs from a playlist (Bulk)
+// @route   DELETE /api/playlists/:id/songs-bulk
+// @access  Private (Owner or Collaborator)
+export const removeSongsBulk = async (req, res, next) => {
+  try {
+    const { songIds } = req.body;
+    const playlist = await Playlist.findById(req.params.id);
+
+    if (!playlist) {
+      res.status(404);
+      throw new Error('Playlist not found');
+    }
+
+    const isOwner = playlist.owner.toString() === req.user._id.toString();
+    const isCollaborator = playlist.collaborators?.some(c => (c._id || c).toString() === req.user._id.toString());
+
+    if (!isOwner && !isCollaborator) {
+      res.status(403);
+      throw new Error('Not authorized to modify this playlist');
+    }
+
+    if (!Array.isArray(songIds)) {
+      res.status(400);
+      throw new Error('Please provide an array of song IDs');
+    }
+
+    playlist.songs = playlist.songs.filter(id => !songIds.includes(id));
+    await playlist.save();
+
+    res.status(200).json(playlist);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Add multiple songs to a playlist (Bulk)
+// @route   POST /api/playlists/:id/songs-bulk
+// @access  Private (Owner or Collaborator)
+export const addSongsBulk = async (req, res, next) => {
+  try {
+    const { songIds } = req.body;
+    const playlist = await Playlist.findById(req.params.id);
+
+    if (!playlist) {
+      res.status(404);
+      throw new Error('Playlist not found');
+    }
+
+    const isOwner = playlist.owner.toString() === req.user._id.toString();
+    const isCollaborator = playlist.collaborators?.some(c => (c._id || c).toString() === req.user._id.toString());
+
+    if (!isOwner && !isCollaborator) {
+      res.status(403);
+      throw new Error('Not authorized to modify this playlist');
+    }
+
+    if (!Array.isArray(songIds)) {
+      res.status(400);
+      throw new Error('Please provide an array of song IDs');
+    }
+
+    // Filter out songs already in the playlist to avoid duplicates
+    const newSongs = songIds.filter(id => !playlist.songs.includes(id));
+    playlist.songs.push(...newSongs);
     await playlist.save();
 
     res.status(200).json(playlist);

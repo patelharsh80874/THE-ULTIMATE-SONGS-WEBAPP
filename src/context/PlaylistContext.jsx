@@ -107,6 +107,29 @@ export const PlaylistProvider = ({ children }) => {
       return false;
     }
   }, []);
+  
+  // Add multiple songs to a playlist (Bulk)
+  const addSongsToPlaylistBulk = useCallback(async (playlistId, songIds) => {
+    const toastId = toast.loading(`Adding ${songIds.length} songs...`, { style: TOAST_STYLE });
+    try {
+      const { data } = await axios.post(
+        `${API}/${playlistId}/songs-bulk`,
+        { songIds },
+        { withCredentials: true }
+      );
+      setPlaylists(prev =>
+        prev.map(p => (p._id === playlistId ? { ...p, songs: data.songs } : p))
+      );
+      setCollaborations(prev =>
+        prev.map(p => (p._id === playlistId ? { ...p, songs: data.songs } : p))
+      );
+      toast.success(`Successfully added ${songIds.length} songs!`, { id: toastId, style: TOAST_STYLE });
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to add songs", { id: toastId, style: TOAST_STYLE });
+      return false;
+    }
+  }, []);
 
   // Remove a song from a playlist
   const removeSongFromPlaylist = useCallback(async (playlistId, songId) => {
@@ -208,6 +231,7 @@ export const PlaylistProvider = ({ children }) => {
         createPlaylist,
         deletePlaylist,
         addSongToPlaylist,
+        addSongsToPlaylistBulk,
         removeSongFromPlaylist,
         importPlaylist,
         togglePlaylistVisibility,

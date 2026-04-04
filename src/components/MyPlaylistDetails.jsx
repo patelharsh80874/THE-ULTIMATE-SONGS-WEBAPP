@@ -11,6 +11,7 @@ import wavs from "../../public/wavs.gif";
 import noimg from "../../public/noimg.png";
 import toast from "react-hot-toast";
 import AddToPlaylistModal from "./AddToPlaylistModal";
+import EditPlaylistModal from "./EditPlaylistModal";
 import Tooltip from "./Tooltip";
 import API_BASE_URL from "../config/api";
 
@@ -36,6 +37,16 @@ const MyPlaylistDetails = () => {
   const [inviteUsername, setInviteUsername] = useState("");
   const [inviting, setInviting] = useState(false);
   const [error, setError] = useState(null); // { status: number, message: string }
+
+  // New States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSongs, setSelectedSongs] = useState(new Set());
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Global Search & Hydration
+  const [allHydratedSongs, setAllHydratedSongs] = useState([]);
+  const [isHydratingAll, setIsHydratingAll] = useState(false);
+  const [hydrationProgress, setHydrationProgress] = useState(0);
 
   const isOwner = user && (playlist?.owner?._id === user._id || playlist?.owner === user._id);
   const isCollaborator = user && playlist?.collaborators?.some(c => (c._id || c) === user._id);
@@ -137,6 +148,109 @@ const MyPlaylistDetails = () => {
     const shareUrl = `${window.location.origin}/${username}/${id}`;
     navigator.clipboard.writeText(shareUrl);
     toast.success("Share link copied!", { style: TOAST_STYLE });
+  };
+  
+  const handleShufflePlay = () => {
+    if (hydratedSongs.length === 0) return;
+    // Fisher-Yates Shuffle
+    const shuffled = [...hydratedSongs];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    playSong(shuffled[0], 0, shuffled);
+    toast.success("Shuffling Vibe...", { icon: "🔀", style: TOAST_STYLE });
+  };
+
+  // Global Hydration for Search
+  const hydrateAllSongs = async () => {
+    if (isHydratingAll || allHydratedSongs.length === playlist?.totalSongs) return;
+    
+    setIsHydratingAll(true);
+    const allIds = playlist?.allSongIds || [];
+    if (allIds.length === 0) {
+      setIsHydratingAll(false);
+      return;
+    }
+
+    const CHUNK_SIZE = 50;
+    const total = allIds.length;
+    let results = [];
+    
+    try {
+      for (let i = 0; i < total; i += CHUNK_SIZE) {
+        const chunk = allIds.slice(i, i + CHUNK_SIZE);
+        const idsString = chunk.join(",");
+        const res = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
+        results = [...results, ...res.data.data];
+        setAllHydratedSongs([...results]);
+        setHydrationProgress(Math.round(((i + chunk.length) / total) * 100));
+      }
+    } catch (err) {
+      console.error("Hydration Failed:", err);
+      toast.error("Failed to load full playlist for search", { style: TOAST_STYLE });
+    } finally {
+      setIsHydratingAll(false);
+    }
+  };
+
+  // Trigger hydration on search focus or first type
+  useEffect(() => {
+    if (searchQuery && allHydratedSongs.length === 0 && !isHydratingAll) {
+      hydrateAllSongs();
+    }
+  }, [searchQuery]);
+
+  // Bulk Removal
+  const handleRemoveSongsBulk = async () => {
+    if (!canEdit || selectedSongs.size === 0) return;
+    if (!window.confirm(`Are you sure you want to remove ${selectedSongs.size} songs?`)) return;
+
+    try {
+      const idsToRemove = Array.from(selectedSongs);
+      await axios.delete(`${API}/${id}/songs-bulk`, {
+        data: { songIds: idsToRemove },
+        withCredentials: true
+      });
+      
+      setHydratedSongs(prev => prev.filter(s => !selectedSongs.has(s.id)));
+      setSelectedSongs(new Set());
+      toast.success("Songs removed successfully!", { style: TOAST_STYLE });
+    } catch (err) {
+      toast.error("Failed to remove songs");
+    }
+  };
+
+  // Inline Update
+  const handleUpdatePlaylist = async (field, value) => {
+    if (!canEdit) return;
+    try {
+      const { data } = await axios.put(`${API}/${id}`, { [field]: value }, { withCredentials: true });
+      setPlaylist(prev => ({ ...prev, [field]: value }));
+      setIsEditingName(false);
+      setIsEditingDesc(false);
+      toast.success("Playlist updated!", { style: TOAST_STYLE });
+    } catch (err) {
+      toast.error("Failed to update playlist");
+    }
+  };
+
+  const toggleSelectSong = (songId) => {
+    setSelectedSongs(prev => {
+      const next = new Set(prev);
+      if (next.has(songId)) next.delete(songId);
+      else next.add(songId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const listToSelectFrom = allHydratedSongs.length > 0 ? allHydratedSongs : hydratedSongs;
+    if (selectedSongs.size === listToSelectFrom.length) {
+      setSelectedSongs(new Set());
+    } else {
+      setSelectedSongs(new Set(listToSelectFrom.map(s => s.id)));
+    }
   };
 
   // Drag state
@@ -362,12 +476,36 @@ const MyPlaylistDetails = () => {
               )}
             </div>
             {hydratedSongs.length > 0 && (
-              <button 
-                onClick={() => playSong(hydratedSongs[0], 0, hydratedSongs)}
-                className="absolute -bottom-4 -right-4 sm:bottom-2 sm:right-2 w-16 h-16 sm:w-14 sm:h-14 bg-green-500 rounded-full flex items-center justify-center text-slate-900 text-3xl shadow-2xl hover:scale-110 active:scale-90 transition-transform"
-              >
-                <i className="ri-play-fill"></i>
-              </button>
+              <div className="absolute -bottom-6 -right-6 sm:-bottom-4 sm:-right-2 flex items-center gap-3">
+                {canEdit && (
+                  <Tooltip text="Edit Details" position="top">
+                    <button 
+                      onClick={() => setIsEditModalOpen(true)}
+                      className="w-12 h-12 sm:w-11 sm:h-11 bg-slate-800/80 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-zinc-400 text-xl shadow-2xl hover:bg-slate-700 hover:text-white hover:scale-110 active:scale-90 transition-all"
+                    >
+                      <i className="ri-edit-box-line"></i>
+                    </button>
+                  </Tooltip>
+                )}
+
+                <Tooltip text="Shuffle and Play" position="top">
+                  <button 
+                    onClick={handleShufflePlay}
+                    className="w-12 h-12 sm:w-11 sm:h-11 bg-slate-800/80 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-white text-xl shadow-2xl hover:bg-slate-700 hover:scale-110 active:scale-90 transition-all"
+                  >
+                    <i className="ri-shuffle-line"></i>
+                  </button>
+                </Tooltip>
+                
+                <Tooltip text="Play All" position="top">
+                  <button 
+                    onClick={() => playSong(hydratedSongs[0], 0, hydratedSongs)}
+                    className="w-16 h-16 sm:w-14 sm:h-14 bg-green-500 rounded-full flex items-center justify-center text-slate-900 text-3xl shadow-2xl hover:scale-110 active:scale-90 transition-transform"
+                  >
+                    <i className="ri-play-fill text-2xl"></i>
+                  </button>
+                </Tooltip>
+              </div>
             )}
           </motion.div>
 
@@ -380,7 +518,7 @@ const MyPlaylistDetails = () => {
               <span className="bg-purple-500/20 text-purple-400 text-[10px] font-bold px-3 py-1 rounded-full border border-purple-500/30 uppercase tracking-widest">
                 {isCollaborator ? "COLLABORATIVE PLAYLIST" : "PERSONAL PLAYLIST"}
               </span>
-              <h2 className="text-5xl sm:text-2xl font-black text-white mt-4 sm:mt-2 tracking-tighter leading-tight drop-shadow-2xl">
+              <h2 className="text-5xl sm:text-2xl font-black text-white mt-4 sm:mt-2 tracking-tighter leading-tight drop-shadow-2xl uppercase">
                 {playlist?.name}
               </h2>
               <div className="flex flex-wrap items-center gap-3 mt-4 sm:mt-3 text-zinc-300 font-medium sm:justify-center">
@@ -390,9 +528,11 @@ const MyPlaylistDetails = () => {
                 <div className="w-1.5 h-1.5 bg-zinc-600 rounded-full" />
                 <p className="text-xl sm:text-sm">{playlist?.totalSongs || 0} Tracks</p>
               </div>
-              {playlist?.description && (
-                <p className="mt-4 text-zinc-500 italic text-sm max-w-xl line-clamp-2">"{playlist.description}"</p>
-              )}
+              <div className="mt-4">
+                <p className="text-zinc-500 italic text-sm max-w-xl line-clamp-2">
+                  "{playlist?.description || "No description added."}"
+                </p>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -465,14 +605,51 @@ const MyPlaylistDetails = () => {
           </motion.div>
         )}
 
+        {/* Controls Bar: Search & Select All */}
+        <div className="mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full max-w-md group">
+            <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-green-500 transition-colors"></i>
+            <input 
+              type="text" 
+              placeholder={`Search in all ${playlist?.totalSongs || 0} tracks...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => { if(allHydratedSongs.length === 0) hydrateAllSongs(); }}
+              className="w-full bg-slate-800/40 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-white focus:outline-none focus:border-green-500/30 backdrop-blur-xl transition-all"
+            />
+            {isHydratingAll && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <span className="text-[9px] font-black text-green-500 tracking-tighter">{hydrationProgress}%</span>
+                <i className="ri-loader-4-line animate-spin text-green-500"></i>
+              </div>
+            )}
+          </div>
+          
+          {canEdit && (
+            <button 
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 px-6 py-3 bg-slate-800/40 border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-all active:scale-95 sm:w-full sm:justify-center"
+            >
+              <i className={selectedSongs.size === (allHydratedSongs.length > 0 ? allHydratedSongs.length : hydratedSongs.length) ? "ri-checkbox-fill text-green-500" : "ri-checkbox-blank-line"}></i>
+              {selectedSongs.size === (allHydratedSongs.length > 0 ? allHydratedSongs.length : hydratedSongs.length) ? "Deselect All" : "Select All"}
+            </button>
+          )}
+        </div>
+
         {/* Track List */}
         <div 
-          className="space-y-2"
+          className="space-y-2 relative pb-[280px] md:pb-64"
           onDragLeave={handleDragLeave}
         >
-          {hydratedSongs.length > 0 ? (
+          {(allHydratedSongs.length > 0 || hydratedSongs.length > 0) ? (
             <>
-              {hydratedSongs.map((song, i) => {
+              {(allHydratedSongs.length > 0 ? allHydratedSongs : hydratedSongs)
+              .filter(song => 
+                song.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                song.artists?.primary?.[0]?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                song.album?.name.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map((song, i) => {
                 const isActive = song.id === songlink[0]?.id;
                 const isDragging = dragIndex === i;
                 const isDragOver = dragOverIndex === i;
@@ -485,7 +662,8 @@ const MyPlaylistDetails = () => {
                     animate={{ opacity: 1, y: 0 }} 
                     transition={{ delay: i * 0.03 }} 
                     onClick={() => playSong(song, i, hydratedSongs)}
-                    className={`group flex items-center gap-4 sm:gap-2 p-3 sm:p-2 rounded-xl cursor-pointer transition-all duration-200 border ${
+                    className={`group flex items-center gap-4 sm:gap-2 p-3 sm:p-2 rounded-xl cursor-pointer transition-all duration-200 border relative ${
+                      selectedSongs.has(song.id) ? "bg-purple-500/10 border-purple-500/30" :
                       isDragging
                         ? "opacity-40 scale-95 border-dashed border-green-500/50"
                         : isDragOver
@@ -495,6 +673,18 @@ const MyPlaylistDetails = () => {
                           : "bg-slate-800/40 border-white/5 hover:bg-slate-800/60 hover:border-white/10"
                     }`}
                   >
+                    {/* Selection Checkbox */}
+                    {canEdit && (
+                      <div 
+                        onClick={(e) => { e.stopPropagation(); toggleSelectSong(song.id); }}
+                        className={`absolute -left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 flex items-center justify-center z-20 transition-all ${
+                          selectedSongs.has(song.id) ? "bg-purple-500 border-purple-400 scale-110 opacity-100" : "bg-slate-900 border-white/10 opacity-0 group-hover:opacity-100"
+                        } sm:opacity-100 sm:w-5 sm:h-5 sm:-left-1.5`}
+                      >
+                        {selectedSongs.has(song.id) && <i className="ri-check-line text-white text-xs font-bold"></i>}
+                      </div>
+                    )}
+
                     {/* Drag Handle / Index / Playing Indicator */}
                     <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
                       {canEdit && (
@@ -636,13 +826,72 @@ const MyPlaylistDetails = () => {
             </div>
           )}
         </div>
+
+        {/* Floating Bulk Action Bar */}
+        <AnimatePresence>
+          {selectedSongs.size > 0 && (
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="fixed bottom-[230px] md:bottom-28 left-0 right-0 mx-auto w-[calc(100%-2rem)] md:w-max max-w-lg md:max-w-none z-[110] flex items-center gap-4 bg-slate-900 border border-white/10 px-8 py-4 rounded-[2rem] shadow-2xl backdrop-blur-2xl sm:px-3 sm:py-3 sm:gap-2"
+            >
+              <div className="flex items-center gap-3 sm:gap-2">
+                <div className="w-10 h-10 sm:w-8 sm:h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-black shadow-lg shadow-purple-500/20 text-xs sm:text-[10px]">
+                  {selectedSongs.size}
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black text-white uppercase tracking-wider">Tracks</h4>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight opacity-50 italic sm:hidden">Multi-vibe action bar</p>
+                </div>
+              </div>
+
+              <div className="h-10 w-px bg-white/5 mx-2 sm:mx-1 sm:h-8" />
+
+              <div className="flex items-center gap-3 sm:gap-1.5">
+                <button
+                  onClick={() => {
+                    const source = allHydratedSongs.length > 0 ? allHydratedSongs : hydratedSongs;
+                    const songsToSet = source.filter(s => selectedSongs.has(s.id));
+                    setPlaylistModalSong(songsToSet);
+                  }}
+                  className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all active:scale-95 flex items-center gap-2 sm:px-3 sm:py-2 sm:text-[9px]"
+                >
+                  <i className="ri-folders-line text-blue-400"></i> <span className="sm:hidden">ADD TO PLAYLISTS</span><span className="hidden sm:inline">ADD TO PL</span>
+                </button>
+                <button
+                  onClick={handleRemoveSongsBulk}
+                  className="px-6 py-2.5 bg-red-500/10 border border-red-500/20 rounded-full text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 flex items-center gap-2 sm:px-3 sm:py-2 sm:text-[9px]"
+                >
+                  <i className="ri-delete-bin-line"></i> <span className="sm:hidden">REMOVE</span><span className="hidden sm:inline">DEL</span>
+                </button>
+                <button
+                  onClick={() => setSelectedSongs(new Set())}
+                  className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+                >
+                  <i className="ri-close-line text-2xl sm:text-xl"></i>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <AnimatePresence>
         {playlistModalSong && (
           <AddToPlaylistModal 
-            song={playlistModalSong} 
+            songs={playlistModalSong} 
             onClose={() => setPlaylistModalSong(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <EditPlaylistModal 
+            playlist={playlist}
+            onClose={() => setIsEditModalOpen(false)}
+            onUpdate={(updated) => setPlaylist(prev => ({ ...prev, name: updated.name, description: updated.description }))}
           />
         )}
       </AnimatePresence>

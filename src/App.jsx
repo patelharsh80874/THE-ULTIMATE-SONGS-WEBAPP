@@ -28,6 +28,8 @@ import MyPlaylists from "./components/MyPlaylists";
 import MyPlaylistDetails from "./components/MyPlaylistDetails";
 import CommunityPlaylists from "./components/CommunityPlaylists";
 import CreatorProfile from "./components/CreatorProfile";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 
 import { SocketProvider } from "./context/SocketContext";
 
@@ -39,7 +41,11 @@ const App = () => {
           <LikedSongsProvider>
             <PlaylistProvider>
               <div className="w-full h-screen">
-                <Toaster position="top-center" reverseOrder={false} />
+                <Toaster 
+                  position="top-center" 
+                  reverseOrder={false} 
+                  containerStyle={{ zIndex: 100000 }}
+                />
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/songs" element={<Songs />} />
@@ -61,6 +67,8 @@ const App = () => {
                   <Route path="/community" element={<CommunityPlaylists />} />
                   <Route path="/profile/:username" element={<CreatorProfile />} />
                   <Route path="/:username/:id" element={<MyPlaylistDetails />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password/:token" element={<ResetPassword />} />
                 </Routes>
                 <PlayerBar />
               </div>

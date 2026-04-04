@@ -5,11 +5,15 @@ import { usePlaylist } from "../context/PlaylistContext";
 import Tooltip from "./Tooltip";
 import toast from "react-hot-toast";
 
-const AddToPlaylistModal = ({ song, onClose }) => {
+const AddToPlaylistModal = ({ songs, onClose }) => {
   const { user } = useContext(AuthContext);
-  const { playlists, collaborations, fetchPlaylists, addSongToPlaylist, removeSongFromPlaylist, createPlaylist } = usePlaylist();
+  const { playlists, collaborations, fetchPlaylists, addSongToPlaylist, addSongsToPlaylistBulk, removeSongFromPlaylist, createPlaylist } = usePlaylist();
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+
+  const isBulk = Array.isArray(songs);
+  const displaySongs = isBulk ? songs : [songs];
+  const firstSong = displaySongs[0];
 
   // On-Demand Refresh: Fetch latest playlists when modal opens
   React.useEffect(() => {
@@ -27,11 +31,18 @@ const AddToPlaylistModal = ({ song, onClose }) => {
   const allPlaylists = [...playlists, ...collaborations];
 
   const handleAdd = async (playlistId) => {
-    await addSongToPlaylist(playlistId, song.id);
+    if (isBulk) {
+      await addSongsToPlaylistBulk(playlistId, displaySongs.map(s => s.id));
+    } else {
+      await addSongToPlaylist(playlistId, displaySongs[0].id);
+    }
   };
 
   const handleRemove = async (playlistId) => {
-    await removeSongFromPlaylist(playlistId, song.id);
+    // Note: Single remove only for now if single song, bulk remove not handled in modal yet
+    if (!isBulk) {
+      await removeSongFromPlaylist(playlistId, displaySongs[0].id);
+    }
   };
 
   const handleQuickCreate = async (e) => {
@@ -39,13 +50,17 @@ const AddToPlaylistModal = ({ song, onClose }) => {
     if (!newName.trim()) return;
     const newPl = await createPlaylist(newName);
     if (newPl) {
-      await addSongToPlaylist(newPl._id, song.id);
+      if (isBulk) {
+        await addSongsToPlaylistBulk(newPl._id, displaySongs.map(s => s.id));
+      } else {
+        await addSongToPlaylist(newPl._id, displaySongs[0].id);
+      }
       setNewName("");
       setShowCreate(false);
     }
   };
 
-  const isSongInPlaylist = (pl) => pl.songs?.includes(song.id);
+  const isSongInPlaylist = (pl) => !isBulk && pl.songs?.includes(displaySongs[0]?.id);
 
   return (
     <div
@@ -65,9 +80,11 @@ const AddToPlaylistModal = ({ song, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="min-w-0 flex-1">
-            <h3 className="text-xl font-black text-white tracking-tight uppercase italic">Manage Playlist</h3>
+            <h3 className="text-xl font-black text-white tracking-tight uppercase italic">
+              {isBulk ? "Bulk Repository" : "Manage Playlist"}
+            </h3>
             <p className="text-xs text-zinc-500 truncate font-bold mt-1 uppercase opacity-60">
-              {song?.name}
+              {isBulk ? `${displaySongs.length} Songs Selected` : firstSong?.name}
             </p>
           </div>
           <Tooltip text="Close Manager" position="left">

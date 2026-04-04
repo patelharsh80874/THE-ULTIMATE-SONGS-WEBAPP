@@ -7,6 +7,8 @@ import {
   deletePlaylist,
   addSongToPlaylist,
   removeSongFromPlaylist,
+  removeSongsBulk,
+  addSongsBulk,
   importPlaylist,
   reorderPlaylistSongs,
   getUserPublicPlaylists,
@@ -62,6 +64,11 @@ router.route('/:id/songs/:songId')
 
 router.route('/:id/songs/reorder')
   .put(protect, reorderPlaylistSongs);
+
+// Bulk operations (removal and addition)
+router.route('/:id/songs-bulk')
+  .post(protect, addSongsBulk)
+  .delete(protect, removeSongsBulk);
 
 // Import (clone) a playlist
 router.route('/:id/import')

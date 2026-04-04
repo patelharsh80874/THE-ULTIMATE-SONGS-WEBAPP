@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
 import logo from "./../../public/logo3.jpg";
+import Tooltip from "./Tooltip";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -108,9 +109,14 @@ const Login = () => {
                     className="w-full pl-12 pr-14 py-3 bg-white/[0.04] border border-white/5 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/30 transition-all font-bold text-sm"
                     placeholder="••••••••"
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-5 flex items-center text-zinc-600 hover:text-white transition-colors">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-5 flex items-center text-zinc-500 hover:text-white transition-colors">
                     <i className={showPassword ? "ri-eye-off-line" : "ri-eye-line text-lg"} />
                   </button>
+                </div>
+                <div className="flex justify-end mt-2">
+                  <Tooltip text="Recover your account" position="top">
+                    <Link to="/forgot-password" size="sm" className="text-[11px] text-zinc-400 hover:text-purple-400 font-black uppercase tracking-widest transition-all hover:underline decoration-purple-500/50 underline-offset-4 pointer-events-auto">Forgot Password?</Link>
+                  </Tooltip>
                 </div>
               </div>
 

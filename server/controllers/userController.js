@@ -67,6 +67,27 @@ export const removeLikedSong = async (req, res, next) => {
   }
 };
 
+// @desc    Remove multiple songs from liked songs
+// @route   DELETE /api/users/likes-bulk
+// @access  Private
+export const removeLikedSongsBulk = async (req, res, next) => {
+  try {
+    const { songIds } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (user && Array.isArray(songIds)) {
+      user.likedSongs = user.likedSongs.filter((id) => !songIds.includes(id));
+      await user.save();
+      res.status(200).json(user.likedSongs);
+    } else {
+      res.status(404);
+      throw new Error('User not found or invalid payload');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Import an array of song IDs into liked songs
 // @route   POST /api/users/likes/import
 // @access  Private

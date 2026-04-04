@@ -33,6 +33,10 @@ const Likes = () => {
   const [songsForDownload, setSongsForDownload] = useState([]);
   const [playlistModalSong, setPlaylistModalSong] = useState(null);
 
+  // New States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSongs, setSelectedSongs] = useState(new Set());
+
   // Sync songs for zip download
   useEffect(() => {
     const mappedSongs = likedSongs.map((item) => ({
@@ -106,6 +110,38 @@ const Likes = () => {
 
   const handleDragLeave = () => {
     setDragOverIndex(null);
+  };
+
+  const TOAST_STYLE = { borderRadius: "10px", background: "rgb(115 115 115)", color: "#fff" };
+
+  const handleShufflePlay = () => {
+    if (likedSongs.length === 0) return;
+    const shuffled = [...likedSongs].sort(() => Math.random() - 0.5);
+    playSong(shuffled[0], 0, shuffled);
+    toast.success("Shuffling Liked Songs...", { icon: "🔀", style: TOAST_STYLE });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedSongs.size === likedSongs.length) {
+      setSelectedSongs(new Set());
+    } else {
+      setSelectedSongs(new Set(likedSongs.map(s => s.id)));
+    }
+  };
+
+  const { removeSongsBulk } = useLikedSongs();
+
+  const handleRemoveSongsBulk = async () => {
+    if (selectedSongs.size === 0) return;
+    if (!window.confirm(`Are you sure you want to unlike ${selectedSongs.size} songs?`)) return;
+
+    try {
+      const idsToRemove = Array.from(selectedSongs);
+      await removeSongsBulk(idsToRemove);
+      setSelectedSongs(new Set());
+    } catch (err) {
+      toast.error("Failed to remove songs");
+    }
   };
 
   if (loading) return <Loading customText="Syncing Favorites" />;
@@ -195,7 +231,7 @@ const Likes = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 pt-[12vh] px-8 sm:px-4 max-w-7xl mx-auto">
+      <div className="relative z-10 pt-[12vh] px-12 sm:px-6 max-w-7xl mx-auto">
         
         {/* Hero Section */}
         <div className="flex sm:flex-col gap-10 sm:gap-6 items-end sm:items-center mb-16 sm:mb-10">
@@ -216,12 +252,25 @@ const Likes = () => {
               )}
             </div>
             {likedSongs.length > 0 && (
-              <button 
-                onClick={() => playSong(likedSongs[0], 0, likedSongs)}
-                className="absolute -bottom-4 -right-4 sm:bottom-2 sm:right-2 w-16 h-16 sm:w-14 sm:h-14 bg-green-500 rounded-full flex items-center justify-center text-slate-900 text-3xl shadow-2xl hover:scale-110 active:scale-90 transition-transform"
-              >
-                <i className="ri-play-fill"></i>
-              </button>
+              <div className="absolute -bottom-6 -right-6 sm:-bottom-4 sm:-right-2 flex items-center gap-3">
+                <Tooltip text="Shuffle and Play" position="top">
+                  <button 
+                    onClick={handleShufflePlay}
+                    className="w-12 h-12 sm:w-11 sm:h-11 bg-slate-800/80 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-white text-xl shadow-2xl hover:bg-slate-700 hover:scale-110 active:scale-90 transition-all"
+                  >
+                    <i className="ri-shuffle-line"></i>
+                  </button>
+                </Tooltip>
+                
+                <Tooltip text="Play All" position="top">
+                  <button 
+                    onClick={() => playSong(likedSongs[0], 0, likedSongs)}
+                    className="w-16 h-16 sm:w-14 sm:h-14 bg-green-500 rounded-full flex items-center justify-center text-slate-900 text-3xl shadow-2xl hover:scale-110 active:scale-90 transition-transform"
+                  >
+                    <i className="ri-play-fill text-2xl"></i>
+                  </button>
+                </Tooltip>
+              </div>
             )}
           </motion.div>
 
@@ -248,13 +297,41 @@ const Likes = () => {
           </div>
         </div>
 
+        {/* Controls Bar: Search & Select All */}
+        <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full max-w-md group">
+            <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-green-500 transition-colors"></i>
+            <input 
+              type="text" 
+              placeholder={`Search in ${likedSongs.length} liked songs...`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-800/40 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-white focus:outline-none focus:border-green-500/30 backdrop-blur-xl transition-all"
+            />
+          </div>
+          
+          <button 
+            onClick={toggleSelectAll}
+            className="flex items-center gap-2 px-6 py-3 bg-slate-800/40 border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-all active:scale-95 sm:w-full sm:justify-center"
+          >
+            <i className={selectedSongs.size === likedSongs.length ? "ri-checkbox-fill text-green-500" : "ri-checkbox-blank-line"}></i>
+            {selectedSongs.size === likedSongs.length ? "Deselect All" : "Select All"}
+          </button>
+        </div>
+
         {/* Track List */}
         <div 
-          className="space-y-2"
+          className="space-y-2 relative pb-[280px] md:pb-64"
           onDragLeave={handleDragLeave}
         >
           {likedSongs.length > 0 ? (
-            likedSongs.map((song, i) => {
+            likedSongs
+            .filter(song => 
+              song.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              song.artists?.primary?.[0]?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              song.album?.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map((song, i) => {
               const isActive = song.id === songlink[0]?.id;
               const isDragging = dragIndex === i;
               const isDragOver = dragOverIndex === i;
@@ -266,28 +343,48 @@ const Likes = () => {
                   initial={{ opacity: 0, y: 15 }} 
                   animate={{ opacity: 1, y: 0 }} 
                   transition={{ delay: i * 0.03 }} 
-                  className={`group flex items-center gap-4 sm:gap-2 p-3 sm:p-2 rounded-xl cursor-pointer transition-all duration-200 border ${
+                  className={`group flex items-center gap-4 sm:gap-2 p-3 sm:p-2 rounded-xl cursor-pointer transition-all duration-200 border relative ${
                     isDragging
                       ? "opacity-40 scale-95 border-dashed border-green-500/50"
                       : isDragOver
                       ? "border-t-4 border-green-500 bg-green-500/5"
-                      : isActive 
-                        ? "bg-green-500/10 border-green-500/30 shadow-lg shadow-green-500/5" 
-                        : "bg-slate-800/40 border-white/5 hover:bg-slate-800/60 hover:border-white/10"
+                      : selectedSongs.has(song.id)
+                        ? "bg-purple-500/10 border-purple-500/30 shadow-lg shadow-purple-500/5"
+                        : isActive 
+                          ? "bg-green-500/10 border-green-500/30 shadow-lg shadow-green-500/5" 
+                          : "bg-slate-800/40 border-white/5 hover:bg-slate-800/60 hover:border-white/10"
                   }`}
                   onClick={() => playSong(song, i, likedSongs)}
                 >
+                  {/* Selection Checkbox */}
+                  <div 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      const newSelected = new Set(selectedSongs);
+                      if (newSelected.has(song.id)) newSelected.delete(song.id);
+                      else newSelected.add(song.id);
+                      setSelectedSongs(newSelected);
+                    }}
+                    className={`absolute -left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 flex items-center justify-center z-20 transition-all ${
+                      selectedSongs.has(song.id) ? "bg-purple-500 border-purple-400 scale-110 opacity-100" : "bg-slate-900 border-white/10 opacity-0 group-hover:opacity-100"
+                    } sm:opacity-100 sm:w-5 sm:h-5 sm:-left-1.5`}
+                  >
+                    {selectedSongs.has(song.id) && <i className="ri-check-line text-white text-xs font-bold"></i>}
+                  </div>
+
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    {/* Drag Handle */}
                     <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
+                      {/* Drag Handle */}
                       <div 
                         draggable
                         onDragStart={(e) => handleDragStart(e, i)}
                         onDragEnd={handleDragEnd}
-                        className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg transition-all"
+                        className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg transition-all"
                       >
-                        <i className="ri-draggable text-xl sm:text-2xl text-zinc-600 group-hover:text-green-500/50 transition-colors"></i>
+                        <i className="ri-draggable text-xl sm:text-lg text-zinc-600 group-hover:text-green-500/50 transition-colors"></i>
                       </div>
+
+                      {/* Index / Playing Indicator */}
                       <div className="w-6 sm:w-5 text-center pointer-events-none">
                         {isActive ? (
                           <img src={wavs} alt="" className="w-4 h-4 sm:w-3 sm:h-3 mx-auto" />
@@ -384,9 +481,56 @@ const Likes = () => {
       </div>
 
       <AnimatePresence>
+        {selectedSongs.size > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-[230px] md:bottom-28 left-0 right-0 mx-auto w-[calc(100%-2rem)] md:w-max max-w-lg md:max-w-none z-[110] flex items-center gap-4 bg-slate-900 border border-white/10 px-8 py-4 rounded-[2rem] shadow-2xl backdrop-blur-2xl sm:px-3 sm:py-3 sm:gap-2"
+          >
+            <div className="flex items-center gap-3 sm:gap-2">
+              <div className="w-10 h-10 sm:w-8 sm:h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-black shadow-lg shadow-purple-500/20 text-xs sm:text-[10px]">
+                {selectedSongs.size}
+              </div>
+              <div>
+                <h4 className="text-[10px] font-black text-white uppercase tracking-wider">Tracks</h4>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight opacity-50 italic sm:hidden">Multi-vibe action bar</p>
+              </div>
+            </div>
+
+            <div className="h-10 w-px bg-white/5 mx-2 sm:mx-1 sm:h-8" />
+
+            <div className="flex items-center gap-3 sm:gap-1.5">
+              <button
+                onClick={() => {
+                  const songsToSet = likedSongs.filter(s => selectedSongs.has(s.id));
+                  setPlaylistModalSong(songsToSet);
+                }}
+                className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all active:scale-95 flex items-center gap-2 sm:px-3 sm:py-2 sm:text-[9px]"
+              >
+                <i className="ri-folders-line text-blue-400"></i> <span className="sm:hidden">ADD TO PLAYLISTS</span><span className="hidden sm:inline">ADD TO PL</span>
+              </button>
+              <button
+                onClick={handleRemoveSongsBulk}
+                className="px-6 py-2.5 bg-red-500/10 border border-red-500/20 rounded-full text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 flex items-center gap-2 sm:px-3 sm:py-2 sm:text-[9px]"
+              >
+                <i className="ri-delete-bin-line"></i> <span className="sm:hidden">UNLIKE TRACKS</span><span className="hidden sm:inline">DEL</span>
+              </button>
+              <button
+                onClick={() => setSelectedSongs(new Set())}
+                className="w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+              >
+                <i className="ri-close-line text-2xl sm:text-xl"></i>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {playlistModalSong && (
           <AddToPlaylistModal 
-            song={playlistModalSong} 
+            songs={playlistModalSong} 
             onClose={() => setPlaylistModalSong(null)} 
           />
         )}
