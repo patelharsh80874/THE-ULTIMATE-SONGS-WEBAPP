@@ -5,7 +5,7 @@ import Tooltip from "./Tooltip";
 import toast from "react-hot-toast";
 
 const PartyDashboard = ({ onClose }) => {
-  const { socket, partyRoom, isHost, participants, createParty, joinParty, leaveParty } = useSocket();
+  const { socket, partyRoom, isHost, participants, createParty, joinParty, leaveParty, isSocketSupported } = useSocket();
   const [joinId, setJoinId] = useState("");
 
   const handleCreate = () => {
@@ -54,9 +54,31 @@ const PartyDashboard = ({ onClose }) => {
 
           {!partyRoom ? (
             <div className="space-y-6">
+              {!isSocketSupported && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl mb-6 flex items-start gap-3"
+                >
+                  <i className="ri-error-warning-fill text-amber-500 text-xl mt-0.5"></i>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Platform Limitation</p>
+                    <p className="text-[10px] font-bold text-zinc-400 leading-relaxed">
+                      Live Synchronization is currently disabled on the Vercel production environment. 
+                      To use Party Mode, please host the backend on a persistent server (like Render.com).
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
               <button
                 onClick={handleCreate}
-                className="w-full py-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-3xl text-white font-black uppercase tracking-[0.2em] text-sm shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-95 transition-all"
+                disabled={!isSocketSupported}
+                className={`w-full py-5 rounded-3xl text-white font-black uppercase tracking-[0.2em] text-sm shadow-lg transition-all ${
+                  isSocketSupported 
+                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 shadow-purple-500/20 hover:scale-[1.02] active:scale-95' 
+                    : 'bg-zinc-800 text-zinc-500 cursor-not-allowed opacity-50'
+                }`}
               >
                 Host a New Party
               </button>
@@ -77,7 +99,12 @@ const PartyDashboard = ({ onClose }) => {
                 />
                 <button
                   type="submit"
-                  className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-zinc-400 font-black uppercase tracking-widest text-xs hover:bg-white/10 hover:text-white transition-all active:scale-95"
+                  disabled={!isSocketSupported}
+                  className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${
+                    isSocketSupported
+                      ? 'bg-white/5 border border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white active:scale-95'
+                      : 'bg-zinc-800 text-zinc-600 cursor-not-allowed border-transparent'
+                  }`}
                 >
                   Join Party
                 </button>

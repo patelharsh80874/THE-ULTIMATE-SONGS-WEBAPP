@@ -28,7 +28,7 @@ const PlayerBar = () => {
   } = usePlayer();
 
   const { isLiked, toggleLike } = useLikedSongs();
-  const { partyRoom, participants, isHost } = useSocket();
+  const { partyRoom, participants, isHost, isSocketSupported } = useSocket();
   const [showQueue, setShowQueue] = useState(false);
   const [showParty, setShowParty] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
@@ -39,6 +39,17 @@ const PlayerBar = () => {
       setShowQueue(false);
     }
   }, [partyRoom, isHost]);
+
+  const handlePartyToggle = () => {
+    if (!isSocketSupported) {
+      toast.error("Listening Party is currently unavailable on Vercel due to platform limitations.", {
+        icon: '⚠️',
+        duration: 4000
+      });
+      return;
+    }
+    setShowParty(true);
+  };
 
   if (songlink.length === 0) return null;
 
@@ -171,13 +182,15 @@ const PlayerBar = () => {
               <div className="h-6 w-px bg-slate-700/50 mx-1"></div>
               
               {/* Listening Party Toggle */}
-              <Tooltip text={partyRoom ? "Manage Listening Party" : "Start Listening Party"}>
+              <Tooltip text={!isSocketSupported ? "Listening Party is Unavailable on Vercel" : partyRoom ? "Manage Listening Party" : "Start Listening Party"}>
                 <button
-                  onClick={() => setShowParty(true)}
+                  onClick={handlePartyToggle}
                   className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all relative ${
                     partyRoom
                       ? "bg-purple-600 text-white font-bold shadow-[0_0_15px_rgba(147,51,234,0.4)]"
-                      : "bg-slate-800 text-zinc-300 hover:text-white hover:bg-slate-700 border border-slate-700"
+                      : isSocketSupported 
+                        ? "bg-slate-800 text-zinc-300 hover:text-white hover:bg-slate-700 border border-slate-700"
+                        : "bg-zinc-900/50 text-zinc-600 border border-white/5 cursor-not-allowed opacity-60"
                   }`}
                 >
                   <i className={`text-sm ${partyRoom ? 'ri-team-fill' : 'ri-team-line'}`}></i>
@@ -314,10 +327,12 @@ const PlayerBar = () => {
                   <span className="text-[9px] font-bold uppercase tracking-wider">Lyrics</span>
                 </button>
               </Tooltip>
-              <Tooltip text={partyRoom ? "Manage Listening Party" : "Start Listening Party"}>
+              <Tooltip text={!isSocketSupported ? "Listening Party is Unavailable on Vercel" : partyRoom ? "Manage Listening Party" : "Start Listening Party"}>
                 <button
-                  onClick={() => setShowParty(true)}
-                  className={`flex flex-col items-center gap-1 transition-colors ${partyRoom ? "text-purple-400" : "text-zinc-400"}`}
+                  onClick={handlePartyToggle}
+                  className={`flex flex-col items-center gap-1 transition-colors ${
+                    partyRoom ? "text-purple-400" : isSocketSupported ? "text-zinc-400" : "text-zinc-600 opacity-50"
+                  }`}
                 >
                   <div className="flex items-center gap-1 leading-none">
                     <i className={`${partyRoom ? 'ri-team-fill' : 'ri-team-line'} text-[22px]`}></i>

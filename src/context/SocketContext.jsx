@@ -20,6 +20,12 @@ export const SocketProvider = ({ children }) => {
   const [partyRoom, setPartyRoom] = useState(null);
   const [isHost, setIsHost] = useState(false);
   const [participants, setParticipants] = useState([]);
+  
+  // Environment Detection for Vercel (No WebSocket Support on Serverless)
+  const isVercelHost = typeof window !== 'undefined' && 
+    (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('now.sh'));
+  
+  const isSocketSupported = process.env.NODE_ENV !== 'production' || !isVercelHost;
 
   // Cleanup on unmount or user logout
   useEffect(() => {
@@ -36,10 +42,17 @@ export const SocketProvider = ({ children }) => {
   const connectSocket = useCallback(() => {
     if (socket?.connected) return socket;
 
+    if (!isSocketSupported) {
+      console.warn("Socket connections are disabled on Vercel Production Environment.");
+      return null;
+    }
+
     console.log("Initializing on-demand socket connection...");
     const newSocket = io(API_BASE_URL, {
       withCredentials: true,
       transports: ["websocket", "polling"],
+      reconnectionAttempts: 3, // Prevent infinite retry loops on Vercel
+      reconnectionDelay: 5000,
     });
 
     // Attach core listeners
@@ -81,6 +94,10 @@ export const SocketProvider = ({ children }) => {
     
     // Ensure socket is connected
     const activeSocket = connectSocket();
+    if (!activeSocket) {
+      toast.error("Real-time sync is not supported on this platform.");
+      return null;
+    }
     
     const roomId = `PARTY-${user.username.toUpperCase() || 'HOST'}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     activeSocket.emit("join-party", { roomId, username: user.username, isCreation: true });
@@ -94,6 +111,10 @@ export const SocketProvider = ({ children }) => {
 
     // Ensure socket is connected
     const activeSocket = connectSocket();
+    if (!activeSocket) {
+      toast.error("Real-time sync is not supported on this platform.");
+      return false;
+    }
 
     activeSocket.emit("join-party", { roomId, username: user.username, isCreation: false });
     setPartyRoom(roomId);
@@ -130,6 +151,7 @@ export const SocketProvider = ({ children }) => {
         joinParty,
         leaveParty,
         emitPlayback,
+        isSocketSupported
       }}
     >
       {children}
