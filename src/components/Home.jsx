@@ -7,7 +7,7 @@ import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
 import wavs from "../../public/wavs.gif";
 import wait from "../../public/wait.gif";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Circ } from "gsap/all";
 import useLikedSongs from "../hooks/useLikedSongs";
 import { usePlayer } from "../context/PlayerContext";
@@ -16,6 +16,7 @@ import { LANGUAGE_OPTIONS } from "../constants";
 import { getHomeModules, searchSongs, getSongSuggestions } from "../services/api";
 import AddToPlaylistModal from "./AddToPlaylistModal";
 import Tooltip from "./Tooltip";
+import { useHistory } from "../hooks/useHistory";
 
 // Premium Card Component for Songs (Defined OUTSIDE Home to prevent re-mounting)
 const SongCard = ({ item, index, songlink, isPlaying, onPlay, addToQueue, setPlaylistModalSong }) => {
@@ -123,7 +124,9 @@ const Home = () => {
 
   const { playSong, songlink, isPlaying, currentIndex, addToQueue } = usePlayer();
   const { isLiked, toggleLike } = useLikedSongs();
-  const { user, logout } = useContext(AuthContext);
+  const { historySongs, loading: historyLoading } = useHistory();
+  const { user, logout, loading: authLoading } = useContext(AuthContext);
+
   const [playlistModalSong, setPlaylistModalSong] = useState(null);
 
   const getHome = async () => {
@@ -253,9 +256,9 @@ const Home = () => {
         transition={{ ease: Circ.easeIn, duration: 0.5 }}
         className="fixed z-[99] top-0 w-full min-h-[10vh] sm:min-h-0 bg-slate-800/90 backdrop-blur-xl border-b border-white/5 py-4 px-8 sm:px-4 sm:py-3 flex sm:flex-col sm:gap-4 items-center gap-6 shadow-lg"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <img className="w-10 h-10 sm:w-8 sm:h-8 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.3)]" src={logo} alt="Logo" />
-          <h1 className="text-xl sm:text-lg text-white font-black tracking-tight" style={{textShadow: "0 0 10px rgba(34,197,94,0.3)"}}>
+          <h1 className="text-xl sm:text-lg text-white font-black tracking-tight whitespace-nowrap" style={{textShadow: "0 0 10px rgba(34,197,94,0.3)"}}>
             ULTIMATE SONGS
           </h1>
         </div>
@@ -264,16 +267,19 @@ const Home = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ease: Circ.easeIn, duration: 0.8 }}
-          className="flex-1 flex items-center gap-2 sm:flex-wrap sm:justify-center"
+          className="flex-1 flex items-center justify-center gap-1.5 sm:flex-wrap sm:justify-center"
         >
           {/* Premium Pill Links */}
           {[
-            { name: "Songs", path: "/songs", icon: "ri-music-2-fill" },
-            { name: "Playlists", path: "/playlist", icon: "ri-play-list-2-fill" },
-            { name: "Artists", path: "/artists", icon: "ri-mic-2-fill" },
-            { name: "Albums", path: "/album", icon: "ri-album-fill" },
-            { name: "Likes", path: "/likes", icon: "ri-heart-3-fill" },
-            ...(user ? [{ name: "My Playlists", path: "/my-playlists", icon: "ri-folder-music-fill" }] : [])
+            { name: "Songs", path: "/songs", icon: "ri-music-2-fill", priority: "low" },
+            { name: "Playlists", path: "/playlist", icon: "ri-play-list-2-fill", priority: "low" },
+            { name: "Community", path: "/community", icon: "ri-global-line", priority: "high" },
+            { name: "Artists", path: "/artists", icon: "ri-mic-2-fill", priority: "low" },
+            { name: "Albums", path: "/album", icon: "ri-album-fill", priority: "low" },
+            { name: "Likes", path: "/likes", icon: "ri-heart-3-fill", priority: "high" },
+            ...(!authLoading && user ? [
+              { name: "My Playlists", path: "/my-playlists", icon: "ri-folder-music-fill", priority: "high" }
+            ] : [])
           ].map((link, index) => (
             <motion.div
               key={link.name}
@@ -293,29 +299,43 @@ const Home = () => {
             >
               <Link
                 to={link.path}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 sm:px-3 sm:py-1 rounded-full bg-slate-700/60 hover:bg-green-500 hover:text-black text-zinc-300 text-sm sm:text-xs font-bold transition-colors duration-300 border border-slate-600/50 hover:border-green-400 shadow-sm"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1 rounded-full bg-slate-700/60 hover:bg-green-500 hover:text-black text-zinc-300 text-[11px] sm:text-xs font-bold transition-colors duration-300 border border-slate-600/50 hover:border-green-400 shadow-sm"
               >
-                <i className={link.icon}></i>
+                <i className={`${link.icon} text-lg`}></i>
                 <span className="sm:hidden lg:inline">{link.name}</span>
               </Link>
             </motion.div>
           ))}
+
           
           <div className="w-[1px] h-6 bg-slate-600/50 mx-2 hidden md:block lg:block"></div>
           
-          {user ? (
-            <div className="flex items-center gap-3 ml-auto sm:ml-0 sm:w-full sm:justify-center">
-              <span className="text-green-400 font-bold text-sm bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
-                Hi, {user.username}
-              </span>
+          {authLoading ? (
+            <div className="flex items-center gap-3 ml-auto sm:ml-0 sm:w-full sm:justify-center min-w-[120px]">
+               <i className="ri-loader-4-line animate-spin text-green-500 text-xl"></i>
+            </div>
+          ) : user ? (
+            <div className="flex items-center gap-2 ml-auto sm:ml-0 sm:w-full sm:justify-center">
+              <Link 
+                to={`/profile/${user.username}`}
+                className="flex items-center gap-2 bg-green-500/5 hover:bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20 transition-all group/navprof"
+              >
+                <div className="w-5 h-5 rounded-md bg-green-500/20 flex items-center justify-center text-[10px] font-black text-green-400 uppercase group-hover/navprof:bg-green-500 group-hover/navprof:text-slate-950 transition-colors">
+                  {user.username[0]}
+                </div>
+                <span className="text-green-400 font-bold text-[11px] whitespace-nowrap flex items-center gap-1.5">
+                  Hi, {user.username}
+                  <i className="ri-external-link-line text-[10px] opacity-50 group-hover/navprof:opacity-100 transition-opacity"></i>
+                </span>
+              </Link>
               {user.role === 'admin' && (
-                <Link to="/admin" className="text-xs bg-purple-600/20 text-purple-400 border border-purple-500/30 px-3 py-1.5 rounded-full hover:bg-purple-600/40 font-bold transition-all">
-                  <i className="ri-dashboard-fill mr-1"></i> Admin
+                <Link to="/admin" className="text-[10px] bg-purple-600/20 text-purple-400 border border-purple-500/30 px-2.5 py-1.5 rounded-full hover:bg-purple-600/40 font-bold transition-all whitespace-nowrap">
+                  Admin
                 </Link>
               )}
               <button 
                 onClick={logout}
-                className="text-xs bg-slate-700 text-white hover:bg-red-500/90 px-3 py-1.5 rounded-full font-bold transition-all border border-slate-600 hover:border-red-400"
+                className="text-[10px] bg-slate-700 text-white hover:bg-red-500/90 px-2.5 py-1.5 rounded-full font-bold transition-all border border-slate-600 hover:border-red-400"
               >
                 Logout
               </button>
@@ -326,6 +346,7 @@ const Home = () => {
               <Link to="/register" className="text-sm bg-white text-black font-black px-5 py-1.5 rounded-full hover:scale-105 transition-all shadow-md">Sign up</Link>
             </div>
           )}
+
         </motion.div>
       </motion.div>
 
@@ -343,6 +364,30 @@ const Home = () => {
             />
           </div>
         </div>
+
+        {/* Recently Played */}
+        {!authLoading && user && historySongs.length > 0 && (
+          <div className="flex flex-col gap-4 w-full">
+            <h2 className="text-2xl sm:text-xl font-black text-white px-2 flex items-center gap-2">
+              Recently Played <i className="ri-history-line text-green-500"></i>
+            </h2>
+            <div className="flex gap-4 sm:gap-3 overflow-x-auto pb-6 pt-2 px-2 scrollbar-hide snap-x">
+              {historySongs.map((t, i) => (
+                <div key={`history-${t.id || i}`} className="snap-start">
+                  <SongCard
+                    item={t}
+                    index={i}
+                    songlink={songlink}
+                    isPlaying={isPlaying}
+                    onPlay={() => playSong(t, i, historySongs)}
+                    addToQueue={addToQueue}
+                    setPlaylistModalSong={setPlaylistModalSong}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Trending Songs */}
         <div className="flex flex-col gap-4 w-full">
@@ -433,13 +478,65 @@ const Home = () => {
         </div>
 
         {/* Footer */}
-        <div className="mt-10 px-4 py-8 border-t border-white/5 mx-2">
-          <p className="text-xs text-zinc-500 text-center max-w-2xl mx-auto leading-relaxed">
-            All trademarks and copyrights belong to their respective owners. All
-            media, images, and songs are the property of their respective
-            owners. This site is for educational purposes only.
-          </p>
-        </div>
+        {/* Premium Developer Footer */}
+        <footer className="mt-20 sm:mt-12 px-6 py-12 border-t border-white/5 mx-2 flex flex-col items-center gap-10">
+          <div className="flex flex-col items-center gap-6">
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-[10px] font-black tracking-[0.3em] text-zinc-600 uppercase">Crafted by</span>
+              <a 
+                href="https://patelharsh.in" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group flex flex-col items-center gap-1"
+              >
+                <h2 className="text-2xl sm:text-lg font-black text-white hover:text-green-400 transition-colors tracking-tight uppercase italic">
+                  Harsh Patel
+                </h2>
+                <div className="h-1 w-0 group-hover:w-full bg-green-500 transition-all duration-500 rounded-full"></div>
+              </a>
+            </div>
+
+            {/* Social & Pro Links */}
+            <div className="flex items-center gap-6 px-10 py-4 bg-slate-900/40 rounded-[2rem] border border-white/5 backdrop-blur-xl shadow-2xl">
+              <Tooltip text="Instagram" position="top">
+                <a href="https://instagram.com/patelharsh.in" target="_blank" rel="noopener noreferrer" className="text-xl text-zinc-500 hover:text-pink-500 transition-all hover:scale-110">
+                  <i className="ri-instagram-line"></i>
+                </a>
+              </Tooltip>
+              <Tooltip text="GitHub Profile" position="top">
+                <a href="https://github.com/patelharsh80874" target="_blank" rel="noopener noreferrer" className="text-xl text-zinc-500 hover:text-white transition-all hover:scale-110">
+                  <i className="ri-github-fill"></i>
+                </a>
+              </Tooltip>
+              <Tooltip text="Contact Mail" position="top">
+                <a href="mailto:patelharsh80874@yahoo.com" className="text-xl text-zinc-500 hover:text-amber-400 transition-all hover:scale-110">
+                  <i className="ri-mail-line"></i>
+                </a>
+              </Tooltip>
+              <div className="w-[1px] h-4 bg-white/10"></div>
+              <Tooltip text="Portfolio" position="top">
+                <a href="https://patelharsh.in" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-zinc-400 hover:text-white transition-all uppercase tracking-widest">
+                  Website
+                </a>
+              </Tooltip>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-6 w-full max-w-4xl">
+            <div className="flex flex-wrap justify-center gap-4 text-[9px] font-black text-zinc-600 tracking-widest uppercase">
+              <a href="https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP" target="_blank" rel="noopener noreferrer" className="hover:text-green-500 transition-colors flex items-center gap-2 bg-slate-900/50 px-4 py-2 rounded-full border border-white/5">
+                <i className="ri-star-line text-green-500"></i> Star on GitHub
+              </a>
+              <div className="bg-slate-900/50 px-4 py-2 rounded-full border border-white/5 flex items-center gap-2">
+                <i className="ri-git-branch-line"></i> v2.0.0
+              </div>
+            </div>
+
+            <p className="text-[10px] text-zinc-700 text-center leading-relaxed font-medium">
+              All trademarks and copyrights belong to their respective owners. All media, images, and songs are the property of their respective owners. This site is for educational and portfolio purposes only.
+            </p>
+          </div>
+        </footer>
       </div>
 
       {/* Add to Playlist Modal */}

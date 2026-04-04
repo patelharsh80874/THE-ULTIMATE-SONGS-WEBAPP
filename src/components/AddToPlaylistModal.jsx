@@ -7,15 +7,24 @@ import toast from "react-hot-toast";
 
 const AddToPlaylistModal = ({ song, onClose }) => {
   const { user } = useContext(AuthContext);
-  const { playlists, addSongToPlaylist, removeSongFromPlaylist, createPlaylist } = usePlaylist();
+  const { playlists, collaborations, fetchPlaylists, addSongToPlaylist, removeSongFromPlaylist, createPlaylist } = usePlaylist();
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+
+  // On-Demand Refresh: Fetch latest playlists when modal opens
+  React.useEffect(() => {
+    if (user) {
+      fetchPlaylists();
+    }
+  }, [user, fetchPlaylists]);
 
   if (!user) {
     toast.error("Please login to add songs to playlists");
     onClose();
     return null;
   }
+
+  const allPlaylists = [...playlists, ...collaborations];
 
   const handleAdd = async (playlistId) => {
     await addSongToPlaylist(playlistId, song.id);
@@ -113,16 +122,20 @@ const AddToPlaylistModal = ({ song, onClose }) => {
 
         {/* Playlist List */}
         <div className="overflow-y-auto overflow-x-hidden space-y-2 flex-1 pr-2 custom-scrollbar">
-          {playlists.length > 0 ? (
-            playlists.map((pl) => {
+          {allPlaylists.length > 0 ? (
+            allPlaylists.map((pl) => {
               const alreadyIn = isSongInPlaylist(pl);
+              const isShared = pl.collaborators && pl.collaborators.length > 0;
+              
               return (
                 <div
                   key={pl._id}
                   className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all border ${
                     alreadyIn
                       ? "bg-green-500/5 border-green-500/20 shadow-inner shadow-green-500/5"
-                      : "bg-slate-800/30 border-white/5 hover:bg-slate-800/60 hover:border-white/10"
+                      : isShared 
+                        ? "bg-purple-500/5 border-purple-500/10 hover:bg-purple-500/10"
+                        : "bg-slate-800/30 border-white/5 hover:bg-slate-800/60 hover:border-white/10"
                   }`}
                 >
                   <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -130,15 +143,26 @@ const AddToPlaylistModal = ({ song, onClose }) => {
                       className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${
                         alreadyIn
                           ? "bg-green-500/20 text-green-400"
-                          : "bg-slate-700/50 text-zinc-500"
+                          : isShared
+                            ? "bg-purple-500/20 text-purple-400"
+                            : "bg-slate-700/50 text-zinc-500"
                       }`}
                     >
-                      <i className={`text-xl ${alreadyIn ? "ri-play-list-2-fill" : "ri-play-list-add-line"}`}></i>
+                      <i className={`text-xl ${
+                        alreadyIn 
+                          ? "ri-play-list-2-fill" 
+                          : isShared 
+                            ? "ri-team-fill" 
+                            : "ri-play-list-add-line"
+                      }`}></i>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-black truncate tracking-tight uppercase ${alreadyIn ? "text-green-400" : "text-white opacity-80"}`}>{pl.name}</p>
                       <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-zinc-600 font-black tracking-widest uppercase italic">{pl.songs?.length || 0} TRACKS</span>
+                        <p className={`text-sm font-black truncate tracking-tight uppercase ${alreadyIn ? "text-green-400" : "text-white opacity-80"}`}>{pl.name}</p>
+                        {isShared && <span className="text-[7px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded-full font-black uppercase tracking-tighter border border-purple-500/10">SHARED</span>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-zinc-600 font-black tracking-widest uppercase italic">{pl.songs?.length || 0} TRACKS {isShared && `• BY ${pl.owner?.username || 'FRIEND'}`}</span>
                           {alreadyIn && <span className="text-[8px] bg-green-500/10 text-green-500 px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter shadow-sm border border-green-500/10">IN ARCHIVE</span>}
                       </div>
                     </div>

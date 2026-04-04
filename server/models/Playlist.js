@@ -25,6 +25,10 @@ const playlistSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    collaborators: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    }],
   },
   { timestamps: true }
 );

@@ -18,7 +18,7 @@ const Songs = () => {
   const [search, setSearch] = useState([]);
   const [page, setPage] = useState(1);
   const [searchclick, setSearchclick] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [playlistModalSong, setPlaylistModalSong] = useState(null);
 
   const { playSong, songlink, isPlaying, addToQueue } = usePlayer();

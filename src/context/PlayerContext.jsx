@@ -1,8 +1,13 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
+import axios from "axios";
+import API_BASE_URL from "../config/api";
 
 const PlayerContext = createContext();
 
 export const usePlayer = () => useContext(PlayerContext);
+
+import { useSocket } from "./SocketContext";
+import toast from "react-hot-toast";
 
 export const PlayerProvider = ({ children }) => {
   const [songlink, setSonglink] = useState([]);
@@ -10,20 +15,110 @@ export const PlayerProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [songsList, setSongsList] = useState([]);
   const audioRef = useRef();
+  
+  const { partyRoom, isHost, socket, emitPlayback } = useSocket();
+
+  // Host: Emit playback state changes
+  const syncHostState = useCallback((forceIsPlaying) => {
+    if (!isHost || !partyRoom || !audioRef.current || songlink.length === 0) return;
+    
+    emitPlayback({
+      song: songlink[0],
+      isPlaying: forceIsPlaying !== undefined ? forceIsPlaying : isPlaying,
+      currentTime: audioRef.current.currentTime,
+      timestamp: Date.now()
+    });
+  }, [isHost, partyRoom, songlink, isPlaying, emitPlayback]);
+
+  // Listen for remote playback state (for followers)
+  useEffect(() => {
+    if (!socket || isHost || !partyRoom) return;
+
+    const handlePlaybackState = (data) => {
+      // data: { song, isPlaying: remoteIsPlaying, currentTime, timestamp }
+      const { song, isPlaying: remoteIsPlaying, currentTime, timestamp } = data;
+
+      // Update song if it's different ID
+      setSonglink(prev => {
+        if (!prev[0] || String(prev[0].id) !== String(song?.id)) {
+          return [song];
+        }
+        return prev;
+      });
+
+      // Update playing status
+      setIsPlaying(remoteIsPlaying);
+      
+      const audio = audioRef.current;
+      if (audio) {
+        if (remoteIsPlaying && audio.paused) {
+          audio.play().catch(() => {});
+        } else if (!remoteIsPlaying && !audio.paused) {
+          audio.pause();
+        }
+
+        // Calculate actual remote time considering network latency
+        const latency = (Date.now() - timestamp) / 1000;
+        const actualRemoteTime = currentTime + (remoteIsPlaying ? latency : 0);
+
+        // Sync time if drift is > 1.5 seconds
+        if (Math.abs(audio.currentTime - actualRemoteTime) > 1.5) {
+          audio.currentTime = actualRemoteTime;
+        }
+      }
+    };
+
+    socket.on("playback-state", handlePlaybackState);
+    return () => socket.off("playback-state", handlePlaybackState);
+  }, [socket, isHost, partyRoom]);
+
+  // Request sync on join (for followers)
+  const syncJoinTime = useCallback(() => {
+    if (!socket || isHost || !partyRoom) return;
+    socket.emit("request-sync", partyRoom);
+  }, [socket, isHost, partyRoom]);
+
+  useEffect(() => {
+    syncJoinTime();
+  }, [syncJoinTime]);
+
+  // Host: Listen for sync requests from new joiners
+  useEffect(() => {
+    if (!socket || !isHost || !partyRoom) return;
+    const handleNeedSync = () => syncHostState();
+    socket.on("need-sync", handleNeedSync);
+    return () => socket.off("need-sync", handleNeedSync);
+  }, [socket, isHost, partyRoom, syncHostState]);
 
   // Set the songs list for next/prev navigation and play a song
   const playSong = useCallback(
     (song, index, list) => {
-      if (songlink[0]?.id === song?.id) {
+      // If in a party and NOT the host, prevent control
+      if (partyRoom && !isHost) {
+        toast.error("Only the host can control playback!", {
+          icon: "🎧",
+          style: {
+            borderRadius: '10px',
+            background: '#333',
+            color: '#fff',
+          },
+        });
+        return;
+      }
+
+      const currentSong = songlink[0];
+      const isSameSong = currentSong && String(currentSong.id) === String(song?.id);
+
+      if (isSameSong) {
         // Same song — toggle play/pause
         const audio = audioRef.current;
         if (audio) {
           if (!audio.paused) {
             audio.pause();
-            setIsPlaying(false);
+            // syncHostState(false) will be handled by native onPause in PlayerBar -> useEffect
           } else {
-            setIsPlaying(true);
             audio.play().catch((err) => console.error("Playback failed:", err));
+            // syncHostState(true) will be handled by native onPlay in PlayerBar -> useEffect
           }
         }
       } else {
@@ -31,37 +126,59 @@ export const PlayerProvider = ({ children }) => {
         if (list) setSongsList(list);
         setCurrentIndex(index);
         setSonglink([song]);
+        setIsPlaying(true); // Optimistic UI update
       }
     },
-    [songlink]
+    [songlink, isHost, partyRoom]
   );
+  
+  // Auto-emit when host seeks manually or periodically
+  useEffect(() => {
+    if (!isHost || !partyRoom || !isPlaying) return;
+    
+    const interval = setInterval(() => {
+      syncHostState();
+    }, 5000); // Sync every 5 seconds to prevent drift
+
+    return () => clearInterval(interval);
+  }, [isHost, partyRoom, isPlaying, syncHostState]);
+
+  // Instant host sync on play/pause
+  useEffect(() => {
+    if (isHost && partyRoom) {
+      syncHostState();
+    }
+  }, [isPlaying, isHost, partyRoom, syncHostState]);
 
   // Play a specific song from the queue by index
   const playFromQueue = useCallback(
     (index) => {
+      if (partyRoom && !isHost) return;
       if (index >= 0 && index < songsList.length) {
         setCurrentIndex(index);
         setSonglink([songsList[index]]);
       }
     },
-    [songsList]
+    [songsList, partyRoom, isHost]
   );
 
   // Next track
   const next = useCallback(() => {
+    if (partyRoom && !isHost) return;
     if (songsList.length === 0) return;
     const nextIdx = currentIndex < songsList.length - 1 ? currentIndex + 1 : 0;
     setCurrentIndex(nextIdx);
     setSonglink([songsList[nextIdx]]);
-  }, [currentIndex, songsList]);
+  }, [currentIndex, songsList, partyRoom, isHost]);
 
   // Previous track
   const previous = useCallback(() => {
+    if (partyRoom && !isHost) return;
     if (songsList.length === 0) return;
     const prevIdx = currentIndex > 0 ? currentIndex - 1 : songsList.length - 1;
     setCurrentIndex(prevIdx);
     setSonglink([songsList[prevIdx]]);
-  }, [currentIndex, songsList]);
+  }, [currentIndex, songsList, partyRoom, isHost]);
 
   // Remove song from queue
   const removeFromQueue = useCallback(
@@ -193,28 +310,69 @@ export const PlayerProvider = ({ children }) => {
     });
 
     navigator.mediaSession.setActionHandler("play", () => {
+      if (partyRoom && !isHost) return;
       audioRef.current?.play();
     });
     navigator.mediaSession.setActionHandler("pause", () => {
+      if (partyRoom && !isHost) return;
       audioRef.current?.pause();
     });
-    navigator.mediaSession.setActionHandler("previoustrack", () => previous());
-    navigator.mediaSession.setActionHandler("nexttrack", () => next());
-  }, [songlink, next, previous]);
+    navigator.mediaSession.setActionHandler("previoustrack", () => {
+      if (partyRoom && !isHost) return;
+      previous();
+    });
+    navigator.mediaSession.setActionHandler("nexttrack", () => {
+      if (partyRoom && !isHost) return;
+      next();
+    });
+  }, [songlink, next, previous, partyRoom, isHost]);
 
-  // Auto-play when songlink changes
+  // Auto-play when songlink changes (but not when just isPlaying status changes via syncHostState)
+  const lastPlayedId = useRef(null);
+
   useEffect(() => {
     if (songlink.length > 0 && audioRef.current) {
-      setIsPlaying(true);
-      audioRef.current.play().catch((err) => console.warn("Autoplay error:", err));
+      const currentId = songlink[0]?.id;
+      
+      // Only auto-play if it's a NEW song being loaded
+      if (currentId !== lastPlayedId.current) {
+        lastPlayedId.current = currentId;
+        setIsPlaying(true);
+        audioRef.current.play().then(() => {
+          if (isHost) syncHostState(true);
+        }).catch((err) => console.warn("Autoplay error:", err));
+      }
+    } else if (songlink.length === 0) {
+      lastPlayedId.current = null;
     }
-  }, [songlink]);
+  }, [songlink, isHost, syncHostState]);
 
   // Update document title
   useEffect(() => {
     const title = songlink[0]?.name;
     document.title = title ? title : "THE ULTIMATE SONGS";
   }, [songlink]);
+
+  // Update Listening History
+  useEffect(() => {
+    if (songlink.length > 0 && isPlaying) {
+      const updateHistory = async () => {
+        try {
+          await axios.post(`${API_BASE_URL}/api/users/history`, 
+            { songId: songlink[0].id },
+            { withCredentials: true }
+          );
+        } catch (error) {
+          // Silent fail if not logged in or other error
+          console.log("History update skipped (not logged in?)");
+        }
+      };
+      
+      // Debounce history update: wait 5 seconds of playback before adding to history
+      const timer = setTimeout(updateHistory, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [songlink, isPlaying]);
 
   const value = {
     songlink,
@@ -237,6 +395,7 @@ export const PlayerProvider = ({ children }) => {
     reorderQueue,
     addToQueue,
     clearQueue,
+    syncJoinTime,
   };
 
   return (

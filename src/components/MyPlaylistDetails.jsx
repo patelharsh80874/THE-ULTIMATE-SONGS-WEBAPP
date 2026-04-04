@@ -33,8 +33,13 @@ const MyPlaylistDetails = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [playlistModalSong, setPlaylistModalSong] = useState(null);
+  const [inviteUsername, setInviteUsername] = useState("");
+  const [inviting, setInviting] = useState(false);
+  const [error, setError] = useState(null); // { status: number, message: string }
 
-  const isOwner = user && playlist?.owner?._id === user._id;
+  const isOwner = user && (playlist?.owner?._id === user._id || playlist?.owner === user._id);
+  const isCollaborator = user && playlist?.collaborators?.some(c => (c._id || c) === user._id);
+  const canEdit = isOwner || isCollaborator;
 
   const fetchPlaylist = async (pageNum = 1, append = false) => {
     try {
@@ -60,10 +65,15 @@ const MyPlaylistDetails = () => {
       } else if (!append) {
         setHydratedSongs([]);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("Playlist not found");
-      navigate(-1);
+    } catch (err) {
+      console.error("[DEBUG] Fetch Error:", err);
+      if (err.response?.status === 403) {
+        setError({ status: 403, message: "This playlist is strictly private. Only the owner and invited contributors can build this vibe." });
+      } else if (err.response?.status === 404) {
+        setError({ status: 404, message: "This archive doesn't exist anymore. It might have been deleted or moved." });
+      } else {
+        setError({ status: 500, message: "Something went wrong while loading this collection." });
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -83,7 +93,34 @@ const MyPlaylistDetails = () => {
     }
   };
 
+  const handleAddCollaborator = async (e) => {
+    e.preventDefault();
+    if (!inviteUsername.trim()) return;
+    setInviting(true);
+    try {
+      await axios.post(`${API}/${id}/collaborators`, { username: inviteUsername.trim() }, { withCredentials: true });
+      toast.success("Collaborator added!", { style: TOAST_STYLE });
+      setInviteUsername("");
+      fetchPlaylist(1); // Refresh
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to add collaborator");
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleRemoveCollaborator = async (userId) => {
+    try {
+      await axios.delete(`${API}/${id}/collaborators/${userId}`, { withCredentials: true });
+      toast.success("Collaborator removed", { style: TOAST_STYLE });
+      fetchPlaylist(1); // Refresh
+    } catch (error) {
+      toast.error("Failed to remove collaborator");
+    }
+  };
+
   const handleRemoveSong = async (songId) => {
+    if (!canEdit) return;
     await removeSongFromPlaylist(id, songId);
     setHydratedSongs((prev) => prev.filter((s) => s.id !== songId));
   };
@@ -108,7 +145,7 @@ const MyPlaylistDetails = () => {
   const dragItem = useRef(null);
 
   const handleDragStart = (e, index) => {
-    if (!isOwner) return;
+    if (!canEdit) return;
     dragItem.current = index;
     setDragIndex(index);
     e.dataTransfer.effectAllowed = "move";
@@ -116,7 +153,7 @@ const MyPlaylistDetails = () => {
   };
 
   const handleDragOver = (e, index) => {
-    if (!isOwner) return;
+    if (!canEdit) return;
     e.preventDefault();
     setDragOverIndex(index);
 
@@ -150,6 +187,55 @@ const MyPlaylistDetails = () => {
   };
 
   if (loading) return <Loading />;
+  
+  if (error) {
+    return (
+      <div className="w-full min-h-screen bg-slate-900 flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Abstract Background Elements */}
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-purple-500/10 blur-[120px] rounded-full animate-pulse"></div>
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-green-500/10 blur-[120px] rounded-full animate-pulse delay-700"></div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="max-w-md w-full bg-slate-800/40 border border-white/5 p-10 rounded-[3rem] backdrop-blur-xl text-center shadow-2xl relative z-10"
+        >
+          <div className="w-24 h-24 bg-slate-800 rounded-3xl mx-auto flex items-center justify-center mb-8 border border-white/5 shadow-inner">
+            <i className={`text-5xl ${error.status === 403 ? "ri-lock-password-fill text-yellow-500" : error.status === 404 ? "ri-ghost-2-fill text-zinc-600" : "ri-error-warning-fill text-red-500"}`}></i>
+          </div>
+          
+          <h2 className="text-3xl font-black text-white tracking-tighter uppercase mb-4 leading-none">
+            {error.status === 403 ? "ACCESS DENIED" : error.status === 404 ? "NOT FOUND" : "ERROR OCCURRED"}
+          </h2>
+          
+          <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest mb-10 opacity-70 leading-relaxed italic">
+            "{error.message}"
+          </p>
+
+          <div className="flex flex-col gap-3">
+            {!user && error.status === 403 && (
+              <button
+                onClick={() => navigate("/login")}
+                className="w-full py-4 bg-green-500 text-slate-900 font-black rounded-2xl hover:bg-green-400 transition-all active:scale-95 shadow-lg shadow-green-500/20 uppercase tracking-widest text-xs"
+              >
+                Sign In to Access
+              </button>
+            )}
+            <button
+              onClick={() => navigate("/")}
+              className="w-full py-4 bg-white/5 border border-white/10 text-white font-black rounded-2xl hover:bg-white/10 transition-all active:scale-95 uppercase tracking-widest text-xs"
+            >
+              Go Back Home
+            </button>
+          </div>
+          
+          <p className="mt-8 text-[9px] text-zinc-600 font-black tracking-[0.3em] uppercase">
+            Protocol Error {error.status}
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
 
   const coverImage = hydratedSongs[0]?.image?.[2]?.url || noimg;
 
@@ -189,6 +275,17 @@ const MyPlaylistDetails = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Manual Sync Button */}
+          <Tooltip text="Sync Latest Changes" position="bottom">
+            <button
+              onClick={() => fetchPlaylist(1)}
+              disabled={loading || loadingMore}
+              className={`w-10 h-10 rounded-full bg-slate-800/80 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-green-400 hover:border-green-500/30 transition-all active:scale-90 shadow-xl ${loading || loadingMore ? 'animate-spin' : ''}`}
+            >
+              <i className="ri-refresh-line text-xl"></i>
+            </button>
+          </Tooltip>
+
           {isOwner && (
             <Tooltip text={playlist?.isPublic ? "Make Private" : "Make Public"} position="bottom">
               <button
@@ -281,7 +378,7 @@ const MyPlaylistDetails = () => {
               transition={{ delay: 0.2 }}
             >
               <span className="bg-purple-500/20 text-purple-400 text-[10px] font-bold px-3 py-1 rounded-full border border-purple-500/30 uppercase tracking-widest">
-                PERSONAL PLAYLIST
+                {isCollaborator ? "COLLABORATIVE PLAYLIST" : "PERSONAL PLAYLIST"}
               </span>
               <h2 className="text-5xl sm:text-2xl font-black text-white mt-4 sm:mt-2 tracking-tighter leading-tight drop-shadow-2xl">
                 {playlist?.name}
@@ -299,6 +396,74 @@ const MyPlaylistDetails = () => {
             </motion.div>
           </div>
         </div>
+
+        {/* Collaborators Section */}
+        {(isOwner || (playlist?.collaborators && playlist.collaborators.length > 0)) && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-12 bg-slate-800/40 border border-white/5 p-6 rounded-[2rem] backdrop-blur-md"
+          >
+            <div className="flex xl:flex-row flex-col justify-between items-center xl:items-start gap-6">
+              <div className="flex flex-col gap-1 w-full">
+                <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                  <i className="ri-group-line text-green-500"></i> Contributors
+                </h3>
+                <p className="text-[10px] text-zinc-500 font-bold mt-1 uppercase opacity-70 leading-relaxed max-w-2xl">
+                  Invite friends to build this archive together. Collaborators can also invite others and add or remove tracks in real-time. 
+                  Even if this playlist is set to private, all contributors will always maintain full access to the vibe!
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <div className="px-3 py-1.5 bg-green-500/20 text-green-400 text-[10px] font-black rounded-full border border-green-500/30 flex items-center gap-2">
+                    <i className="ri-vip-crown-fill text-xs"></i> OWNER: {playlist?.owner?.username}
+                  </div>
+                  {playlist?.collaborators?.map(collab => (
+                    <div key={collab._id || collab} className="flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 text-zinc-300 text-[10px] font-bold rounded-full border border-white/10">
+                      <i className="ri-user-line text-zinc-500"></i>
+                      {collab.username || "User"}
+                      {isOwner && (
+                        <Tooltip text="Remove Contributor">
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Remove ${collab.username || 'this user'} from contributors?`)) {
+                                handleRemoveCollaborator(collab._id || collab);
+                              }
+                            }}
+                            className="ml-1 w-4 h-4 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-90"
+                          >
+                            <i className="ri-close-line text-xs font-bold"></i>
+                          </button>
+                        </Tooltip>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {canEdit && (
+                <form onSubmit={handleAddCollaborator} className="flex items-center gap-2 w-full max-w-sm">
+                  <div className="relative flex-1">
+                    <i className="ri-user-add-line absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+                    <input 
+                      type="text"
+                      placeholder="Invite by username..."
+                      value={inviteUsername}
+                      onChange={(e) => setInviteUsername(e.target.value)}
+                      className="w-full bg-slate-900/50 border border-white/10 rounded-full py-2.5 pl-11 pr-4 text-xs font-bold focus:border-green-500/50 focus:outline-none transition-all placeholder:text-zinc-700"
+                    />
+                  </div>
+                  <button 
+                    type="submit"
+                    disabled={inviting}
+                    className="p-2.5 bg-green-500 hover:bg-green-400 text-slate-900 rounded-full transition-all active:scale-90 disabled:opacity-50 shadow-lg shadow-green-500/20"
+                  >
+                    {inviting ? <i className="ri-loader-4-line animate-spin"></i> : <i className="ri-add-line font-bold"></i>}
+                  </button>
+                </form>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Track List */}
         <div 
@@ -331,25 +496,27 @@ const MyPlaylistDetails = () => {
                     }`}
                   >
                     {/* Drag Handle / Index / Playing Indicator */}
-                    <div className="w-8 sm:w-6 text-center flex-shrink-0 flex items-center justify-center">
-                      <div className="flex flex-col items-center gap-1">
-                        {isOwner && (
-                          <div 
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, i)}
-                            onDragEnd={handleDragEnd}
-                            className="cursor-grab active:cursor-grabbing p-1"
-                          >
-                            <i className="ri-draggable text-xl text-zinc-600 group-hover:text-green-500/50 transition-colors"></i>
-                          </div>
-                        )}
+                    <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
+                      {canEdit && (
+                        <div 
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, i)}
+                          onDragEnd={handleDragEnd}
+                          className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg transition-all"
+                        >
+                          <i className="ri-draggable text-xl sm:text-2xl text-zinc-600 group-hover:text-green-500/50 transition-colors"></i>
+                        </div>
+                      )}
+                      
+                      <div className="w-6 sm:w-5 text-center pointer-events-none">
                         {isActive ? (
                           <img src={wavs} alt="" className="w-4 h-4 sm:w-3 sm:h-3 mx-auto" />
                         ) : (
-                          <span className="text-[10px] font-bold text-zinc-500 group-hover:text-green-400 transition-colors">{i + 1}</span>
+                          <span className="text-[10px] sm:text-[9px] font-bold text-zinc-500 group-hover:text-green-400 transition-colors">{i + 1}</span>
                         )}
                       </div>
                     </div>
+
 
                     {/* Song Cover */}
                     <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-lg overflow-hidden flex-shrink-0 relative shadow-md">
@@ -414,7 +581,7 @@ const MyPlaylistDetails = () => {
                           <i className="ri-folder-add-line text-lg sm:text-base"></i>
                         </button>
                       </Tooltip>
-                      {isOwner && (
+                      {canEdit && (
                         <Tooltip text="Remove from Playlist">
                           <button 
                             onClick={(e) => { 

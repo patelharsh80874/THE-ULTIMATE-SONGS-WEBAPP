@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    listeningHistory: {
+      type: [String], // Array of JioSaavn song IDs
+      default: [],
+    },
   },
   { timestamps: true }
 );

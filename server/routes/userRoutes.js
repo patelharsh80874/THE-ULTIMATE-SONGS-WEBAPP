@@ -10,6 +10,7 @@ import {
   deleteUser,
   updateUserRole,
 } from '../controllers/userController.js';
+import { getHistory, addToHistory } from '../controllers/historyController.js';
 import { protect, admin } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -24,6 +25,9 @@ router.route('/likes/:id')
 
 router.post('/likes/import', protect, importSharedPlaylistKeys);
 router.put('/likes/reorder', protect, reorderLikedSongs);
+router.route('/history')
+  .get(protect, getHistory)
+  .post(protect, addToHistory);
 
 // Public Shared Playlist Route
 router.get('/shared/:id', getSharedPlaylist);

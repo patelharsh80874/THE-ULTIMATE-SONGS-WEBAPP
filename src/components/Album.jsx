@@ -14,9 +14,10 @@ const Album = () => {
   const [albums, setAlbums] = useState([]);
   const [searchClickState, setSearchClickState] = useState(false);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
 
   const getAlbums = async () => {
+    if (!requery) return;
     try {
       const { data } = await axios.get(
         `https://jiosaavn-roan.vercel.app/api/search/albums?query=${requery}&page=${page}&limit=20`
@@ -26,7 +27,7 @@ const Album = () => {
       if (newItems.length > 0) {
         const filtered = newItems.filter(newItem => !albums.some(prevItem => prevItem.id === newItem.id));
         setAlbums(prev => [...prev, ...filtered]);
-        setHasMore(filtered.length > 0);
+        setHasMore(newItems.length >= 20); // If we got a full page, there's likely more
         setPage(prev => prev + 1);
         localStorage.setItem("albums", JSON.stringify([...albums, ...filtered]));
       } else {
@@ -34,8 +35,10 @@ const Album = () => {
       }
     } catch (error) {
       console.error(error);
+      setHasMore(false);
     }
   };
+
 
   const handleSearch = () => {
     if (!query.trim()) return toast.error("Enter an album name");
@@ -80,7 +83,7 @@ const Album = () => {
         </Tooltip>
 
         <div className="relative flex-1 max-w-2xl">
-          <i className="ri-album-line absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-lg"></i>
+          <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-lg"></i>
           <input
             className="w-full bg-slate-800/50 rounded-full pl-12 pr-4 py-2.5 sm:py-2 text-white border border-white/5 focus:border-green-500/50 outline-none transition-all placeholder:text-zinc-500 sm:text-sm"
             onChange={(e) => setQuery(e.target.value)}
@@ -93,10 +96,18 @@ const Album = () => {
 
         <button
           onClick={handleSearch}
+          className="hidden sm:flex w-10 h-10 rounded-full bg-slate-800 border border-white/5 items-center justify-center text-white hover:border-green-500/50 transition-all font-bold"
+        >
+          <i className="ri-search-line"></i>
+        </button>
+
+        <button
+          onClick={handleSearch}
           className="sm:hidden px-6 py-2.5 bg-green-500 text-slate-900 rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-all shadow-lg shadow-green-500/10"
         >
           SEARCH
         </button>
+
       </motion.div>
 
       {/* Grid Content */}

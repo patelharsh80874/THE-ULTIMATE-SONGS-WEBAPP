@@ -3,17 +3,19 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
+import { initSocket } from './socket.js';
+import { renderApiDocs } from './controllers/docController.js';
 
-// Load env variables
-dotenv.config();
-
-// Connect to database
-connectDB();
-
+// Route Imports
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import playlistRoutes from './routes/playlistRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
+
+// Load env variables & Connect DB
+dotenv.config();
+connectDB();
 
 const app = express();
 
@@ -25,7 +27,6 @@ const allowedOrigins = [
 
 app.use(cors({ 
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
@@ -38,18 +39,19 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes);
 
-// Basic Route for testing
-app.get('/', (req, res) => {
-  res.send('THE ULTIMATE SONGS API is running...');
-});
+// Documentation Dashboard (Markdown to HTML)
+app.get('/', renderApiDocs);
 
-// Global Error Handler
+/**
+ * Global Error Handler
+ */
 app.use((err, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode).json({
@@ -60,12 +62,14 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Only listen if not running in a serverless environment (Vercel)
+// Start Server Logic
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server running in http://localhost:${PORT} ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Server running in http://localhost:${PORT} [${process.env.NODE_ENV || 'development'}] on port ${PORT}`);
   });
+  
+  // Initialize WebSockets
+  initSocket(server, allowedOrigins);
 }
 
 export default app;
-

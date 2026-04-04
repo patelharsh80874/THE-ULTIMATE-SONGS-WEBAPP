@@ -12,12 +12,19 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.3.3"
+    "mongoose": "^9.3.3",
+    "node-fetch": "^3.3.2",
+    "socket.io": "^4.8.3",
+    "spotify-url-info": "^3.3.0",
+    "string-similarity": "^4.0.4",
+    "youtube-sr": "^4.3.12",
+    "yt-search": "^2.13.1"
   }
 }

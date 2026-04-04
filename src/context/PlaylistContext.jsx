@@ -20,19 +20,26 @@ export const usePlaylist = () => {
 
 export const PlaylistProvider = ({ children }) => {
   const [playlists, setPlaylists] = useState([]);
+  const [collaborations, setCollaborations] = useState([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const { user } = useContext(AuthContext);
 
-  // Fetch user's playlists
+  // Fetch user's playlists (owned and collaborations)
   const fetchPlaylists = useCallback(async () => {
     if (!user) {
       setPlaylists([]);
+      setCollaborations([]);
       return;
     }
     setLoadingPlaylists(true);
     try {
-      const { data } = await axios.get(`${API}/my`, { withCredentials: true });
-      setPlaylists(data);
+      // Fetch owned
+      const resOwned = await axios.get(`${API}/my`, { withCredentials: true });
+      setPlaylists(resOwned.data);
+      
+      // Fetch collaborations
+      const resCollab = await axios.get(`${API}/collaborations`, { withCredentials: true });
+      setCollaborations(resCollab.data);
     } catch (error) {
       console.error("Failed to fetch playlists:", error);
     } finally {
@@ -81,8 +88,11 @@ export const PlaylistProvider = ({ children }) => {
         { songId },
         { withCredentials: true }
       );
-      // Update local state
+      // Update local state for both owned and collaborations
       setPlaylists(prev =>
+        prev.map(p => (p._id === playlistId ? { ...p, songs: data.songs } : p))
+      );
+      setCollaborations(prev =>
         prev.map(p => (p._id === playlistId ? { ...p, songs: data.songs } : p))
       );
       toast.success("Song added to playlist!", { style: TOAST_STYLE, duration: 1500 });
@@ -106,6 +116,9 @@ export const PlaylistProvider = ({ children }) => {
         { withCredentials: true }
       );
       setPlaylists(prev =>
+        prev.map(p => (p._id === playlistId ? { ...p, songs: data.songs } : p))
+      );
+      setCollaborations(prev =>
         prev.map(p => (p._id === playlistId ? { ...p, songs: data.songs } : p))
       );
       toast.success("Song removed from playlist", { style: TOAST_STYLE, duration: 1500 });
@@ -171,10 +184,25 @@ export const PlaylistProvider = ({ children }) => {
     }
   }, []);
 
+  // Fetch community playlists (all public ones)
+  const fetchCommunityPlaylists = useCallback(async (page = 1, search = '', sortBy = 'updatedAt') => {
+    try {
+      const { data } = await axios.get(`${API}/community`, {
+        params: { page, search, sortBy, limit: 12 },
+        withCredentials: true
+      });
+      return data; // returns { playlists, total, page, totalPages, hasMore }
+    } catch (error) {
+      console.error("Failed to fetch community playlists:", error);
+      return null;
+    }
+  }, []);
+
   return (
     <PlaylistContext.Provider
       value={{
         playlists,
+        collaborations,
         loadingPlaylists,
         fetchPlaylists,
         createPlaylist,
@@ -184,6 +212,7 @@ export const PlaylistProvider = ({ children }) => {
         importPlaylist,
         togglePlaylistVisibility,
         reorderSongs,
+        fetchCommunityPlaylists,
       }}
     >
       {children}

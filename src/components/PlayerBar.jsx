@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Circ } from "gsap/all";
@@ -9,6 +9,9 @@ import handleGenerateAudio2 from "../utils/audioUtils2";
 import Queue from "./Queue";
 import AddToPlaylistModal from "./AddToPlaylistModal";
 import Tooltip from "./Tooltip";
+import PartyDashboard from "./PartyDashboard";
+import { useSocket } from "../context/SocketContext";
+import LyricsOverlay from "./LyricsOverlay";
 
 const PlayerBar = () => {
   const navigate = useNavigate();
@@ -21,11 +24,21 @@ const PlayerBar = () => {
     next,
     previous,
     songsList,
+    syncJoinTime,
   } = usePlayer();
 
   const { isLiked, toggleLike } = useLikedSongs();
+  const { partyRoom, participants, isHost } = useSocket();
   const [showQueue, setShowQueue] = useState(false);
+  const [showParty, setShowParty] = useState(false);
+  const [showLyrics, setShowLyrics] = useState(false);
   const [playlistModalSong, setPlaylistModalSong] = useState(null);
+
+  useEffect(() => {
+    if (partyRoom && !isHost) {
+      setShowQueue(false);
+    }
+  }, [partyRoom, isHost]);
 
   if (songlink.length === 0) return null;
 
@@ -34,6 +47,16 @@ const PlayerBar = () => {
       {/* Queue Panel */}
       <AnimatePresence>
         {showQueue && <Queue onClose={() => setShowQueue(false)} />}
+      </AnimatePresence>
+
+      {/* Party Dashboard */}
+      <AnimatePresence>
+        {showParty && <PartyDashboard onClose={() => setShowParty(false)} />}
+      </AnimatePresence>
+
+      {/* Lyrics Overlay */}
+      <AnimatePresence>
+        {showLyrics && <LyricsOverlay onClose={() => setShowLyrics(false)} />}
       </AnimatePresence>
 
       <motion.div
@@ -59,8 +82,8 @@ const PlayerBar = () => {
                       alt={e?.name}
                     />
                   </Tooltip>
-                  {isPlaying && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900 animate-pulse"></div>
+                  {(isPlaying || partyRoom) && (
+                    <div className={`absolute -top-1 -right-1 w-3 h-3 ${partyRoom ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]' : 'bg-green-500'} rounded-full border-2 border-slate-900 animate-pulse`}></div>
                   )}
                 </div>
                 <div className="flex flex-col min-w-0 justify-center">
@@ -103,10 +126,13 @@ const PlayerBar = () => {
 
             {/* 2. Center Layout: Audio Controls */}
             <div className="flex items-center justify-center gap-4 sm:gap-2 w-[40%] sm:w-full flex-1 max-w-2xl px-4 sm:px-0">
-              <Tooltip text="Previous Song">
+              <Tooltip text={partyRoom && !isHost ? "Only the host can skip" : "Previous Song"}>
                 <button
                   onClick={previous}
-                  className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                  disabled={partyRoom && !isHost}
+                  className={`w-10 h-10 flex items-center justify-center transition-all ${
+                    partyRoom && !isHost ? "text-zinc-600 cursor-not-allowed" : "text-zinc-400 hover:text-white"
+                  }`}
                 >
                   <i className="ri-skip-back-fill text-2xl"></i>
                 </button>
@@ -117,19 +143,23 @@ const PlayerBar = () => {
                   ref={audioRef}
                   onPause={() => setIsPlaying(false)}
                   onPlay={() => setIsPlaying(true)}
+                  onLoadedMetadata={() => { if(partyRoom && !isHost) syncJoinTime(); }}
                   className="w-full h-10 appearance-none bg-transparent outline-none rounded-full invert-[0.8] hue-rotate-180 contrast-125"
-                  controls
+                  controls={!partyRoom || isHost}
                   controlsList="nodownload noplaybackrate"
                   autoPlay
                   onEnded={next}
                   src={e?.downloadUrl?.[4]?.url}
                 ></audio>
               </div>
-
-              <Tooltip text="Next Song">
+ 
+              <Tooltip text={partyRoom && !isHost ? "Only the host can skip" : "Next Song"}>
                 <button
                   onClick={next}
-                  className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                  disabled={partyRoom && !isHost}
+                  className={`w-10 h-10 flex items-center justify-center transition-all ${
+                    partyRoom && !isHost ? "text-zinc-600 cursor-not-allowed" : "text-zinc-400 hover:text-white"
+                  }`}
                 >
                   <i className="ri-skip-forward-fill text-2xl"></i>
                 </button>
@@ -137,7 +167,36 @@ const PlayerBar = () => {
             </div>
 
             {/* 3. Right Layout: Actions (Desktop) */}
-            <div className="flex items-center justify-end gap-3 w-[30%] min-w-[220px] sm:hidden">
+            <div className="flex items-center justify-end gap-2 w-[30%] min-w-[220px] sm:hidden">
+              <div className="h-6 w-px bg-slate-700/50 mx-1"></div>
+              
+              {/* Listening Party Toggle */}
+              <Tooltip text={partyRoom ? "Manage Listening Party" : "Start Listening Party"}>
+                <button
+                  onClick={() => setShowParty(true)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all relative ${
+                    partyRoom
+                      ? "bg-purple-600 text-white font-bold shadow-[0_0_15px_rgba(147,51,234,0.4)]"
+                      : "bg-slate-800 text-zinc-300 hover:text-white hover:bg-slate-700 border border-slate-700"
+                  }`}
+                >
+                  <i className={`text-sm ${partyRoom ? 'ri-team-fill' : 'ri-team-line'}`}></i>
+                  {partyRoom && <span className="text-[10px] font-black uppercase tracking-tighter">{participants.length} LIVE</span>}
+                </button>
+              </Tooltip>
+
+              <div className="h-6 w-px bg-slate-700/50 mx-1"></div>
+              
+              {/* Lyrics Toggle */}
+              <Tooltip text="View Lyrics">
+                <button
+                  onClick={() => setShowLyrics(true)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all bg-slate-800 text-zinc-300 hover:text-green-400 hover:bg-slate-700 border border-slate-700`}
+                >
+                  <i className="ri-mic-2-line text-xl"></i>
+                </button>
+              </Tooltip>
+
               <div className="h-6 w-px bg-slate-700/50 mx-1"></div>
               
               {/* 320kbps Download */}
@@ -195,10 +254,12 @@ const PlayerBar = () => {
               <div className="h-6 w-px bg-slate-700/50 mx-1"></div>
 
               {/* Queue Toggle */}
-              <Tooltip text="Toggle Queue">
+              <Tooltip text={partyRoom && !isHost ? "Queue is managed by the host" : "Toggle Queue"}>
                 <button
                   onClick={() => setShowQueue(!showQueue)}
+                  disabled={partyRoom && !isHost}
                   className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                    partyRoom && !isHost ? "opacity-50 cursor-not-allowed text-zinc-500 bg-slate-800 border border-slate-700" :
                     showQueue
                       ? "bg-green-500 text-black font-bold shadow-[0_0_15px_rgba(34,197,94,0.3)]"
                       : "bg-slate-800 text-zinc-300 hover:text-white hover:bg-slate-700 border border-slate-700"
@@ -244,10 +305,35 @@ const PlayerBar = () => {
                   <span className="text-[9px] font-bold uppercase tracking-wider">Flac Format</span>
                 </button>
               </Tooltip>
-              <Tooltip text="Current Playback Queue">
+              <Tooltip text="View Song Lyrics">
+                <button
+                  onClick={() => setShowLyrics(true)}
+                  className="text-zinc-400 hover:text-green-400 flex flex-col items-center gap-1 transition-colors"
+                >
+                  <i className="ri-mic-2-line text-[22px] leading-none"></i>
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Lyrics</span>
+                </button>
+              </Tooltip>
+              <Tooltip text={partyRoom ? "Manage Listening Party" : "Start Listening Party"}>
+                <button
+                  onClick={() => setShowParty(true)}
+                  className={`flex flex-col items-center gap-1 transition-colors ${partyRoom ? "text-purple-400" : "text-zinc-400"}`}
+                >
+                  <div className="flex items-center gap-1 leading-none">
+                    <i className={`${partyRoom ? 'ri-team-fill' : 'ri-team-line'} text-[22px]`}></i>
+                    {partyRoom && <span className="text-[10px] font-bold bg-purple-500/20 px-1.5 rounded-sm">{participants.length}</span>}
+                  </div>
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Party</span>
+                </button>
+              </Tooltip>
+              <Tooltip text={partyRoom && !isHost ? "Queue is managed by the host" : "Current Playback Queue"}>
                 <button
                   onClick={() => setShowQueue(!showQueue)}
-                  className={`flex flex-col items-center gap-1 transition-colors ${showQueue ? "text-green-400" : "text-zinc-400"}`}
+                  disabled={partyRoom && !isHost}
+                  className={`flex flex-col items-center gap-1 transition-colors ${
+                    partyRoom && !isHost ? "opacity-30 cursor-not-allowed text-zinc-600" :
+                    showQueue ? "text-green-400" : "text-zinc-400"
+                  }`}
                 >
                   <div className="flex items-center gap-1 leading-none">
                     <i className="ri-play-list-2-fill text-[22px]"></i>

@@ -80,7 +80,7 @@ const Playlist = () => {
         </Tooltip>
 
         <div className="relative flex-1 max-w-2xl">
-          <i className="ri-play-list-2-line absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-lg"></i>
+          <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-lg"></i>
           <input
             className="w-full bg-slate-800/50 rounded-full pl-12 pr-4 py-2.5 sm:py-2 text-white border border-white/5 focus:border-green-500/50 outline-none transition-all placeholder:text-zinc-500 sm:text-sm"
             onChange={(e) => setQuery(e.target.value)}
@@ -93,10 +93,18 @@ const Playlist = () => {
 
         <button
           onClick={handleSearch}
+          className="hidden sm:flex w-10 h-10 rounded-full bg-slate-800 border border-white/5 items-center justify-center text-white hover:border-green-500/50 transition-all font-bold"
+        >
+          <i className="ri-search-line"></i>
+        </button>
+
+        <button
+          onClick={handleSearch}
           className="sm:hidden px-6 py-2.5 bg-green-500 text-slate-900 rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-all shadow-lg shadow-green-500/10"
         >
           SEARCH
         </button>
+
       </motion.div>
 
       {/* Grid Content */}

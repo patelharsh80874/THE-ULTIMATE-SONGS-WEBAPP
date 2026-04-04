@@ -6,7 +6,11 @@ import User from '../models/User.js';
 // @access  Private
 export const createPlaylist = async (req, res, next) => {
   try {
-    const { name, description, isPublic } = req.body;
+    console.log('[DEBUG] Create Playlist Hit');
+    console.log('[DEBUG] User:', req.user?._id);
+    console.log('[DEBUG] Body:', JSON.stringify(req.body));
+
+    const { name, description, isPublic, songs } = req.body;
 
     if (!name || name.trim() === '') {
       res.status(400);
@@ -18,9 +22,10 @@ export const createPlaylist = async (req, res, next) => {
       description: description?.trim() || '',
       owner: req.user._id,
       isPublic: isPublic === undefined ? true : isPublic,
+      songs: Array.isArray(songs) ? songs : []
     });
 
-    res.status(201).json(playlist);
+    return res.status(201).json(playlist);
   } catch (error) {
     next(error);
   }
@@ -33,7 +38,7 @@ export const getMyPlaylists = async (req, res, next) => {
   try {
     const playlists = await Playlist.find({ owner: req.user._id })
       .sort({ updatedAt: -1 })
-      .select('name description songs isPublic createdAt updatedAt');
+      .select('name description songs isPublic collaborators owner createdAt updatedAt');
 
     // Return playlists with song count (virtual field handles this)
     res.status(200).json(playlists);
@@ -48,7 +53,8 @@ export const getMyPlaylists = async (req, res, next) => {
 export const getPlaylistById = async (req, res, next) => {
   try {
     const playlist = await Playlist.findById(req.params.id)
-      .populate('owner', 'username');
+      .populate('owner', 'username')
+      .populate('collaborators', 'username');
 
     if (!playlist) {
       res.status(404);
@@ -56,10 +62,11 @@ export const getPlaylistById = async (req, res, next) => {
     }
 
     // Check access: public playlists are visible to all,
-    // private playlists only to the owner
-    const isOwner = req.user && String(playlist.owner._id || playlist.owner) === String(req.user._id);
+    // private playlists only to the owner or collaborators
+    const isOwner = req.user && String(playlist.owner?._id || playlist.owner) === String(req.user._id);
+    const isCollaborator = req.user && playlist.collaborators?.some(c => String(c._id || c) === String(req.user._id));
     
-    if (!playlist.isPublic && !isOwner) {
+    if (!playlist.isPublic && !isOwner && !isCollaborator) {
       res.status(403);
       throw new Error('This playlist is private');
     }
@@ -85,6 +92,7 @@ export const getPlaylistById = async (req, res, next) => {
       totalPages: Math.ceil(totalSongs / limit),
       createdAt: playlist.createdAt,
       updatedAt: playlist.updatedAt,
+      collaborators: playlist.collaborators,
     });
   } catch (error) {
     next(error);
@@ -103,7 +111,10 @@ export const updatePlaylist = async (req, res, next) => {
       throw new Error('Playlist not found');
     }
 
-    if (playlist.owner.toString() !== req.user._id.toString()) {
+    const isOwner = playlist.owner.toString() === req.user._id.toString();
+    const isCollaborator = playlist.collaborators?.some(c => (c._id || c).toString() === req.user._id.toString());
+
+    if (!isOwner && !isCollaborator) {
       res.status(403);
       throw new Error('Not authorized to edit this playlist');
     }
@@ -157,7 +168,10 @@ export const addSongToPlaylist = async (req, res, next) => {
       throw new Error('Playlist not found');
     }
 
-    if (playlist.owner.toString() !== req.user._id.toString()) {
+    const isOwner = playlist.owner.toString() === req.user._id.toString();
+    const isCollaborator = playlist.collaborators?.some(c => (c._id || c).toString() === req.user._id.toString());
+
+    if (!isOwner && !isCollaborator) {
       res.status(403);
       throw new Error('Not authorized to modify this playlist');
     }
@@ -188,7 +202,10 @@ export const removeSongFromPlaylist = async (req, res, next) => {
       throw new Error('Playlist not found');
     }
 
-    if (playlist.owner.toString() !== req.user._id.toString()) {
+    const isOwner = playlist.owner.toString() === req.user._id.toString();
+    const isCollaborator = playlist.collaborators?.some(c => (c._id || c).toString() === req.user._id.toString());
+
+    if (!isOwner && !isCollaborator) {
       res.status(403);
       throw new Error('Not authorized to modify this playlist');
     }
@@ -215,7 +232,10 @@ export const reorderPlaylistSongs = async (req, res, next) => {
       throw new Error('Playlist not found');
     }
 
-    if (playlist.owner.toString() !== req.user._id.toString()) {
+    const isOwner = playlist.owner.toString() === req.user._id.toString();
+    const isCollaborator = playlist.collaborators?.some(c => (c._id || c).toString() === req.user._id.toString());
+
+    if (!isOwner && !isCollaborator) {
       res.status(403);
       throw new Error('Not authorized to modify this playlist');
     }
@@ -297,6 +317,155 @@ export const getUserPublicPlaylists = async (req, res, next) => {
       likedSongsCount: user.likedSongs.length,
       likedSongIds: user.likedSongs,
       playlists,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Add a collaborator to a playlist
+// @route   POST /api/playlists/:id/collaborators
+// @access  Private (Owner or existing Collaborator)
+export const addCollaborator = async (req, res, next) => {
+  try {
+    const { username } = req.body;
+    const playlist = await Playlist.findById(req.params.id);
+
+    if (!playlist) {
+      res.status(404);
+      throw new Error('Playlist not found');
+    }
+
+    const isOwner = playlist.owner.toString() === req.user._id.toString();
+    const isCollaborator = playlist.collaborators?.some(c => c.toString() === req.user._id.toString());
+
+    if (!isOwner && !isCollaborator) {
+      res.status(403);
+      throw new Error('Not authorized to manage collaborators');
+    }
+
+    const userToAdd = await User.findOne({ username });
+    if (!userToAdd) {
+      res.status(404);
+      throw new Error('User to add not found');
+    }
+
+    if (playlist.owner.toString() === userToAdd._id.toString()) {
+      res.status(400);
+      throw new Error('User is already the owner');
+    }
+
+    if (playlist.collaborators.includes(userToAdd._id)) {
+      res.status(400);
+      throw new Error('User is already a collaborator');
+    }
+
+    playlist.collaborators.push(userToAdd._id);
+    await playlist.save();
+    const updatedPlaylist = await Playlist.findById(playlist._id).populate('collaborators', 'username');
+
+    res.status(200).json({ 
+      message: 'Collaborator added successfully', 
+      collaborators: updatedPlaylist.collaborators 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Remove a collaborator from a playlist
+// @route   DELETE /api/playlists/:id/collaborators/:userId
+// @access  Private (Owner or the collaborator themselves)
+export const removeCollaborator = async (req, res, next) => {
+  try {
+    const playlist = await Playlist.findById(req.params.id);
+    const userIdToRemove = req.params.userId;
+
+    if (!playlist) {
+      res.status(404);
+      throw new Error('Playlist not found');
+    }
+
+    const isOwner = playlist.owner.toString() === req.user._id.toString();
+    const isSelf = userIdToRemove === req.user._id.toString();
+
+    if (!isOwner && !isSelf) {
+      res.status(403);
+      throw new Error('Not authorized to remove this collaborator');
+    }
+
+    playlist.collaborators = playlist.collaborators.filter(c => c.toString() !== userIdToRemove);
+    await playlist.save();
+    const updatedPlaylist = await Playlist.findById(playlist._id).populate('collaborators', 'username');
+
+    res.status(200).json({ 
+      message: 'Collaborator removed successfully', 
+      collaborators: updatedPlaylist.collaborators 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get playlists where user is a collaborator
+// @route   GET /api/playlists/collaborations
+// @access  Private
+export const getMyCollaborations = async (req, res, next) => {
+  try {
+    const playlists = await Playlist.find({ collaborators: req.user._id })
+      .populate('owner', 'username')
+      .sort({ updatedAt: -1 });
+
+    res.status(200).json(playlists);
+  } catch (error) {
+    next(error);
+  }
+};
+// @desc    Get all public playlists (Community) with pagination and search
+// @route   GET /api/playlists/community
+// @access  Public
+export const getCommunityPlaylists = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    const search = req.query.search || '';
+    const sortBy = req.query.sortBy || 'updatedAt'; // 'updatedAt', 'name', 'songCount'
+
+    let query = { isPublic: true };
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    let sortOption = {};
+    if (sortBy === 'name') {
+      sortOption = { name: 1 };
+    } else if (sortBy === 'songCount') {
+      // Note: Sorting by virtuals is not directly possible in MongoDB 
+      // We might need to sort in-memory if we want songCount, or stick to updatedAt
+      sortOption = { updatedAt: -1 };
+    } else {
+      sortOption = { updatedAt: -1 };
+    }
+
+    const playlists = await Playlist.find(query)
+      .populate('owner', 'username profileImage')
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .select('name description songs owner createdAt updatedAt isPublic');
+
+    const total = await Playlist.countDocuments(query);
+
+    res.status(200).json({
+      playlists,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      hasMore: page * limit < total
     });
   } catch (error) {
     next(error);

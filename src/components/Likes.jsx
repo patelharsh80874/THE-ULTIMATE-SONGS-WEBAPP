@@ -12,6 +12,7 @@ import { usePlayer } from "../context/PlayerContext";
 import { AuthContext } from "../context/AuthContext";
 import AddToPlaylistModal from "./AddToPlaylistModal";
 import Tooltip from "./Tooltip";
+import Loading from "./Loading";
 
 const Likes = () => {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const Likes = () => {
       toast.error('Please login to view your liked songs');
     }
   }, [user, loading, navigate]);
+
 
   const { likedSongs, removeSong, reorderLikes } = useLikedSongs();
   const { playSong, songlink, isPlaying, addToQueue } = usePlayer();
@@ -105,6 +107,8 @@ const Likes = () => {
   const handleDragLeave = () => {
     setDragOverIndex(null);
   };
+
+  if (loading) return <Loading customText="Syncing Favorites" />;
 
   const coverImage = likedSongs?.[0]?.image?.[2]?.url || noimg;
 
@@ -275,21 +279,24 @@ const Likes = () => {
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {/* Drag Handle */}
-                    <div 
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, i)}
-                      onDragEnd={handleDragEnd}
-                      className="w-8 sm:w-6 text-center flex-shrink-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <i className="ri-draggable text-xl text-zinc-600 group-hover:text-green-500/50 transition-colors"></i>
+                    <div className="flex items-center gap-2 sm:gap-1 flex-shrink-0">
+                      <div 
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, i)}
+                        onDragEnd={handleDragEnd}
+                        className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg transition-all"
+                      >
+                        <i className="ri-draggable text-xl sm:text-2xl text-zinc-600 group-hover:text-green-500/50 transition-colors"></i>
+                      </div>
+                      <div className="w-6 sm:w-5 text-center pointer-events-none">
                         {isActive ? (
                           <img src={wavs} alt="" className="w-4 h-4 sm:w-3 sm:h-3 mx-auto" />
                         ) : (
-                          <span className="text-[10px] font-bold text-zinc-500 group-hover:text-green-400 transition-colors">{i + 1}</span>
+                          <span className="text-[10px] sm:text-[9px] font-bold text-zinc-500 group-hover:text-green-400 transition-colors">{i + 1}</span>
                         )}
                       </div>
                     </div>
+
 
                     <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-lg overflow-hidden flex-shrink-0 relative shadow-md">
                       <img 

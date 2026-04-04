@@ -109,7 +109,8 @@ const Queue = ({ onClose }) => {
             <div
               key={song.id + "-" + i}
               onDragOver={(e) => handleDragOver(e, i)}
-              className={`flex items-center gap-3 sm:gap-2 p-2 rounded-lg mb-1 duration-200 group select-none ${
+              onClick={() => playFromQueue(i)}
+              className={`flex items-center gap-3 sm:gap-2 p-2 rounded-lg mb-1 duration-200 group select-none cursor-pointer ${
                 isDragging
                   ? "opacity-40 scale-95"
                   : isDragOver
@@ -124,6 +125,7 @@ const Queue = ({ onClose }) => {
                 draggable
                 onDragStart={(e) => handleDragStart(e, i)}
                 onDragEnd={handleDragEnd}
+                onClick={(e) => e.stopPropagation()}
                 className="flex-shrink-0 text-zinc-600 hover:text-zinc-300 cursor-grab active:cursor-grabbing"
               >
                 <i className="ri-draggable text-lg"></i>
@@ -140,8 +142,7 @@ const Queue = ({ onClose }) => {
 
               {/* Song Image */}
               <img
-                onClick={() => playFromQueue(i)}
-                className="w-10 h-10 rounded-md object-cover cursor-pointer flex-shrink-0"
+                className="w-10 h-10 rounded-md object-cover flex-shrink-0"
                 src={song.image?.[1]?.url || song.image?.[2]?.url}
                 alt=""
               />
@@ -180,7 +181,7 @@ const Queue = ({ onClose }) => {
               {songsList.length > 1 && (
                 <Tooltip text="Remove from Queue">
                   <button
-                    onClick={() => removeFromQueue(i)}
+                    onClick={(e) => { e.stopPropagation(); removeFromQueue(i); }}
                     className="w-7 h-7 flex items-center justify-center rounded text-zinc-500 sm:opacity-100 opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-500/10 duration-200 flex-shrink-0"
                   >
                     <i className="ri-close-line"></i>
