@@ -112,7 +112,7 @@ const Register = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-2">
-              <div className="space-y-1.5 group">
+              <div className="space-y-1 group">
                 <label className="block text-[10px] font-black text-zinc-300 uppercase tracking-[0.4em] ml-2 group-focus-within:text-blue-400 transition-colors">Pick a Username</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
@@ -130,6 +130,18 @@ const Register = () => {
                     </div>
                   )}
                 </div>
+                <AnimatePresence>
+                  {usernameAvailable !== null && !isChecking && (
+                    <motion.p 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      className={`text-[9px] font-black uppercase tracking-widest ml-2 mt-1 ${usernameAvailable ? 'text-green-500' : 'text-red-500'}`}
+                    >
+                      {usernameAvailable ? 'Username Available' : 'Username Already Taken'}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div className="space-y-1.5 group">
