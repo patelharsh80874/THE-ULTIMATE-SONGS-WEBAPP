@@ -1,5 +1,8 @@
-import express from 'express';
 import dotenv from 'dotenv';
+// Load env variables immediately
+dotenv.config();
+
+import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
@@ -13,11 +16,28 @@ import playlistRoutes from './routes/playlistRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 
-// Load env variables & Connect DB
-dotenv.config();
-connectDB();
+// Global Environment Check for Production
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.MONGODB_URI) console.error('CRITICAL: MONGODB_URI is missing on Vercel.');
+  if (!process.env.JWT_SECRET) console.error('CRITICAL: JWT_SECRET is missing on Vercel.');
+}
 
 const app = express();
+
+/**
+ * Database Connection Middleware (For Serverless resiliency)
+ */
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(503).json({ 
+      message: 'Database connection failed. Please check server logs.',
+      status: 'error'
+    });
+  }
+});
 
 // Middleware
 const allowedOrigins = [

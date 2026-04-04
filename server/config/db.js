@@ -4,16 +4,25 @@ let isConnected = false;
 
 const connectDB = async () => {
   if (isConnected) {
+    console.log('Using existing MongoDB connection');
+    return;
+  }
+
+  if (!process.env.MONGODB_URI) {
+    console.error('ERROR: MONGODB_URI is not defined in environment variables.');
     return;
   }
 
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      bufferCommands: true,
+      autoIndex: true,
+    });
+    
     isConnected = !!conn.connections[0].readyState;
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`🚀 MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`Error connecting to MongoDB: ${error.message}`);
-    // In serverless, we don't want to process.exit(1)
+    console.error(`❌ MongoDB connection failed: ${error.message}`);
     throw error;
   }
 };
