@@ -143,11 +143,30 @@ const MyPlaylistDetails = () => {
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const username = playlist?.owner?.username || "user";
+    const playlistName = playlist?.name || "My Playlist";
     const shareUrl = `${window.location.origin}/${username}/${id}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast.success("Share link copied!", { style: TOAST_STYLE });
+    const shareText = `Check out "${playlistName}" by ${username} on THE ULTIMATE SONGS: ${shareUrl}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: playlistName,
+          text: shareText,
+          url: shareUrl,
+        });
+        toast.success("Shared successfully!", { style: TOAST_STYLE });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          navigator.clipboard.writeText(shareText);
+          toast.success("Share link copied!", { style: TOAST_STYLE });
+        }
+      }
+    } else {
+      navigator.clipboard.writeText(shareText);
+      toast.success("Share link copied!", { style: TOAST_STYLE });
+    }
   };
   
   const handleShufflePlay = () => {
