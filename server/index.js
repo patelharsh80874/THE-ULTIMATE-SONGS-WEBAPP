@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
 import { initSocket } from './socket.js';
 import { renderApiDocs } from './controllers/docController.js';
+import { renderDynamicMeta } from './controllers/metaController.js';
 
 // Route Imports
 import authRoutes from './routes/authRoutes.js';
@@ -68,6 +69,9 @@ app.use('/api/ai', aiRoutes);
 
 // Documentation Dashboard (Markdown to HTML)
 app.get('/', renderApiDocs);
+
+// Dynamic Shared Link Previews (Metadata Injection)
+app.get('/:username/:id', renderDynamicMeta);
 
 /**
  * Global Error Handler

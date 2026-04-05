@@ -5,6 +5,10 @@
         "destination": "/api"
       },
       {
+        "source": "/:username/:id",
+        "destination": "/api"
+      },
+      {
         "source": "/(.*)",
         "destination": "/"
       }
