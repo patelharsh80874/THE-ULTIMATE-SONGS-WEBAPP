@@ -147,27 +147,24 @@ const MyPlaylistDetails = () => {
     const username = playlist?.owner?.username || "user";
     const playlistName = playlist?.name || "My Playlist";
     const shareUrl = `${window.location.origin}/${username}/${id}`;
-    const profileUrl = `${window.location.origin}/profile/${username}`;
-
-    const songCount = playlist?.totalSongs || 0;
-    const shareText = `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!\n📊 Tracks: ${songCount}\n👤 Profile: ${profileUrl}\n🎵 Playlist: ${shareUrl}`;
+    const shareText = `Check out "${playlistName}" by ${username} on THE ULTIMATE SONGS: ${shareUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: playlistName,
-          text: `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!\n📊 Tracks: ${songCount}\n👤 Profile: ${profileUrl}`,
-          url: `${shareUrl}?t=${Date.now()}`,
+          text: `Check out "${playlistName}" by ${username} on THE ULTIMATE SONGS`,
+          url: shareUrl,
         });
       } catch (err) {
         if (err.name !== 'AbortError') {
           navigator.clipboard.writeText(shareText);
-          toast.success("Share info copied!", { style: TOAST_STYLE });
+          toast.success("Share link copied!", { style: TOAST_STYLE });
         }
       }
     } else {
       navigator.clipboard.writeText(shareText);
-      toast.success("Share info copied!", { style: TOAST_STYLE });
+      toast.success("Share link copied!", { style: TOAST_STYLE });
     }
   };
   
