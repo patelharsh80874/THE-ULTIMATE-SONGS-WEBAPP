@@ -156,8 +156,8 @@ const MyPlaylistDetails = () => {
       try {
         await navigator.share({
           title: playlistName,
-          text: `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!\n📊 Tracks: ${songCount}\n\n👤 Profile: ${profileUrl}\n\n\n🎵 Playlist:`,
-          url:shareUrl,
+          text: `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!\n📊 Tracks: ${songCount}\n👤 Profile: ${profileUrl}`,
+          url: `${shareUrl}?t=${Date.now()}`,
         });
       } catch (err) {
         if (err.name !== 'AbortError') {

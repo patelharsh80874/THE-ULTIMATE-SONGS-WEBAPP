@@ -36,19 +36,28 @@ export const renderDynamicMeta = async (req, res) => {
     if (playlist.songs && playlist.songs.length > 0) {
       try {
         const songId = playlist.songs[0];
-        // Using SAAVN_API_URL from .env
-        const songResponse = await fetch(`${saavnApiUrl}/songs?ids=${songId}`, {
+        const apiUrl = `${saavnApiUrl}/songs?ids=${songId}`;
+        console.log(`[Meta] Fetching metadata for song ${songId} in playlist ${id}...`);
+        
+        const songResponse = await fetch(apiUrl, {
             headers: { 'User-Agent': 'Mozilla/5.0' }
         });
         const songData = await songResponse.json();
         
         if (songData && songData.data && songData.data.length > 0) {
             const song = songData.data[0];
-            // Get highest resolution image
-            imageUrl = song.image?.[song.image.length - 1]?.url || song.image?.[2]?.url || imageUrl;
+            // Extract highest res image
+            // Force HTTPS and handle protocol-relative URLs
+            if (rawImage.startsWith('//')) imageUrl = `https:${rawImage}`;
+            else if (rawImage.startsWith('http:')) imageUrl = rawImage.replace('http:', 'https:');
+            else imageUrl = rawImage;
+            
+            console.log(`[Meta] Successfully extracted image: ${imageUrl}`);
+        } else {
+            console.warn(`[Meta] Song data empty for ${songId} at ${apiUrl}. Fallback to logo.`);
         }
       } catch (err) {
-        console.error(`[Meta] Image Fetch failed for song ${playlist.songs[0]}:`, err.message);
+        console.error(`[Meta] API Fetch failed for ${playlist.songs[0]}:`, err.message);
       }
     }
 
@@ -96,8 +105,11 @@ export const renderDynamicMeta = async (req, res) => {
     html = updateMetaTag(html, 'og:title', title);
     html = updateMetaTag(html, 'og:description', description);
     html = updateMetaTag(html, 'og:image', imageUrl);
+    html = updateMetaTag(html, 'og:image:secure_url', imageUrl);
+    html = updateMetaTag(html, 'og:image:width', '500');
+    html = updateMetaTag(html, 'og:image:height', '500');
     html = updateMetaTag(html, 'og:url', shareUrl);
-    html = updateMetaTag(html, 'og:type', 'music.playlist');
+    html = updateMetaTag(html, 'og:type', 'website');
     html = updateMetaTag(html, 'og:site_name', 'THE ULTIMATE SONGS');
     
     // Music Specific Tags
