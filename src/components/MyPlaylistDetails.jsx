@@ -147,25 +147,26 @@ const MyPlaylistDetails = () => {
     const username = playlist?.owner?.username || "user";
     const playlistName = playlist?.name || "My Playlist";
     const shareUrl = `${window.location.origin}/${username}/${id}`;
-    // For navigator.share, we keep the text simple as the URL is added separately
-    const shareText = `Check out "${playlistName}" by ${username} on THE ULTIMATE SONGS`;
+    const profileUrl = `${window.location.origin}/profile/${username}`;
+
+    const shareText = `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!\n👤 Profile: ${profileUrl}\n🎵 Playlist: ${shareUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: playlistName,
-          text: shareText,
+          text: `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!`,
           url: shareUrl,
         });
       } catch (err) {
         if (err.name !== 'AbortError') {
-          navigator.clipboard.writeText(`${shareText}: ${shareUrl}`);
-          toast.success("Share link copied!", { style: TOAST_STYLE });
+          navigator.clipboard.writeText(shareText);
+          toast.success("Share info copied!", { style: TOAST_STYLE });
         }
       }
     } else {
-      navigator.clipboard.writeText(`${shareText}: ${shareUrl}`);
-      toast.success("Share link copied!", { style: TOAST_STYLE });
+      navigator.clipboard.writeText(shareText);
+      toast.success("Share info copied!", { style: TOAST_STYLE });
     }
   };
   

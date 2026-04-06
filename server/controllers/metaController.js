@@ -55,10 +55,10 @@ export const renderDynamicMeta = async (req, res) => {
     // 3. Prepare Metadata Strings (Dynamic Creator Info)
     const ownerName = playlist.owner?.username || 'User';
     const songCount = playlist.songs?.length || 0;
-    const title = `${playlist.name} | curated by ${ownerName}`;
-    const description = `Check out "${playlist.name}" • ${songCount} Tracks. High-fidelity streaming curated by ${ownerName} on THE ULTIMATE SONGS.`;
+    const title = `"${playlist.name}" | curated by ${ownerName}`;
+    const description = `Listen to "${playlist.name}" by ${ownerName} • ${songCount} Tracks. High-fidelity streaming curated by ${ownerName} on THE ULTIMATE SONGS.`;
     const shareUrl = `${frontendUrl}/${username}/${id}`;
-    const profileUrl = `${frontendUrl}/${username}`;
+    const profileUrl = `${frontendUrl}/profile/${username}`;
 
     // 4. Inject into index.html
     const indexPath = path.resolve(__dirname, '..', '..', 'index.html');
@@ -99,6 +99,10 @@ export const renderDynamicMeta = async (req, res) => {
     html = updateMetaTag(html, 'og:url', shareUrl);
     html = updateMetaTag(html, 'og:type', 'music.playlist');
     html = updateMetaTag(html, 'og:site_name', 'THE ULTIMATE SONGS');
+    
+    // Music Specific Tags
+    html = updateMetaTag(html, 'music:song_count', songCount.toString());
+    html = updateMetaTag(html, 'music:creator', profileUrl);
 
     // Twitter Social Sync
     html = updateMetaTag(html, 'twitter:card', 'summary_large_image', 'name');
