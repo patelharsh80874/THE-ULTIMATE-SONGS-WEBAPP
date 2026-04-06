@@ -1,5 +1,12 @@
 import dotenv from 'dotenv';
-// Load env variables immediately
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Load root env variables
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+// Load server env variables (prioritizes server-specific ones if any)
 dotenv.config();
 
 import express from 'express';
