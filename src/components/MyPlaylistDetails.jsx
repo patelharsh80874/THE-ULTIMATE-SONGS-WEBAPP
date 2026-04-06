@@ -147,7 +147,7 @@ const MyPlaylistDetails = () => {
     const username = playlist?.owner?.username || "user";
     const playlistName = playlist?.name || "My Playlist";
     const shareUrl = `${window.location.origin}/${username}/${id}`;
-    const shareText = `Check out "${playlistName}" by ${username} on THE ULTIMATE SONGS: ${shareUrl}`;
+    const shareText = `Check out "${playlistName}" by ${username} on THE ULTIMATE SONGS!\n\n${shareUrl}`;
 
     if (navigator.share) {
       try {
