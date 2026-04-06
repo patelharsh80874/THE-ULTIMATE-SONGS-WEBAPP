@@ -5,14 +5,15 @@ import { usePlaylist } from "../context/PlaylistContext";
 import Tooltip from "./Tooltip";
 import toast from "react-hot-toast";
 
-const AddToPlaylistModal = ({ songs, onClose }) => {
+const AddToPlaylistModal = ({ songs, song, onClose }) => {
   const { user } = useContext(AuthContext);
   const { playlists, collaborations, fetchPlaylists, addSongToPlaylist, addSongsToPlaylistBulk, removeSongFromPlaylist, createPlaylist } = usePlaylist();
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
 
-  const isBulk = Array.isArray(songs);
-  const displaySongs = isBulk ? songs : [songs];
+  const actualSongs = songs || song;
+  const isBulk = Array.isArray(actualSongs);
+  const displaySongs = isBulk ? actualSongs : (actualSongs ? [actualSongs] : []);
   const firstSong = displaySongs[0];
 
   // On-Demand Refresh: Fetch latest playlists when modal opens

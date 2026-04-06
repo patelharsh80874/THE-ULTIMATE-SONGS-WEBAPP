@@ -14,7 +14,7 @@ export const renderDynamicMeta = async (req, res) => {
   const { id, username } = req.params;
   
   try {
-    // 1. Fetch Playlist Data
+    // 1. Fetch Playlist Data from DB
     const playlist = await Playlist.findById(id).populate('owner', 'username');
     
     if (!playlist) {
@@ -27,16 +27,18 @@ export const renderDynamicMeta = async (req, res) => {
     if (playlist.songs && playlist.songs.length > 0) {
       try {
         const songId = playlist.songs[0];
-        // Using the same reliable endpoint as seen in the frontend hydration
-        const songResponse = await fetch(`https://www.jiosaavn.com/api.php?__call=song.getDetails&pids=${songId}&_format=json&_marker=0&api_version=4&ctx=web6dot0`, {
+        // Using the more reliable endpoint as seen in the frontend hydration (roan API is better)
+        const songResponse = await fetch(`https://jiosaavn-roan.vercel.app/api/songs?ids=${songId}`, {
             headers: { 'User-Agent': 'Mozilla/5.0' }
         });
         const songData = await songResponse.json();
         
-        if (songData && songData[songId]) {
-            const song = songData[songId];
-            // Extract high-res image (500x500)
-            imageUrl = song.image?.replace('150x150', '500x500') || imageUrl;
+        if (songData && songData.data && songData.data.length > 0) {
+            const song = songData.data[0];
+            // Get highest resolution image (usually the last index in the image array)
+            imageUrl = song.image?.[song.image.length - 1]?.url || song.image?.[2]?.url || imageUrl;
+        } else {
+            console.warn(`[Meta] Fallback: No song data found for ID ${songId}. Use static logo.`);
         }
       } catch (err) {
         console.error(`[Meta] Image Fetch failed for song in ${id}:`, err.message);
@@ -47,44 +49,55 @@ export const renderDynamicMeta = async (req, res) => {
     const ownerName = playlist.owner?.username || 'User';
     const songCount = playlist.songs?.length || 0;
     const title = `${playlist.name} | THE ULTIMATE SONGS`;
-    const description = `Check out "${playlist.name}" curated by ${ownerName} • ${songCount} Tracks. High-fidelity streaming only on THE ULTIMATE SONGS.`;
+    const description = `Check out "${playlist.name}" by ${ownerName} • ${songCount} Tracks. High-fidelity streaming only on THE ULTIMATE SONGS.`;
     const siteUrl = `https://the-ultimate-songs-webapp-harsh-patel.vercel.app/${username}/${id}`;
 
     // 4. Inject into index.html
-    const indexPath = path.join(__dirname, '..', '..', 'index.html');
+    const indexPath = path.resolve(__dirname, '..', '..', 'index.html');
     if (!fs.existsSync(indexPath)) {
+        console.error(`[Meta] index.html not found at ${indexPath}`);
         return res.status(404).send('index.html not found.');
     }
 
     let html = fs.readFileSync(indexPath, 'utf8');
 
-    // REGEX: Flexible matching for both self-closing (/>) and standard (>) tags
-    const replaceTag = (htmlContent, propertyName, newValue, type = 'property') => {
-        const attr = type === 'property' ? 'property' : 'name';
-        const regex = new RegExp(`<meta\\s+${attr}=["']${propertyName}["']\\s+content=["'].*?["']\\s*\/?>`, 'gi');
-        return htmlContent.replace(regex, `<meta ${attr}="${propertyName}" content="${newValue}" />`);
+    /**
+     * Replaces or Injects a meta tag into the HTML head
+     */
+    const updateMetaTag = (htmlContent, property, content, attr = 'property') => {
+        const regex = new RegExp(`<meta\\s+(?:${attr}=["']${property}["']\\s+content=["'].*?["']|content=["'].*?["']\\s+${attr}=["']${property}["'])\\s*/?>`, 'i');
+        const newTag = `<meta ${attr}="${property}" content="${content}" />`;
+        
+        if (regex.test(htmlContent)) {
+            return htmlContent.replace(regex, newTag);
+        } else {
+            // Inject if missing (before </head>)
+            return htmlContent.replace('</head>', `  ${newTag}\n  </head>`);
+        }
     };
 
+    // Update Title
     html = html.replace(/<title>.*?<\/title>/gi, `<title>${title}</title>`);
-    html = replaceTag(html, 'description', description, 'name');
+    
+    // Update Meta Description
+    html = updateMetaTag(html, 'description', description, 'name');
     
     // OG Tags
-    html = replaceTag(html, 'og:title', title);
-    html = replaceTag(html, 'og:description', description);
-    html = replaceTag(html, 'og:image', imageUrl);
-    html = replaceTag(html, 'og:url', siteUrl);
+    html = updateMetaTag(html, 'og:title', title);
+    html = updateMetaTag(html, 'og:description', description);
+    html = updateMetaTag(html, 'og:image', imageUrl);
+    html = updateMetaTag(html, 'og:url', siteUrl);
+    html = updateMetaTag(html, 'og:type', 'music.playlist');
 
     // Twitter Tags
-    html = replaceTag(html, 'twitter:title', title, 'name');
-    html = replaceTag(html, 'twitter:description', description, 'name');
-    html = replaceTag(html, 'twitter:image', imageUrl, 'name');
+    html = updateMetaTag(html, 'twitter:card', 'summary_large_image', 'name');
+    html = updateMetaTag(html, 'twitter:title', title, 'name');
+    html = updateMetaTag(html, 'twitter:description', description, 'name');
+    html = updateMetaTag(html, 'twitter:image', imageUrl, 'name');
 
-    // Final sanity check for Vercel: If the regex missed for some reason, we force inject og:image
-    if (!html.toLowerCase().includes('og:image')) {
-        html = html.replace('</head>', `<meta property="og:image" content="${imageUrl}" />\n</head>`);
-    }
-
-    res.contentType('text/html').send(html);
+    // Final result
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
   } catch (error) {
     console.error(`[Meta] Global Render Error for ${id}:`, error);
     serveStaticIndex(res);
@@ -92,10 +105,10 @@ export const renderDynamicMeta = async (req, res) => {
 };
 
 const serveStaticIndex = (res) => {
-    const indexPath = path.join(__dirname, '..', '..', 'index.html');
+    const indexPath = path.resolve(__dirname, '..', '..', 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        res.status(404).send('Frontend not built yet.');
+        res.status(404).send('index.html missing.');
     }
 };

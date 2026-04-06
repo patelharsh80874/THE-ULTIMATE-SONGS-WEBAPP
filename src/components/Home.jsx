@@ -542,7 +542,7 @@ const Home = () => {
       {/* Add to Playlist Modal */}
       {playlistModalSong && (
         <AddToPlaylistModal
-          song={playlistModalSong}
+          songs={playlistModalSong}
           onClose={() => setPlaylistModalSong(null)}
         />
       )}

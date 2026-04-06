@@ -232,7 +232,7 @@ const PlaylistDetails = () => {
 
       {playlistModalSong && (
         <AddToPlaylistModal 
-          song={playlistModalSong} 
+          songs={playlistModalSong} 
           onClose={() => setPlaylistModalSong(null)} 
         />
       )}

@@ -365,7 +365,7 @@ const PlayerBar = () => {
       {/* Add To Playlist Modal */}
       {playlistModalSong && (
         <AddToPlaylistModal
-          song={playlistModalSong}
+          songs={playlistModalSong}
           onClose={() => setPlaylistModalSong(null)}
         />
       )}

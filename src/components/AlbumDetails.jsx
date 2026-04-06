@@ -238,11 +238,11 @@ const AlbumDetails = () => {
 
       {playlistModalSong && (
         <AddToPlaylistModal 
-          song={playlistModalSong} 
+          songs={playlistModalSong} 
           onClose={() => setPlaylistModalSong(null)} 
         />
       )}
-    </div>
+ </div>
   );
 };
 

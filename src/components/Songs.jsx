@@ -257,7 +257,7 @@ const Songs = () => {
 
       {playlistModalSong && (
         <AddToPlaylistModal 
-          song={playlistModalSong} 
+          songs={playlistModalSong} 
           onClose={() => setPlaylistModalSong(null)} 
         />
       )}

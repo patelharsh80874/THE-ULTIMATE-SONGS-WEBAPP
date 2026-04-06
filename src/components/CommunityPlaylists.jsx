@@ -237,7 +237,7 @@ const CommunityPlaylists = () => {
                                                     <div className="w-5 h-5 rounded-md bg-green-500/10 border border-green-500/20 flex items-center justify-center text-[8px] font-black text-green-400 uppercase group-hover/user:bg-green-500 group-hover/user:text-slate-950">
                                                         {p.owner?.username?.[0]}
                                                     </div>
-                                                    <span className="text-[10px] sm:text-[9px] text-zinc-500 font-bold uppercase tracking-wider group-hover/user:text-green-400 transition-colors flex items-center gap-1.5 font-bold">
+                                                    <span className="text-[10px] sm:text-[9px] text-zinc-500 font-bold uppercase tracking-wider group-hover/user:text-green-400 transition-colors flex items-center gap-1.5">
                                                         {p.owner?.username}
                                                         <i className="ri-external-link-line text-[9px] opacity-100 sm:opacity-0 group-hover/user:opacity-100 text-green-500/50"></i>
                                                     </span>
