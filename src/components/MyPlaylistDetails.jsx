@@ -149,14 +149,15 @@ const MyPlaylistDetails = () => {
     const shareUrl = `${window.location.origin}/${username}/${id}`;
     const profileUrl = `${window.location.origin}/profile/${username}`;
 
-    const shareText = `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!\n👤 Profile: ${profileUrl}\n🎵 Playlist: ${shareUrl}`;
+    const songCount = playlist?.totalSongs || 0;
+    const shareText = `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!\n📊 Tracks: ${songCount}\n👤 Profile: ${profileUrl}\n🎵 Playlist: ${shareUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: playlistName,
-          text: `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!`,
-          url: shareUrl,
+          text: `Check out "${playlistName}" curated by ${username} on THE ULTIMATE SONGS!\n📊 Tracks: ${songCount}\n\n👤 Profile: ${profileUrl}\n\n\n🎵 Playlist:`,
+          url:shareUrl,
         });
       } catch (err) {
         if (err.name !== 'AbortError') {
