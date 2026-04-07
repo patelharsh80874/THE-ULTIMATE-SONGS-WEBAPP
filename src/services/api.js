@@ -143,21 +143,23 @@ export const getSongsByStationId = async (stationId, limit = 20, next = 1) => {
     
     // Convert generic object { "0": {...}, "1": {...} } to array of song IDs
     const data = response.data;
-    if (!data) return [];
+    if (!data) return { data: [] };
     
-    // Jiosaavn returns the songs as an object map, sometimes wrapped. Handle it like native app.
+    // Jiosaavn returns the songs as an object map. Handle it like native app.
     const songIds = Object.keys(data)
       .filter(key => !isNaN(key))
       .map(key => data[key]?.song?.id)
       .filter(id => id); // filter out undefined
       
-    if (songIds.length === 0) return [];
+    if (songIds.length === 0) return { data: [] };
     
+    // FIX: Use query param format (?ids=) not path format (/ids)
     const idsParam = songIds.join(',');
-    const detailRes = await axios.get(`${API_BASE_URL}/songs/${idsParam}`);
-    return { data: Array.isArray(detailRes.data.data) ? detailRes.data.data : [detailRes.data.data] };
+    const detailRes = await axios.get(`${API_BASE_URL}/songs?ids=${idsParam}`);
+    const songs = detailRes.data?.data;
+    return { data: Array.isArray(songs) ? songs : (songs ? [songs] : []) };
   } catch (error) {
-    console.error("Error fetching station songs", error);
+    console.error("Error fetching station songs:", error?.response?.status, error?.message);
     return { data: [] };
   }
 };
