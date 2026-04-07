@@ -23,6 +23,7 @@ import userRoutes from './routes/userRoutes.js';
 import playlistRoutes from './routes/playlistRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import radioRoutes from './routes/radioRoutes.js';
 
 // Global Environment Check for Production
 if (process.env.NODE_ENV === 'production') {
@@ -61,7 +62,8 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true 
+  credentials: true,
+  exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'RateLimit-Limit', 'RateLimit-Remaining']
 }));
 
 app.use(express.json());
@@ -73,6 +75,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/radio', radioRoutes);
 
 // Documentation Dashboard (Markdown to HTML)
 app.get('/', renderApiDocs);

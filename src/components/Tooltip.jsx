@@ -1,12 +1,12 @@
 import React from 'react';
 
-const Tooltip = ({ text, children, position = 'top' }) => {
+const Tooltip = ({ text, children, position = 'top', className = '' }) => {
   const isBottom = position === 'bottom';
   
   return (
-    <div className="relative inline-flex items-center justify-center group/tooltip">
+    <div className={`relative inline-flex items-center justify-center group/tooltip ${className}`}>
       {children}
-      <div className={`absolute left-1/2 -translate-x-1/2 w-max max-w-[180px] opacity-0 pointer-events-none group-hover/tooltip:opacity-100 transition-all duration-300 z-[100] text-center
+      <div className={`absolute left-1/2 -translate-x-1/2 w-max max-w-[180px] opacity-0 pointer-events-none group-hover/tooltip:opacity-100 transition-all duration-300 z-[9999] text-center
         ${isBottom 
           ? 'top-full mt-2 translate-y-[-4px] group-hover/tooltip:translate-y-0' 
           : 'bottom-full mb-2 translate-y-1 group-hover/tooltip:translate-y-0'

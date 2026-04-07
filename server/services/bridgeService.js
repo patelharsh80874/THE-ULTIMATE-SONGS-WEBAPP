@@ -96,7 +96,7 @@ const findJioSaavnMatchForMix = async (title, artistsArray = [], rawTitle = "", 
     let results = [];
     for (const query of searchTiers) {
         try {
-            const res = await fetch(`https://jiosaavn-roan.vercel.app/api/search/songs?query=${encodeURIComponent(query)}&limit=10`);
+            const res = await fetch(`${process.env.VITE_API_BASE_URL}/search/songs?query=${encodeURIComponent(query)}&limit=10`);
             const data = await res.json();
             const batch = data?.data?.results || [];
             results = [...results, ...batch];
@@ -168,14 +168,14 @@ const findJioSaavnMatch = async (title, artistRaw) => {
     
     // Tier 1: Title + Full Artist String
     const tier1Query = encodeURIComponent(`${cleanedSpotifyTitle} ${artistRaw}`);
-    const res1 = await fetch(`https://jiosaavn-roan.vercel.app/api/search/songs?query=${tier1Query}&limit=10`);
+    const res1 = await fetch(`${process.env.VITE_API_BASE_URL}/search/songs?query=${tier1Query}&limit=10`);
     const data1 = await res1.json();
     results = data1?.data?.results || [];
 
     // Tier 2: Title + Primary Artist
     if (results.length === 0) {
       const tier2Query = encodeURIComponent(`${cleanedSpotifyTitle} ${primarySpotifyArtist}`);
-      const res2 = await fetch(`https://jiosaavn-roan.vercel.app/api/search/songs?query=${tier2Query}&limit=10`);
+      const res2 = await fetch(`${process.env.VITE_API_BASE_URL}/search/songs?query=${tier2Query}&limit=10`);
       const data2 = await res2.json();
       results = data2?.data?.results || [];
     }
@@ -183,7 +183,7 @@ const findJioSaavnMatch = async (title, artistRaw) => {
     // Tier 3: Title Only
     if (results.length === 0) {
       const tier3Query = encodeURIComponent(cleanedSpotifyTitle);
-      const res3 = await fetch(`https://jiosaavn-roan.vercel.app/api/search/songs?query=${tier3Query}&limit=10`);
+      const res3 = await fetch(`${process.env.VITE_API_BASE_URL}/search/songs?query=${tier3Query}&limit=10`);
       const data3 = await res3.json();
       results = data3?.data?.results || [];
     }
@@ -270,28 +270,44 @@ export const analyzePlaylist = async (url) => {
         console.log(`[BRIDGE SERVICE] Analyzing YouTube: ${url}`);
         const urlObj = new URL(url.replace('music.youtube.com', 'www.youtube.com'));
         const listId = urlObj.searchParams.get('list');
-        if (!listId) throw new Error('Could not find a valid playlist ID in the URL.');
+        if (!listId) throw new Error('Could not find a valid playlist ID in the URL. Make sure it contains ?list=...');
+
+        let youtubeSrFailed = false;
 
         if (listId.startsWith('PL')) {
-            extractionMethod = 'youtube-sr';
-            const ytPlaylist = await YouTube.getPlaylist(url, { fetchAll: true });
-            if (!ytPlaylist) throw new Error('YouTube Playlist not found or private.');
-            playlistName = ytPlaylist.title || 'YouTube Import';
-            tracksToProcess = ytPlaylist.videos.map(v => ({
-                name: v.title,
-                artist: v.channel?.name || 'Unknown Artist',
-                image: v.thumbnail?.url
-            }));
-        } else {
+            try {
+                extractionMethod = 'youtube-sr';
+                const ytPlaylist = await YouTube.getPlaylist(url, { fetchAll: true });
+                if (!ytPlaylist || !ytPlaylist.videos || ytPlaylist.videos.length === 0) {
+                    throw new Error('youtube-sr returned empty or null');
+                }
+                playlistName = ytPlaylist.title || 'YouTube Import';
+                tracksToProcess = ytPlaylist.videos.map(v => ({
+                    name: v.title,
+                    artist: v.channel?.name || 'Unknown Artist',
+                    image: v.thumbnail?.url
+                }));
+            } catch (err) {
+                console.log(`[BRIDGE SERVICE] youtube-sr failed for ${listId}, falling back to yt-search. Error: ${err.message}`);
+                youtubeSrFailed = true;
+            }
+        }
+
+        // Use yt-search as a primary for Mixes or as a fallback for Playlists
+        if (!listId.startsWith('PL') || youtubeSrFailed) {
             extractionMethod = 'yt-search';
             const ytData = await yts({ listId });
-            if (!ytData || !ytData.videos) throw new Error('Could not extract Mix/Radio data.');
-            playlistName = ytData.title || 'YouTube Music Mix';
+            
+            if (!ytData || !ytData.videos || ytData.videos.length === 0) {
+                throw new Error('Could not extract playlist data from YouTube. It might be private or invalid.');
+            }
+            
+            playlistName = ytData.title || 'YouTube Import';
             tracksToProcess = ytData.videos.map(v => {
                 const meta = parseYouTubeMetadata(v.title, v.author?.name || '');
                 return {
                     name: meta.title,
-                    artist: meta.artists,
+                    artist: meta.artists.length > 0 ? meta.artists : [v.author?.name || 'Unknown Artist'],
                     rawTitle: meta.rawTitle,
                     allParts: meta.allParts,
                     image: v.thumbnail || v.image
@@ -299,6 +315,8 @@ export const analyzePlaylist = async (url) => {
             });
         }
     }
+
+
 
     console.log(`[BRIDGE SERVICE] Processing ${tracksToProcess.length} tracks in batches...`);
     const results = [];

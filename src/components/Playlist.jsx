@@ -17,7 +17,7 @@ const Playlist = () => {
   const getPlaylists = async () => {
     try {
       const { data } = await axios.get(
-        `https://jiosaavn-roan.vercel.app/api/search/playlists?query=${query}&page=${page}&limit=12`
+        `${import.meta.env.VITE_API_BASE_URL}/search/playlists?query=${query}&page=${page}&limit=12`
       );
 
       const items = data?.data?.results || [];

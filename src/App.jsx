@@ -12,6 +12,7 @@ import Playlist from "./components/Playlist";
 import PlaylistDetails from "./components/PlaylistDetails";
 import Artists from "./components/Artists";
 import ArtistsDetails from "./components/ArtistsDetails";
+import LabelDetails from "./components/LabelDetails";
 import Download from "./components/Download";
 import Home from "./components/Home";
 import AlbumDetails from "./components/AlbumDetails";
@@ -57,6 +58,7 @@ const App = () => {
                   <Route path="/playlist/details/:id" element={<PlaylistDetails />} />
                   <Route path="/artists" element={<Artists />} />
                   <Route path="/artists/details/:id" element={<ArtistsDetails />} />
+                  <Route path="/label/:token" element={<LabelDetails />} />
                   <Route path="/likes" element={<Likes />} />
                   <Route path="/import" element={<Import />} />
                   <Route path="/login" element={<Login />} />

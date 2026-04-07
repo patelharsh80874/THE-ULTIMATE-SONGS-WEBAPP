@@ -25,7 +25,7 @@ export const LikedSongsProvider = ({ children }) => {
 
         if (data && Array.isArray(data) && data.length > 0) {
           const idsString = data.join(',');
-          const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
+          const saavnRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/songs?ids=${idsString}`);
           setLikedSongs(saavnRes.data.data || []);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(saavnRes.data.data || []));
         } else {

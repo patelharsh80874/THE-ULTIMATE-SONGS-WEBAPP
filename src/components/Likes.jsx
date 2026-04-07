@@ -75,6 +75,26 @@ const Likes = () => {
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const dragItem = useRef(null);
 
+  const formatDeviceName = (ua) => {
+    if (!ua) return "Unknown Device";
+    let browser = "Browser";
+    let os = "Device";
+
+    if (ua.includes("Windows")) os = "Windows";
+    else if (ua.includes("Macintosh")) os = "macOS";
+    else if (ua.includes("iPhone")) os = "iPhone";
+    else if (ua.includes("Android")) os = "Android";
+    else if (ua.includes("Linux")) os = "Linux";
+
+    if (ua.includes("Edg/")) browser = "Edge";
+    else if (ua.includes("Chrome")) browser = "Chrome";
+    else if (ua.includes("Firefox")) browser = "Firefox";
+    else if (ua.includes("Safari") && !ua.includes("Chrome")) browser = "Safari";
+    else if (ua.includes("OPR")) browser = "Opera";
+
+    return `${browser} on ${os}`;
+  };
+
   const handleDragStart = (e, index) => {
     dragItem.current = index;
     setDragIndex(index);
@@ -293,6 +313,34 @@ const Likes = () => {
                 <div className="w-1.5 h-1.5 bg-zinc-600 rounded-full" />
                 <p className="text-xl sm:text-sm">{likedSongs.length} Tracks</p>
               </div>
+
+              {(user?.lastLogin || user?.createdAt) && (
+                <div className="mt-4 flex flex-col sm:items-center gap-1.5 opacity-80 group/activity">
+                  <Tooltip 
+                    text="Stay safe! Monitor your account activity to ensure all sessions are recognized." 
+                    position="top"
+                    className="!justify-start !items-start w-fit"
+                  >
+                    <div className="flex items-center gap-1.5 text-[8px] font-black text-blue-500/80 uppercase tracking-[0.3em] mb-1 cursor-pointer">
+                      <i className="ri-shield-check-line text-[10px]"></i>
+                      Account Security
+                    </div>
+                  </Tooltip>
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover/activity:text-blue-400 transition-colors">
+                    <i className="ri-history-line"></i>
+                    {user?.lastLogin ? "Last Active:" : "Joined:"} 
+                    <span className="text-white ml-1">
+                      {new Date(user?.lastLogin || user?.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                    </span>
+                  </div>
+                  {user?.lastLoginDevice && (
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                      <i className="ri-device-line text-zinc-600"></i>
+                      Via: <span className="text-zinc-400 truncate max-w-[240px] italic">{formatDeviceName(user.lastLoginDevice)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           </div>
         </div>

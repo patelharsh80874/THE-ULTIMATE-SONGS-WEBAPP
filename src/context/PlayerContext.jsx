@@ -11,7 +11,12 @@ import toast from "react-hot-toast";
 
 export const PlayerProvider = ({ children }) => {
   const [songlink, setSonglink] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [hasRadioQueue, setHasRadioQueue] = useState(false);
+  const [stationId, setStationId] = useState(null);
+  const [currentRadioPage, setCurrentRadioPage] = useState(1);
+  const [loadingMoreRadio, setLoadingMoreRadio] = useState(false);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [songsList, setSongsList] = useState([]);
   const audioRef = useRef();
@@ -163,13 +168,64 @@ export const PlayerProvider = ({ children }) => {
   );
 
   // Next track
-  const next = useCallback(() => {
+  const next = useCallback(async () => {
     if (partyRoom && !isHost) return;
     if (songsList.length === 0) return;
-    const nextIdx = currentIndex < songsList.length - 1 ? currentIndex + 1 : 0;
-    setCurrentIndex(nextIdx);
-    setSonglink([songsList[nextIdx]]);
-  }, [currentIndex, songsList, partyRoom, isHost]);
+
+    if (currentIndex < songsList.length - 1) {
+      const nextIdx = currentIndex + 1;
+      setCurrentIndex(nextIdx);
+      setSonglink([songsList[nextIdx]]);
+      
+      // Infinite radio: preemptively fetch when 3 songs away
+      if (hasRadioQueue && stationId && !loadingMoreRadio && nextIdx >= songsList.length - 3) {
+        setLoadingMoreRadio(true);
+        try {
+          const nextPage = currentRadioPage + 1;
+          const { getSongsByStationId } = await import("../services/api");
+          const newSongsRes = await getSongsByStationId(stationId, 20, nextPage);
+          if (newSongsRes && newSongsRes.data && newSongsRes.data.length > 0) {
+             setSongsList(prev => [...prev, ...newSongsRes.data]);
+             setCurrentRadioPage(nextPage);
+          }
+        } catch (error) {
+          console.error("Failed to fetch more radio songs", error);
+        } finally {
+          setLoadingMoreRadio(false);
+        }
+      }
+    } else {
+      // Reached the end
+      if (hasRadioQueue && stationId) {
+        setLoadingMoreRadio(true);
+        try {
+          const nextPage = currentRadioPage + 1;
+          const { getSongsByStationId } = await import("../services/api");
+          const newSongsRes = await getSongsByStationId(stationId, 20, nextPage);
+          if (newSongsRes && newSongsRes.data && newSongsRes.data.length > 0) {
+             const newSongs = newSongsRes.data;
+             setSongsList(prev => [...prev, ...newSongs]);
+             setCurrentRadioPage(nextPage);
+             const nextIdx = currentIndex + 1;
+             setCurrentIndex(nextIdx);
+             setSonglink([newSongs[0]]);
+          } else {
+             setCurrentIndex(0);
+             setSonglink([songsList[0]]);
+          }
+        } catch (error) {
+           setCurrentIndex(0);
+           setSonglink([songsList[0]]);
+        } finally {
+          setLoadingMoreRadio(false);
+        }
+      } else {
+        // Loop back
+        setCurrentIndex(0);
+        setSonglink([songsList[0]]);
+      }
+    }
+  }, [currentIndex, songsList, partyRoom, isHost, hasRadioQueue, stationId, currentRadioPage, loadingMoreRadio]);
 
   // Previous track
   const previous = useCallback(() => {
@@ -395,6 +451,11 @@ export const PlayerProvider = ({ children }) => {
     reorderQueue,
     addToQueue,
     clearQueue,
+    hasRadioQueue,
+    setHasRadioQueue,
+    stationId,
+    setStationId,
+    setCurrentRadioPage,
     syncJoinTime,
   };
 

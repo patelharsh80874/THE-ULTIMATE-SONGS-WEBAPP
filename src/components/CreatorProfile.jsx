@@ -55,9 +55,9 @@ const CreatorProfile = () => {
             {/* Header */}
             <header className="fixed top-0 z-[100] w-full bg-slate-900/60 backdrop-blur-2xl border-b border-white/5 py-4 px-6 sm:px-4 flex justify-between items-center shadow-2xl">
                 <div className="flex items-center gap-3">
-                    <Tooltip text="Back to Community">
+                    <Tooltip text="Go Back" position="bottom">
                         <button 
-                            onClick={() => navigate("/community")}
+                            onClick={() => navigate(-1)}
                             className="flex items-center gap-1.5 bg-slate-900 border border-white/5 hover:bg-green-500 hover:text-slate-100 px-3 py-1.5 rounded-full transition-all font-bold text-[10px] uppercase tracking-widest shadow-xl"
                         >
                             <i className="ri-arrow-left-line text-base"></i> <span className="sm:hidden">Back</span>
@@ -70,7 +70,7 @@ const CreatorProfile = () => {
                     </div>
                 </div>
 
-                <Tooltip text="Go to Home">
+                <Tooltip text="Go to Home" position="bottom">
                     <button 
                         onClick={() => navigate("/")}
                         className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-full transition-all border border-white/5 text-[10px] font-bold uppercase tracking-widest"
@@ -119,7 +119,7 @@ const CreatorProfile = () => {
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="grid grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-2 gap-6 sm:gap-4"
+                        className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-2 gap-6 sm:gap-4"
                     >
                         {playlists.map((p, i) => (
                             <motion.div

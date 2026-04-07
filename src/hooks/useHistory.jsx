@@ -22,7 +22,7 @@ export const HistoryProvider = ({ children }) => {
       
       if (data && data.length > 0) {
         const idsString = data.join(',');
-        const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
+        const saavnRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/songs?ids=${idsString}`);
         // JioSaavn API might return songs in a different order, let's keep the history order
         const fetchedSongs = saavnRes.data.data;
         const orderedSongs = data.map(id => fetchedSongs.find(s => s.id === id)).filter(Boolean);

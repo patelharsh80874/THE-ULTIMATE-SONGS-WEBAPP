@@ -1,10 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "./../../public/logo3.jpg";
 import Loading from "./Loading";
-import Dropdown from "react-dropdown";
-import "react-dropdown/style.css";
+// Removed react-dropdown as it's being replaced by a premium custom dropdown
 import wavs from "../../public/wavs.gif";
 import wait from "../../public/wait.gif";
 import { AnimatePresence, motion } from "framer-motion";
@@ -13,10 +12,12 @@ import useLikedSongs from "../hooks/useLikedSongs";
 import { usePlayer } from "../context/PlayerContext";
 import { AuthContext } from "../context/AuthContext";
 import { LANGUAGE_OPTIONS } from "../constants";
-import { getHomeModules, searchSongs, getSongSuggestions } from "../services/api";
+import { getHomeModules, searchSongs, getSongSuggestions, fetchFeaturedRadios, fetchArtistsRadios, fetchUniqueArtists, fetchStarringArtists, getTrendingLabels, fetchRadioSongs, fetchArtitsRadioSongs } from "../services/api";
 import AddToPlaylistModal from "./AddToPlaylistModal";
 import Tooltip from "./Tooltip";
 import { useHistory } from "../hooks/useHistory";
+import HorizontalRadioList from "./HorizontalRadioList";
+import HorizontalLabelList from "./HorizontalLabelList";
 
 // Premium Card Component for Songs (Defined OUTSIDE Home to prevent re-mounting)
 const SongCard = ({ item, index, songlink, isPlaying, onPlay, addToQueue, setPlaylistModalSong }) => {
@@ -113,6 +114,83 @@ const CollectionCard = ({ item, index, pathPrefix, navigate }) => {
   );
 };
 
+// Premium Custom Dropdown Component
+const PremiumDropdown = ({ options, value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-slate-700/40 hover:bg-slate-700/60 transition-all duration-300 rounded-2xl border border-white/10 group overflow-hidden"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500">
+            <i className="ri-global-line text-lg"></i>
+          </div>
+          <span className="text-sm font-black text-white uppercase tracking-widest">
+            {value ? value : "Select Language"}
+          </span>
+        </div>
+        <i className={`ri-arrow-down-s-line text-xl text-zinc-500 transition-transform duration-500 ${isOpen ? "rotate-180 text-green-500" : ""}`}></i>
+        
+        {/* Subtle highlight line */}
+        <div className="absolute bottom-0 left-0 h-0.5 bg-green-500 transition-all duration-500" style={{ width: isOpen ? '100%' : '0%' }}></div>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            className="absolute z-[100] mt-3 w-full bg-slate-800/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+          >
+            <div className="flex flex-col gap-1">
+              {options.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    onChange({ value: opt });
+                    setIsOpen(false);
+                  }}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group/item ${
+                    value === opt ? 'bg-green-500 text-slate-950 font-black' : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <span className="text-[11px] font-black uppercase tracking-widest">
+                    {opt}
+                  </span>
+                  {value === opt ? (
+                    <i className="ri-checkbox-circle-fill text-lg"></i>
+                  ) : (
+                    <i className="ri-arrow-right-line text-lg opacity-0 group-hover/item:opacity-100 transition-opacity translate-x-2 group-hover/item:translate-x-0 duration-300"></i>
+                  )}
+                </button>
+              ))}
+            </div>
+            
+            {/* Background design element */}
+            <div className="absolute -top-10 -right-10 w-24 h-24 bg-green-500/5 blur-3xl rounded-full pointer-events-none"></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const [home, setHome] = useState(null);
@@ -122,7 +200,13 @@ const Home = () => {
   let [page, setPage] = useState(1);
   let [page2, setPage2] = useState(Math.floor(Math.random() * 50));
 
-  const { playSong, songlink, isPlaying, currentIndex, addToQueue } = usePlayer();
+  const [radioStations, setRadioStations] = useState([]);
+  const [artistRadioStations, setArtistRadioStations] = useState([]);
+  const [trendingArtistRadioStations, setTrendingArtistRadioStations] = useState([]);
+  const [starringArtistRadioStations, setStarringArtistRadioStations] = useState([]);
+  const [trendingLabels, setLabels] = useState([]);
+
+  const { playSong, songlink, isPlaying, currentIndex, addToQueue, setHasRadioQueue, setStationId, setCurrentRadioPage } = usePlayer();
   const { isLiked, toggleLike } = useLikedSongs();
   const { historySongs, loading: historyLoading } = useHistory();
   const { user, logout, loading: authLoading } = useContext(AuthContext);
@@ -247,6 +331,67 @@ const Home = () => {
     processLikedSongIds();
   }, [language]);
 
+  useEffect(() => {
+    async function loadRadios() {
+      try {
+        const radios = await fetchFeaturedRadios(language);
+        setRadioStations(radios);
+        const artistRadios = await fetchArtistsRadios();
+        setArtistRadioStations(artistRadios);
+        const uniqueArtists = await fetchUniqueArtists(language);
+        setTrendingArtistRadioStations(uniqueArtists);
+        const starringArtists = await fetchStarringArtists(language);
+        setStarringArtistRadioStations(starringArtists);
+        const labelsData = await getTrendingLabels(language);
+        setLabels(labelsData);
+      } catch (err) {
+        console.error("Error loading radios", err);
+      }
+    }
+    loadRadios();
+  }, [language]);
+
+  async function FinalfetchRadioSongs(language, radioId) {
+    const loadingToast = toast.loading("Tuning into radio station...", {
+        style: { borderRadius: '10px', background: '#333', color: '#fff' }
+    });
+    try {
+      const { fullSongs, stationId } = await fetchRadioSongs(language, radioId);
+      if (fullSongs?.data?.length > 0) {
+        setStationId(stationId);
+        setHasRadioQueue(true);
+        setCurrentRadioPage(1);
+        playSong(fullSongs.data[0], 0, fullSongs.data);
+        toast.success("Ready to play!", { id: loadingToast });
+      } else {
+        toast.error("Station is currently offline", { id: loadingToast });
+      }
+    } catch (e) {
+      toast.error("Failed to connect to station", { id: loadingToast });
+    }
+  }
+
+  async function FinalfetchArtitsRadioSongs(language, radioId) {
+    const loadingToast = toast.loading("Tuning into artist station...", {
+        style: { borderRadius: '10px', background: '#333', color: '#fff' }
+    });
+    try {
+      const { fullSongs, stationId } = await fetchArtitsRadioSongs(radioId);
+      if (fullSongs?.data?.length > 0) {
+        setStationId(stationId);
+        setHasRadioQueue(true);
+        setCurrentRadioPage(1);
+        playSong(fullSongs.data[0], 0, fullSongs.data);
+        toast.success("Playing now!", { id: loadingToast });
+      } else {
+        toast.error("Artist station unavailable", { id: loadingToast });
+      }
+    } catch (e) {
+      toast.error("Failed to load radio", { id: loadingToast });
+    }
+  }
+
+
   return details.length > 0 ? (
     <div className="w-full min-h-screen bg-slate-800">
       {/* ========== UPGRADED NAVBAR ========== */}
@@ -353,14 +498,13 @@ const Home = () => {
       {/* ========== CONTENT ========== */}
       <div className="w-full pt-[20vh] sm:pt-[24vh] pb-[25vh] px-8 sm:px-4 flex flex-col gap-8 overflow-hidden">
         
-        {/* Language Selector */}
+        {/* Premium Animated Language Selector */}
         <div className="w-full flex justify-end">
-          <div className="w-[200px] sm:w-[150px]">
-            <Dropdown
-              className="text-sm font-semibold text-black"
+          <div className="w-[240px] sm:w-[180px]">
+            <PremiumDropdown
               options={LANGUAGE_OPTIONS}
+              value={language}
               onChange={(e) => setLanguage(e.value)}
-              placeholder={language ? `${language.charAt(0).toUpperCase() + language.slice(1)}` : "Select language"}
             />
           </div>
         </div>
@@ -476,6 +620,42 @@ const Home = () => {
             ))}
           </div>
         </div>
+
+        {/* --- RADIO STATIONS MODS --- */}
+        {radioStations.length > 0 && (
+          <div className="flex flex-col gap-4 w-full">
+            <h2 className="text-2xl sm:text-xl font-black text-white px-2">Radio Stations</h2>
+            <HorizontalRadioList radios={radioStations} onRadioPress={FinalfetchRadioSongs} />
+          </div>
+        )}
+
+        {artistRadioStations.length > 0 && (
+          <div className="flex flex-col gap-4 w-full">
+            <h2 className="text-2xl sm:text-xl font-black text-white px-2">Top Artists Radio Stations</h2>
+            <HorizontalRadioList radios={artistRadioStations} onRadioPress={FinalfetchArtitsRadioSongs} />
+          </div>
+        )}
+
+        {trendingArtistRadioStations.length > 0 && (
+          <div className="flex flex-col gap-4 w-full">
+            <h2 className="text-2xl sm:text-xl font-black text-white px-2">Trending Artists Radio Stations</h2>
+            <HorizontalRadioList radios={trendingArtistRadioStations} onRadioPress={FinalfetchArtitsRadioSongs} />
+          </div>
+        )}
+
+        {starringArtistRadioStations.length > 0 && (
+          <div className="flex flex-col gap-4 w-full">
+            <h2 className="text-2xl sm:text-xl font-black text-white px-2">Actors Radio Stations</h2>
+            <HorizontalRadioList radios={starringArtistRadioStations} onRadioPress={FinalfetchArtitsRadioSongs} />
+          </div>
+        )}
+
+        {trendingLabels.length > 0 && (
+          <div className="flex flex-col gap-4 w-full">
+            <h2 className="text-2xl sm:text-xl font-black text-white px-2">Trending Labels</h2>
+            <HorizontalLabelList labels={trendingLabels} onPressLabel={(lbl) => navigate(`/label/${lbl.token}`)} />
+          </div>
+        )}
 
         {/* Footer */}
         {/* Premium Developer Footer */}

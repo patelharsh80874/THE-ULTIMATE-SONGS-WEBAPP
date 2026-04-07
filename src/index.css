@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: dark; /* Prevents browser from forcing light scrollbars */
+}
+
+body {
+  background-color: #0f172a; /* matches bg-slate-900 */
+}
+
 
 
 @media only screen and (max-width: 600px) {
@@ -12,15 +20,29 @@
 
   }
 
-::-webkit-scrollbar{
-    width: 7px;
-    height: 7px;
-  background-color: gray;
-
+/* Modern Premium Scrollbar Styling - Soft & Rounded */
+::-webkit-scrollbar {
+    width: 6px; /* Super thin & elegant */
+    height: 6px;
 }
-::-webkit-scrollbar-thumb{
-    background-color: #47646e;
-    border-radius: 10px;
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03); /* Subtle light tint */
+    border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2); /* Lighter zinc thumb */
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.05); /* Soft border */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(34, 197, 94, 0.4); /* Premium green grow on hover */
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: #22c55e; /* Solid green when interacting */
 }
 
  audio {
@@ -50,6 +72,7 @@ audio::-webkit-media-controls-time-remaining-display {
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -57,12 +80,17 @@ audio::-webkit-media-controls-time-remaining-display {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(34, 197, 94, 0.2);
-  border-radius: 10px;
+  background: rgba(34, 197, 94, 0.15);
+  border-radius: 40px;
+  transition: all 0.3s;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.4);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background: #22c55e;
 }
 
 

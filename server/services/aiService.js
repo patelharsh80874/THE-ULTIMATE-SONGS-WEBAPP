@@ -101,7 +101,7 @@ export const generateAISmartPlaylist = async (prompt) => {
     limitedSuggestions.map(async (item) => {
       try {
         const searchQuery = encodeURIComponent(`${item.name} ${item.artist}`);
-        const searchUrl = `https://jiosaavn-roan.vercel.app/api/search/songs?query=${searchQuery}&limit=1`;
+        const searchUrl = `${process.env.VITE_API_BASE_URL}/search/songs?query=${searchQuery}&limit=1;`;
         const response = await fetch(searchUrl);
         const data = await response.json();
         return data?.data?.results?.[0] || null;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
@@ -30,7 +30,7 @@ const SharedPlaylist = () => {
 
         if (data && data.likedSongs && data.likedSongs.length > 0) {
           const idsString = data.likedSongs.join(',');
-          const saavnRes = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
+          const saavnRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/songs?ids=${idsString}`);
           setPlaylistUser({ ...data, likedSongs: saavnRes.data.data });
         } else {
           setPlaylistUser({ ...data, likedSongs: [] });
@@ -80,9 +80,18 @@ const SharedPlaylist = () => {
             </button>
           </Tooltip>
           <div className="flex flex-col min-w-0">
-            <h1 className="text-lg sm:text-base text-white font-black tracking-tight leading-none truncate">
-              SHARED BY {playlistUser?.username?.toUpperCase()}
-            </h1>
+            <Link 
+              to={`/profile/${playlistUser?.username}`}
+              className="flex items-center gap-2 bg-green-500/5 hover:bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20 transition-all group/navprof"
+            >
+              <div className="w-5 h-5 rounded-md bg-green-500/20 flex items-center justify-center text-[10px] font-black text-green-400 uppercase group-hover/navprof:bg-green-500 group-hover/navprof:text-slate-950 transition-colors">
+                {playlistUser?.username?.[0] || 'U'}
+              </div>
+              <span className="text-green-400 font-bold text-[11px] whitespace-nowrap flex items-center gap-1.5 uppercase tracking-wider">
+                {playlistUser?.username}
+                <i className="ri-external-link-line text-[10px] opacity-50 group-hover/navprof:opacity-100 transition-opacity"></i>
+              </span>
+            </Link>
             <span className="text-[10px] text-zinc-500 font-bold tracking-[0.2em] ml-0.5">PUBLIC COLLECTION</span>
           </div>
         </div>
@@ -158,8 +167,18 @@ const SharedPlaylist = () => {
               <span className="bg-green-500/20 text-green-400 text-[10px] font-bold px-3 py-1 rounded-full border border-green-500/30 uppercase tracking-widest">
                 SHARED PLAYLIST
               </span>
-              <h2 className="text-5xl sm:text-2xl font-black text-white mt-4 sm:mt-2 tracking-tighter leading-tight drop-shadow-2xl">
-                {playlistUser?.username}'s Library
+              <h2 className="text-5xl sm:text-2xl font-black text-white mt-4 sm:mt-2 tracking-tighter leading-tight drop-shadow-2xl break-words">
+                <Link 
+                  to={`/profile/${playlistUser?.username}`} 
+                  className="group flex items-center gap-4 hover:text-green-400 transition-all active:scale-95"
+                >
+                  <span className="hover:underline underline-offset-8 decoration-green-500/30 font-black">
+                    {playlistUser?.username}'s Library
+                  </span>
+                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-xl font-black text-green-400 uppercase group-hover:bg-green-500 group-hover:text-slate-950 transition-all">
+                    {playlistUser?.username?.[0] || 'U'}
+                  </div>
+                </Link>
               </h2>
               <div className="flex flex-wrap items-center gap-3 mt-4 sm:mt-3 text-zinc-300 font-medium sm:justify-center">
                 <p className="text-xl sm:text-sm font-bold opacity-80 uppercase">PUBLIC</p>

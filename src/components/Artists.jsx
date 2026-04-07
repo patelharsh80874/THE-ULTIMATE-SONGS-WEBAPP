@@ -16,7 +16,7 @@ const Artists = () => {
   const getArtists = async () => {
     try {
       const { data } = await axios.get(
-        `https://jiosaavn-roan.vercel.app/api/search/artists?query=${query}&limit=50`
+        `${import.meta.env.VITE_API_BASE_URL}/search/artists?query=${query}&limit=50`
       );
       setArtists(data?.data?.results || []);
       localStorage.setItem("artists", JSON.stringify(data?.data?.results || []));

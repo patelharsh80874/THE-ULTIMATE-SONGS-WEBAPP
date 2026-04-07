@@ -20,7 +20,7 @@ const Album = () => {
     if (!requery) return;
     try {
       const { data } = await axios.get(
-        `https://jiosaavn-roan.vercel.app/api/search/albums?query=${requery}&page=${page}&limit=20`
+        `${import.meta.env.VITE_API_BASE_URL}/search/albums?query=${requery}&page=${page}&limit=20`
       );
       
       const newItems = data?.data?.results || [];

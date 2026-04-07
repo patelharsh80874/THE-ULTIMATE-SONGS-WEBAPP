@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import { AuthContext } from "../context/AuthContext";
@@ -42,6 +42,7 @@ const MyPlaylistDetails = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSongs, setSelectedSongs] = useState(new Set());
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [mobileActionsId, setMobileActionsId] = useState(null); // Track which song's menu is open on mobile
 
   // Global Search & Hydration
   const [allHydratedSongs, setAllHydratedSongs] = useState([]);
@@ -66,7 +67,7 @@ const MyPlaylistDetails = () => {
       if (data.songs && data.songs.length > 0) {
         const idsString = data.songs.join(",");
         const saavnRes = await axios.get(
-          `https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`
+          `${import.meta.env.VITE_API_BASE_URL}/songs?ids=${idsString}`
         );
         if (append) {
           setHydratedSongs((prev) => [...prev, ...saavnRes.data.data]);
@@ -95,6 +96,14 @@ const MyPlaylistDetails = () => {
     fetchPlaylist(1);
     window.scrollTo(0, 0);
   }, [id]);
+
+  useEffect(() => {
+    const handleClickOutside = () => setMobileActionsId(null);
+    if (mobileActionsId) {
+      window.addEventListener("click", handleClickOutside);
+    }
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, [mobileActionsId]);
 
   const handleLoadMore = () => {
     if (page < totalPages) {
@@ -199,7 +208,7 @@ const MyPlaylistDetails = () => {
       for (let i = 0; i < total; i += CHUNK_SIZE) {
         const chunk = allIds.slice(i, i + CHUNK_SIZE);
         const idsString = chunk.join(",");
-        const res = await axios.get(`https://jiosaavn-roan.vercel.app/api/songs?ids=${idsString}`);
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/songs?ids=${idsString}`);
         results = [...results, ...res.data.data];
         setAllHydratedSongs([...results]);
         setHydrationProgress(Math.round(((i + chunk.length) / total) * 100));
@@ -536,18 +545,27 @@ const MyPlaylistDetails = () => {
               <span className="bg-purple-500/20 text-purple-400 text-[10px] font-bold px-3 py-1 rounded-full border border-purple-500/30 uppercase tracking-widest">
                 {isCollaborator ? "COLLABORATIVE PLAYLIST" : "PERSONAL PLAYLIST"}
               </span>
-              <h2 className="text-5xl sm:text-2xl font-black text-white mt-4 sm:mt-2 tracking-tighter leading-tight drop-shadow-2xl uppercase">
+              <h2 className="text-5xl sm:text-2xl font-black text-white mt-4 sm:mt-2 tracking-tighter leading-tight drop-shadow-2xl uppercase break-words">
                 {playlist?.name}
               </h2>
               <div className="flex flex-wrap items-center gap-3 mt-4 sm:mt-3 text-zinc-300 font-medium sm:justify-center">
-                <p className="text-xl sm:text-sm text-green-400 font-bold uppercase">
-                  {playlist?.owner?.username}
-                </p>
+                <Link 
+                  to={`/profile/${playlist?.owner?.username}`}
+                  className="flex items-center gap-2 bg-green-500/5 hover:bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20 transition-all group/curator"
+                >
+                  <div className="w-5 h-5 rounded-md bg-green-500/20 flex items-center justify-center text-[10px] font-black text-green-400 uppercase group-hover/curator:bg-green-500 group-hover/curator:text-slate-950 transition-colors">
+                    {playlist?.owner?.username?.[0] || 'U'}
+                  </div>
+                  <span className="text-green-400 font-bold text-[11px] whitespace-nowrap flex items-center gap-1.5 uppercase tracking-wider">
+                    {playlist?.owner?.username}
+                    <i className="ri-external-link-line text-[10px] opacity-50 group-hover/curator:opacity-100 transition-opacity"></i>
+                  </span>
+                </Link>
                 <div className="w-1.5 h-1.5 bg-zinc-600 rounded-full" />
                 <p className="text-xl sm:text-sm">{playlist?.totalSongs || 0} Tracks</p>
               </div>
-              <div className="mt-4">
-                <p className="text-zinc-500 italic text-sm max-w-xl line-clamp-2">
+              <div className="mt-4 sm:mt-2">
+                <p className="text-zinc-500 italic text-sm max-w-xl sm:max-w-full line-clamp-2 break-words overflow-wrap-anywhere sm:w-96">
                   "{playlist?.description || "No description added."}"
                 </p>
               </div>
@@ -750,58 +768,91 @@ const MyPlaylistDetails = () => {
                       </p>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity">
-                      <Tooltip text="Add to Queue">
+                    {/* Actions - Optimizing for mobile space */}
+                    <div className="flex items-center gap-1.5 sm:gap-1 ml-auto">
+                      {/* Always visible Like button */}
+                      <Tooltip text={isLiked(song?.id) ? "Liked" : "Like"} position="bottom">
                         <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            const added = addToQueue(song); 
-                            if (added) toast.success("Added to queue", { style: TOAST_STYLE }); 
-                            else toast("Already in queue", { icon: "⚠️", style: TOAST_STYLE }); 
-                          }}
-                          className="w-9 h-9 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-green-400 hover:bg-green-500/10 transition-all font-bold"
-                        >
-                          <i className="ri-play-list-add-line text-lg sm:text-base"></i>
-                        </button>
-                      </Tooltip>
-                      <Tooltip text={isLiked(song?.id) ? "Unlike" : "Like"}>
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            toggleLike(song); 
-                          }}
+                          onClick={(e) => { e.stopPropagation(); toggleLike(song); }}
                           className={`w-9 h-9 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all ${
-                            isLiked(song?.id) ? "text-red-500" : "text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
+                            isLiked(song?.id) ? "text-red-500" : "text-zinc-500 hover:text-red-400"
                           }`}
                         >
-                          <i className={`${isLiked(song?.id) ? "ri-heart-fill" : "ri-heart-line"} text-lg sm:text-base`}></i>
+                          <i className={`${isLiked(song?.id) ? "ri-heart-fill" : "ri-heart-line"} text-xl sm:text-lg`}></i>
                         </button>
                       </Tooltip>
-                      <Tooltip text="Add to Playlist">
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setPlaylistModalSong(song); 
-                          }}
-                          className="w-9 h-9 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10 transition-all font-bold"
-                        >
-                          <i className="ri-folder-add-line text-lg sm:text-base"></i>
-                        </button>
-                      </Tooltip>
-                      {canEdit && (
-                        <Tooltip text="Remove from Playlist">
-                          <button 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              handleRemoveSong(song.id); 
-                            }}
-                            className="w-9 h-9 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                          >
-                            <i className="ri-close-circle-line text-lg sm:text-base"></i>
-                          </button>
+
+                      {/* Desktop-only Actions - Visible on PC (>639px) */}
+                      <div className="flex sm:hidden items-center gap-1.5">
+                        <Tooltip text="Add to Queue" position="bottom">
+                          <button onClick={(e) => { e.stopPropagation(); addToQueue(song); toast.success("Added to Queue", { style: TOAST_STYLE }); }} className="w-9 h-9 flex items-center justify-center text-zinc-500 hover:text-green-400 transition-colors"><i className="ri-play-list-add-line text-xl"></i></button>
                         </Tooltip>
-                      )}
+                        <Tooltip text="Add to Playlist" position="bottom">
+                          <button onClick={(e) => { e.stopPropagation(); setPlaylistModalSong(song); }} className="w-9 h-9 flex items-center justify-center text-zinc-500 hover:text-purple-400 transition-colors"><i className="ri-folder-add-line text-xl"></i></button>
+                        </Tooltip>
+                        {canEdit && (
+                          <Tooltip text="Remove" position="bottom">
+                            <button onClick={(e) => { e.stopPropagation(); handleRemoveSong(song.id); }} className="w-9 h-9 flex items-center justify-center text-zinc-700 hover:text-red-500 transition-colors"><i className="ri-close-circle-line text-xl"></i></button>
+                          </Tooltip>
+                        )}
+                      </div>
+
+                      {/* Mobile-only More Actions Menu */}
+                      <div className="hidden sm:block relative">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setMobileActionsId(mobileActionsId === song.id ? null : song.id); }}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${mobileActionsId === song.id ? "bg-white/10 text-white" : "text-zinc-500"}`}
+                        >
+                          <i className="ri-more-2-fill text-xl"></i>
+                        </button>
+
+                        <AnimatePresence>
+                          {mobileActionsId === song.id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                              className="absolute right-0 top-full mt-2 bg-slate-800 border border-white/10 rounded-2xl p-2 flex flex-col gap-1 shadow-2xl z-[100] min-w-[160px]"
+                            >
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); toggleLike(song); setMobileActionsId(null); }} 
+                                className={`w-full h-10 px-3 ${isLiked(song?.id) ? 'bg-red-500/5' : 'bg-slate-700/30'} hover:bg-slate-700/60 rounded-xl flex items-center gap-3 transition-colors`}
+                              >
+                                <i className={`${isLiked(song?.id) ? "ri-heart-fill text-red-500" : "ri-heart-line text-zinc-400"}`}></i>
+                                <span className={`text-[11px] font-black uppercase tracking-tight ${isLiked(song?.id) ? 'text-red-400' : 'text-zinc-300'}`}>
+                                  {isLiked(song?.id) ? "Remove Like" : "Like Song"}
+                                </span>
+                              </button>
+
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); addToQueue(song); setMobileActionsId(null); toast.success("In Queue", { style: TOAST_STYLE }); }} 
+                                className="w-full h-10 px-3 bg-slate-700/30 hover:bg-slate-700/60 rounded-xl flex items-center gap-3 text-zinc-300 transition-colors"
+                              >
+                                <i className="ri-play-list-add-line text-green-400"></i>
+                                <span className="text-[11px] font-black uppercase tracking-tight">Add to Queue</span>
+                              </button>
+                              
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setPlaylistModalSong(song); setMobileActionsId(null); }} 
+                                className="w-full h-10 px-3 bg-slate-700/30 hover:bg-slate-700/60 rounded-xl flex items-center gap-3 text-zinc-300 transition-colors"
+                              >
+                                <i className="ri-folder-add-line text-purple-400"></i>
+                                <span className="text-[11px] font-black uppercase tracking-tight">Add to Playlist</span>
+                              </button>
+
+                              {canEdit && (
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleRemoveSong(song.id); setMobileActionsId(null); }} 
+                                  className="w-full h-10 px-3 bg-red-500/5 hover:bg-red-500/10 rounded-xl flex items-center gap-3 text-red-500 transition-colors"
+                                >
+                                  <i className="ri-close-circle-line"></i>
+                                  <span className="text-[11px] font-black uppercase tracking-tight">Remove Track</span>
+                                </button>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </motion.div>
                 );

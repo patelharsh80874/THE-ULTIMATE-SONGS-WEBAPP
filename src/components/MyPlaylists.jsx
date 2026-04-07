@@ -203,7 +203,7 @@ const MyPlaylists = () => {
                     <i className="ri-account-circle-line text-2xl"></i>
                     <span className="text-xs font-black tracking-[0.2em] uppercase">{user?.username || "GUEST"}</span>
                 </div>
-                <h2 className="text-4xl sm:text-3xl font-black text-white tracking-tighter mb-4">Your Musical Archives</h2>
+                <h2 className="text-3xl sm:text-xl font-black text-white tracking-tighter mb-4">Your Musical Archives</h2>
                 <div className="flex items-center gap-6 text-sm font-bold text-zinc-400">
                     <div className="flex items-center gap-2">
                         <span className="text-white text-xl">{playlists.length}</span> PLAYLISTS
@@ -232,10 +232,10 @@ const MyPlaylists = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04 }}
                     onClick={() => navigate(`/${user?.username || "user"}/${pl._id}`)}
-                    className="group flex items-center gap-5 sm:gap-3 p-4 sm:p-3 rounded-2xl bg-slate-800/40 border border-white/5 hover:bg-slate-800/80 hover:border-white/10 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-black/40"
+                    className="group flex items-center gap-3 sm:gap-5 p-4 sm:p-3 rounded-2xl bg-slate-800/40 border border-white/5 hover:bg-slate-800/80 hover:border-white/10 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-black/40"
                   >
-                    <div className="w-16 h-16 sm:w-12 sm:h-12 rounded-2xl bg-slate-700/50 flex items-center justify-center flex-shrink-0 border border-white/5 group-hover:border-green-500/30 transition-all shadow-inner">
-                      <i className="ri-play-list-2-fill text-3xl sm:text-xl text-green-500/80 group-hover:text-green-400"></i>
+                    <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-2xl bg-slate-700/50 flex items-center justify-center flex-shrink-0 border border-white/5 group-hover:border-green-500/30 transition-all shadow-inner">
+                      <i className="ri-play-list-2-fill text-2xl sm:text-xl text-green-500/80 group-hover:text-green-400"></i>
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -253,13 +253,18 @@ const MyPlaylists = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className={`px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase border ${
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-auto">
+                      <div className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black tracking-widest uppercase border flex-shrink-0 ${
                         pl.isPublic 
                           ? "bg-green-500/10 border-green-500/20 text-green-400" 
                           : "bg-zinc-800 border-white/5 text-zinc-500"
                       }`}>
-                        {pl.isPublic ? "PUBLIC ARCHIVE" : "PRIVATE"}
+                        {pl.isPublic ? (
+                          <>
+                            <span className="sm:inline hidden">PUBLIC</span>
+                            <span className="sm:hidden">PUBLIC ARCHIVE</span>
+                          </>
+                        ) : "PRIVATE"}
                       </div>
                       
                       <button

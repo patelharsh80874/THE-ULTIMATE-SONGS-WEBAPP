@@ -15,7 +15,7 @@ export const renderDynamicMeta = async (req, res) => {
   
   // Base URLs (Always absolute for crawlers)
   const frontendUrl = process.env.FRONTEND_URL || 'https://the-ultimate-songs-webapp-harsh-patel.vercel.app';
-  const saavnApiUrl = process.env.VITE_API_BASE_URL || 'https://jiosaavn-roan.vercel.app/api';
+  const saavnApiUrl = process.env.VITE_API_BASE_URL;
 
   try {
     // 1. Fetch Playlist Data

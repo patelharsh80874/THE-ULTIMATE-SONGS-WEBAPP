@@ -130,7 +130,7 @@ const CommunityPlaylists = () => {
                                 { id: "updatedAt", icon: "ri-time-line", label: "Newest" },
                                 { id: "name", icon: "ri-sort-alphabet-asc", label: "A-Z" }
                             ].map(opt => (
-                                <Tooltip key={opt.id} text={`Sort by ${opt.label}`}>
+                                <Tooltip key={opt.id} position="bottom" text={`Sort by ${opt.label}`}>
                                     <button
                                         onClick={() => setSortBy(opt.id)}
                                         className={`px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${sortBy === opt.id ? "bg-green-500 text-slate-950 shadow-lg shadow-green-500/10" : "text-zinc-500 hover:text-white"}`}
