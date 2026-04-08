@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const getJioSaavnApi = () => process.env.JIOSAAVN_API_URL;
-
+const getJioSaavnApi = () => process.env.VITE_JIOSAAVN_API_URL;
+const getJioSaavnRadioApi = () => process.env.VITE_JIOSAAVN_RADIO_URL;
 // Proxy wrapper utility to keep code clean
 const proxyRequest = async (res, next, url) => {
     try {
@@ -47,7 +47,7 @@ export const getStationSongs = async (req, res, next) => {
     if (!stationid) {
         return res.status(400).json({ error: "stationid is required" });
     }
-    const url = `${getJioSaavnApi()}?__call=webradio.getSong&stationid=${stationid}&k=${limit}&next=${nextPage}&api_version=4&_format=json&_marker=0&ctx=web6dot0`;
+    const url = `${getJioSaavnRadioApi()}/radio/songs?id=${stationid}&n=${limit}&mini=false&raw=true&camel=true`;
     await proxyRequest(res, next, url);
 };
 
