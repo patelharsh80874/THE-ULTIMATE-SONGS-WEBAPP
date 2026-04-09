@@ -497,7 +497,7 @@ export const PlayerProvider = ({ children }) => {
         } catch (e) {
           // Ignore
         }
-      }, 1000); // Heartbeat every 1 seconds keeps OS awake for this session
+      }, 800); // Heartbeat every 0.8 seconds keeps OS awake for this session
 
       return () => clearInterval(keepAliveInterval);
     }
