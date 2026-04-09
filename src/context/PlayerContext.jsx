@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
 import axios from "axios";
 import API_BASE_URL from "../config/api";
+import { buildSmartQueueForSong } from "../services/api";
 
 const PlayerContext = createContext();
 
@@ -16,6 +17,19 @@ export const PlayerProvider = ({ children }) => {
   const [stationId, setStationId] = useState(null);
   const [currentRadioPage, setCurrentRadioPage] = useState(1);
   const [loadingMoreRadio, setLoadingMoreRadio] = useState(false);
+
+  // Smart Queue state — persisted in localStorage so setting survives refresh
+  const [smartQueueEnabled, setSmartQueueEnabled] = useState(() => {
+    try { return localStorage.getItem('smartQueueEnabled') === 'true'; }
+    catch { return false; }
+  });
+  const [smartQueueLoading, setSmartQueueLoading] = useState(false);
+
+  // Persist smartQueueEnabled to localStorage whenever it changes
+  useEffect(() => {
+    try { localStorage.setItem('smartQueueEnabled', String(smartQueueEnabled)); }
+    catch {}
+  }, [smartQueueEnabled]);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [songsList, setSongsList] = useState([]);
@@ -95,9 +109,46 @@ export const PlayerProvider = ({ children }) => {
     return () => socket.off("need-sync", handleNeedSync);
   }, [socket, isHost, partyRoom, syncHostState]);
 
-  // Set the songs list for next/prev navigation and play a song
+  // Build smart queue in background when a new song is played
+  const triggerSmartQueue = useCallback(async (song, currentList, playedIndex, isRadioExplicit = false) => {
+    // Skip if smart queue is off, no song, or user is explicitly playing a radio
+    if (!smartQueueEnabled || !song?.id || isRadioExplicit) return;
+    setSmartQueueLoading(true);
+    try {
+      const smartSongs = await buildSmartQueueForSong(song.id);
+      if (smartSongs && smartSongs.length > 0) {
+        // We want Smart Queue to take over immediately after the currently played song.
+        // So we truncate the existing list at playedIndex + 1.
+        const baseList = (currentList || []).slice(0, playedIndex + 1);
+        
+        // Filter out songs that are already in the base list
+        const existingIds = new Set(baseList.map(s => s.id));
+        const newSongs = smartSongs.filter(s => !existingIds.has(s.id));
+        
+        if (newSongs.length > 0) {
+          setSongsList(prev => {
+            // Also truncate 'prev' in case it updated in the meantime
+            const safePrev = prev.slice(0, playedIndex + 1);
+            const prevIds = new Set(safePrev.map(s => s.id));
+            const filtered = newSongs.filter(s => !prevIds.has(s.id));
+            return [...safePrev, ...filtered];
+          });
+          toast.success(`✨ Smart Queue: ${newSongs.length} songs taking over!`, {
+            style: { borderRadius: '12px', background: '#1e293b', color: '#4ade80', border: '1px solid rgba(74,222,128,0.2)' },
+            duration: 2500,
+          });
+        }
+      }
+    } catch (e) {
+      // Silent fail — existing queue stays intact
+      console.warn('[SmartQueue] Background build failed, using existing queue.', e);
+    } finally {
+      setSmartQueueLoading(false);
+    }
+  }, [smartQueueEnabled]);
+
   const playSong = useCallback(
-    (song, index, list) => {
+    (song, index, list, isRadioExplicit = false) => {
       // If in a party and NOT the host, prevent control
       if (partyRoom && !isHost) {
         toast.error("Only the host can control playback!", {
@@ -120,21 +171,36 @@ export const PlayerProvider = ({ children }) => {
         if (audio) {
           if (!audio.paused) {
             audio.pause();
-            // syncHostState(false) will be handled by native onPause in PlayerBar -> useEffect
           } else {
             audio.play().catch((err) => console.error("Playback failed:", err));
-            // syncHostState(true) will be handled by native onPlay in PlayerBar -> useEffect
           }
         }
       } else {
-        // New song
-        if (list) setSongsList(list);
+        // New song — set it and trigger smart queue build in background
+        const newList = list || [];
+        
+        // If it's a normal playback explicitly, turn off radio mode globally
+        // so it doesn't pollute the new queue
+        if (!isRadioExplicit) {
+           setHasRadioQueue(false);
+           setStationId(null);
+        }
+        
+        // If Smart Queue is taking over, we truncate the playlist UI instantly as well
+        if (smartQueueEnabled && !isRadioExplicit) {
+           if (list) setSongsList(newList.slice(0, index + 1));
+        } else {
+           if (list) setSongsList(newList);
+        }
+        
         setCurrentIndex(index);
         setSonglink([song]);
         setIsPlaying(true); // Optimistic UI update
+        // Fire smart queue in background (non-blocking)
+        triggerSmartQueue(song, newList, index, isRadioExplicit);
       }
     },
-    [songlink, isHost, partyRoom]
+    [songlink, isHost, partyRoom, triggerSmartQueue]
   );
   
   // Auto-emit when host seeks manually or periodically
@@ -348,40 +414,94 @@ export const PlayerProvider = ({ children }) => {
     setIsPlaying(false);
   }, []);
 
-  // Media Session API
+  // Store latest context details in a ref to avoid recreating MediaSession handlers,
+  // which causes iOS/Safari to drop the Lock Screen controls!
+  const sessionHandlersRef = useRef({ next, previous, partyRoom, isHost });
+  useEffect(() => {
+    sessionHandlersRef.current = { next, previous, partyRoom, isHost };
+  }, [next, previous, partyRoom, isHost]);
+
+  // Register Media Session Action Handlers EXACTLY ONCE
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+
+    try {
+      navigator.mediaSession.setActionHandler("play", () => {
+        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        audioRef.current?.play().catch(console.error);
+      });
+      navigator.mediaSession.setActionHandler("pause", () => {
+        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        audioRef.current?.pause();
+      });
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
+        const { partyRoom: pr, isHost: ih, previous: prevFn } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        if (prevFn) prevFn();
+      });
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        const { partyRoom: pr, isHost: ih, next: nextFn } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        if (nextFn) nextFn();
+      });
+    } catch (e) {
+      console.warn("MediaSession action handler registration failed:", e);
+    }
+  }, []);
+
+  // Update Media Session Metadata ONLY when song changes
   useEffect(() => {
     if (songlink.length === 0 || !("mediaSession" in navigator)) return;
 
     const song = songlink[0];
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: song?.name || "",
-      artist: song?.album?.name || "",
-      artwork: [
-        {
-          src: song?.image?.[2]?.url || "",
-          sizes: "512x512",
-          type: "image/jpeg",
-        },
-      ],
-    });
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: song?.name || song?.title || "Unknown Track",
+        artist: song?.artists?.primary?.map(a => a.name).join(", ") || song?.album?.name || "Unknown Artist",
+        artwork: [
+          {
+            src: song?.image?.[2]?.url || song?.image?.[1]?.url || song?.image?.[0]?.url || "",
+            sizes: "512x512",
+            type: "image/jpeg",
+          },
+        ],
+      });
+    } catch (e) {
+      console.warn("MediaSession metadata update failed:", e);
+    }
+  }, [songlink]);
 
-    navigator.mediaSession.setActionHandler("play", () => {
-      if (partyRoom && !isHost) return;
-      audioRef.current?.play();
-    });
-    navigator.mediaSession.setActionHandler("pause", () => {
-      if (partyRoom && !isHost) return;
-      audioRef.current?.pause();
-    });
-    navigator.mediaSession.setActionHandler("previoustrack", () => {
-      if (partyRoom && !isHost) return;
-      previous();
-    });
-    navigator.mediaSession.setActionHandler("nexttrack", () => {
-      if (partyRoom && !isHost) return;
-      next();
-    });
-  }, [songlink, next, previous, partyRoom, isHost]);
+  // Sync actual Playback State to MediaSession to prevent lockscreen drop
+  // Browsers aggressively kill background processes unless they are given explicit states.
+  useEffect(() => {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    }
+  }, [isPlaying]);
+
+  // Keep-alive heartbeat for paused state (Prevents Chrome/Windows from dropping session)
+  // When paused, we continuously ping the position state so the OS knows the tab hasn't "abandoned" the session.
+  useEffect(() => {
+    if (!isPlaying && "mediaSession" in navigator && audioRef.current) {
+      const keepAliveInterval = setInterval(() => {
+        try {
+          if (navigator.mediaSession.playbackState === "paused") {
+            navigator.mediaSession.setPositionState({
+              duration: audioRef.current.duration || 0,
+              playbackRate: audioRef.current.playbackRate || 1,
+              position: audioRef.current.currentTime || 0
+            });
+          }
+        } catch (e) {
+          // Ignore
+        }
+      }, 1000); // Heartbeat every 1 seconds keeps OS awake for this session
+
+      return () => clearInterval(keepAliveInterval);
+    }
+  }, [isPlaying]);
 
   // Auto-play when songlink changes (but not when just isPlaying status changes via syncHostState)
   const lastPlayedId = useRef(null);
@@ -457,6 +577,10 @@ export const PlayerProvider = ({ children }) => {
     setStationId,
     setCurrentRadioPage,
     syncJoinTime,
+    // Smart Queue
+    smartQueueEnabled,
+    setSmartQueueEnabled,
+    smartQueueLoading,
   };
 
   return (

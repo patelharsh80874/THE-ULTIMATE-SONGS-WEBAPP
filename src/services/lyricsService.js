@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { cachedGet } from '../utils/cachedApiClient';
 
 /**
  * Parses LRC format string into an array of { time, text } objects.
@@ -37,7 +38,7 @@ export const parseLRC = (lrcString) => {
 export const fetchLyrics = async (artist, title, duration) => {
   try {
     // LRCLIB GET endpoint: /api/get?artist_name=...&track_name=...&duration=...
-    const response = await axios.get('https://lrclib.net/api/get', {
+    const response = await cachedGet('https://lrclib.net/api/get', {
       params: {
         artist_name: artist,
         track_name: title,

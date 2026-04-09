@@ -7,7 +7,9 @@ import {
     getStationSongs,
     getTrending,
     getSearchStarring,
-    getLabelData
+    getLabelData,
+    createEntityStation,
+    getSmartQueueSongs
 } from '../controllers/radioController.js';
 
 const router = express.Router();
@@ -20,5 +22,7 @@ router.get('/station-songs', getStationSongs);
 router.get('/trending', getTrending);
 router.get('/starring', getSearchStarring);
 router.get('/label', getLabelData);
+router.get('/create-entity-station', createEntityStation);
+router.get('/smart-queue-songs', getSmartQueueSongs);
 
 export default router;

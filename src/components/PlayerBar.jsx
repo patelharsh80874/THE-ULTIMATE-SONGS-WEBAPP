@@ -33,6 +33,56 @@ const PlayerBar = () => {
   const [showParty, setShowParty] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
   const [playlistModalSong, setPlaylistModalSong] = useState(null);
+  
+  // Custom Player States
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(err => console.error("Playback failed:", err));
+      }
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+      setDuration(audioRef.current.duration);
+      
+      // Keep iOS Media Session alive and strictly synced
+      if ("mediaSession" in navigator && "setPositionState" in navigator.mediaSession) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: audioRef.current.duration || 0,
+            playbackRate: audioRef.current.playbackRate || 1,
+            position: audioRef.current.currentTime || 0
+          });
+        } catch (e) {
+          // Ignore if position out of bounds error
+        }
+      }
+    }
+  };
+
+  const handleSeek = (e) => {
+    if (partyRoom && !isHost) return;
+    if (audioRef.current) {
+      const newTime = Number(e.target.value);
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const formatTime = (time) => {
+    if (isNaN(time)) return "0:00";
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
 
   useEffect(() => {
     if (partyRoom && !isHost) {
@@ -135,46 +185,90 @@ const PlayerBar = () => {
               </div>
             </div>
 
-            {/* 2. Center Layout: Audio Controls */}
-            <div className="flex items-center justify-center gap-4 sm:gap-2 w-[40%] sm:w-full flex-1 max-w-2xl px-4 sm:px-0">
-              <Tooltip text={partyRoom && !isHost ? "Only the host can skip" : "Previous Song"}>
-                <button
-                  onClick={previous}
-                  disabled={partyRoom && !isHost}
-                  className={`w-10 h-10 flex items-center justify-center transition-all ${
-                    partyRoom && !isHost ? "text-zinc-600 cursor-not-allowed" : "text-zinc-400 hover:text-white"
-                  }`}
+            {/* 2. Center Layout: Custom Audio Controls */}
+            <div className="flex flex-col items-center justify-center flex-1 w-[40%] max-w-2xl px-4 sm:px-0 gap-1 sm:w-full">
+              {/* Playback Buttons */}
+              <div className="flex items-center justify-center gap-6 sm:gap-5 mt-1 sm:mt-0">
+                <Tooltip text={partyRoom && !isHost ? "Only the host can skip" : "Previous Song"}>
+                  <button
+                    onClick={previous}
+                    disabled={partyRoom && !isHost}
+                    className={`transition-all ${
+                      partyRoom && !isHost ? "text-zinc-600 cursor-not-allowed" : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    <i className="ri-skip-back-fill text-2xl"></i>
+                  </button>
+                </Tooltip>
+                
+                {/* Play/Pause */}
+                <button 
+                  onClick={togglePlay}
+                  className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white text-slate-900 hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,255,255,0.2)]"
                 >
-                  <i className="ri-skip-back-fill text-2xl"></i>
+                  <i className={`text-xl ${isPlaying ? 'ri-pause-fill' : 'ri-play-fill ml-0.5'}`}></i>
                 </button>
-              </Tooltip>
-              
-              <div className="w-full relative group flex items-center">
+
+                <Tooltip text={partyRoom && !isHost ? "Only the host can skip" : "Next Song"}>
+                  <button
+                    onClick={next}
+                    disabled={partyRoom && !isHost}
+                    className={`transition-all ${
+                      partyRoom && !isHost ? "text-zinc-600 cursor-not-allowed" : "text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    <i className="ri-skip-forward-fill text-2xl"></i>
+                  </button>
+                </Tooltip>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="flex items-center w-full gap-3 group relative px-2 sm:px-0">
+                <span className="text-[10px] text-zinc-400 font-medium w-8 text-right tabular-nums">{formatTime(currentTime)}</span>
+                
+                <div className="relative flex-1 h-2 flex items-center cursor-pointer">
+                  <input 
+                    type="range" 
+                    min={0} 
+                    max={duration || 100} 
+                    value={currentTime} 
+                    onChange={handleSeek}
+                    disabled={partyRoom && !isHost}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  {/* Track BG */}
+                  <div className="w-full h-1 bg-slate-700/50 rounded-full overflow-hidden">
+                    {/* Track Fill */}
+                    <div 
+                      className={`h-full transition-none ${isPlaying ? 'bg-green-500' : 'bg-green-600/70'}`} 
+                      style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+                    ></div>
+                  </div>
+                  {/* Thumb */}
+                  <div 
+                    className="absolute h-3 w-3 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity z-0 pointer-events-none" 
+                    style={{ left: `${(currentTime / (duration || 1)) * 100}%`, transform: 'translateX(-50%)' }}
+                  ></div>
+                </div>
+
+                <span className="text-[10px] text-zinc-400 font-medium w-8 tabular-nums">{formatTime(duration)}</span>
+                
+                {/* Hidden Audio Backend */}
                 <audio
                   ref={audioRef}
                   onPause={() => setIsPlaying(false)}
                   onPlay={() => setIsPlaying(true)}
-                  onLoadedMetadata={() => { if(partyRoom && !isHost) syncJoinTime(); }}
-                  className="w-full h-10 appearance-none bg-transparent outline-none rounded-full invert-[0.8] hue-rotate-180 contrast-125"
-                  controls={!partyRoom || isHost}
-                  controlsList="nodownload noplaybackrate"
+                  onTimeUpdate={handleTimeUpdate}
+                  onLoadedMetadata={(ev) => { 
+                    handleTimeUpdate();
+                    if(partyRoom && !isHost) syncJoinTime(); 
+                  }}
                   autoPlay
                   onEnded={next}
                   src={e?.downloadUrl?.[4]?.url}
+                  className="absolute opacity-0 pointer-events-none w-0 h-0"
                 ></audio>
               </div>
- 
-              <Tooltip text={partyRoom && !isHost ? "Only the host can skip" : "Next Song"}>
-                <button
-                  onClick={next}
-                  disabled={partyRoom && !isHost}
-                  className={`w-10 h-10 flex items-center justify-center transition-all ${
-                    partyRoom && !isHost ? "text-zinc-600 cursor-not-allowed" : "text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  <i className="ri-skip-forward-fill text-2xl"></i>
-                </button>
-              </Tooltip>
             </div>
 
             {/* 3. Right Layout: Actions (Desktop) */}

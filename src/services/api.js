@@ -1,48 +1,49 @@
 import axios from "axios";
+import { cachedGet } from "../utils/cachedApiClient";
 import { API_BASE_URL, API_HOME_URL } from "../constants";
 import BACKEND_URL from '../config/api';
 
 export const getHomeModules = (language) =>
-  axios.get(`${API_HOME_URL}/modules?language=${language}`);
+  cachedGet(`${API_HOME_URL}/modules?language=${language}`);
 
 export const searchSongs = (query, page, limit = 40) =>
-  axios.get(`${API_BASE_URL}/search/songs?query=${query}&page=${page}&limit=${limit}`);
+  cachedGet(`${API_BASE_URL}/search/songs?query=${query}&page=${page}&limit=${limit}`);
 
 export const getSongSuggestions = (id) =>
-  axios.get(`${API_BASE_URL}/songs/${id}/suggestions`);
+  cachedGet(`${API_BASE_URL}/songs/${id}/suggestions`);
 
 export const getAlbumDetails = (id) =>
-  axios.get(`${API_BASE_URL}/albums?id=${id}`);
+  cachedGet(`${API_BASE_URL}/albums?id=${id}`);
 
 export const getPlaylistDetails = (id, limit = 100) =>
-  axios.get(`${API_BASE_URL}/playlists?id=${id}&limit=${limit}`);
+  cachedGet(`${API_BASE_URL}/playlists?id=${id}&limit=${limit}`);
 
 export const getArtistSongs = (id, page) =>
-  axios.get(`${API_BASE_URL}/artists/${id}/songs?page=${page}`);
+  cachedGet(`${API_BASE_URL}/artists/${id}/songs?page=${page}`);
 
 export const getArtistDetails = (id) =>
-  axios.get(`${API_BASE_URL}/artists/${id}`);
+  cachedGet(`${API_BASE_URL}/artists/${id}`);
 
 export const getSongDetails = (id) =>
-  axios.get(`${API_BASE_URL}/songs/${id}`);
+  cachedGet(`${API_BASE_URL}/songs/${id}`);
 
 export const getSongsDetails = (ids) =>
-  axios.get(`${API_BASE_URL}/songs?ids=${ids}`);
+  cachedGet(`${API_BASE_URL}/songs?ids=${ids}`);
 
 // --- RADIO FEATURE ENDPOINTS ---
 
 export const fetchFeaturedRadios = async (language = 'hindi') => {
-  const response = await axios.get(`${BACKEND_URL}/api/radio/featured?language=${language}`);
+  const response = await cachedGet(`${BACKEND_URL}/api/radio/featured?language=${language}`);
   return response.data;
 };
 
 export const fetchArtistsRadios = async () => {
-  const response = await axios.get(`${BACKEND_URL}/api/radio/artists`);
+  const response = await cachedGet(`${BACKEND_URL}/api/radio/artists`);
   return response.data?.top_artists || [];
 };
 
 export const fetchUniqueArtists = async (language) => {
-  const response = await axios.get(`${BACKEND_URL}/api/radio/trending?language=${language}`);
+  const response = await cachedGet(`${BACKEND_URL}/api/radio/trending?language=${language}`);
   const uniqueArtists = [];
   const addedIds = new Set();
 
@@ -59,7 +60,7 @@ export const fetchUniqueArtists = async (language) => {
 };
 
 export const fetchStarringArtists = async (language) => {
-  const response = await axios.get(`${BACKEND_URL}/api/radio/starring?language=${language}`);
+  const response = await cachedGet(`${BACKEND_URL}/api/radio/starring?language=${language}`);
   const uniqueArtists = [];
   const addedIds = new Set();
   
@@ -77,7 +78,7 @@ export const fetchStarringArtists = async (language) => {
 };
 
 export const getTrendingLabels = async (language = 'hindi') => {
-  const trending = await axios.get(`${BACKEND_URL}/api/radio/trending?language=${language}`);
+  const trending = await cachedGet(`${BACKEND_URL}/api/radio/trending?language=${language}`);
   const unique = new Set();
   const results = [];
 
@@ -92,7 +93,7 @@ export const getTrendingLabels = async (language = 'hindi') => {
     unique.add(token);
 
     try {
-      const detailRes = await axios.get(`${BACKEND_URL}/api/radio/label?token=${token}`);
+      const detailRes = await cachedGet(`${BACKEND_URL}/api/radio/label?token=${token}`);
       if (detailRes.data) {
         results.push({
           label_url,
@@ -108,7 +109,7 @@ export const getTrendingLabels = async (language = 'hindi') => {
 };
 
 export const getDetailedLabel = async (token, page = 0, n_song = 20, n_album = 20, category = 'popularity', sortOrder = 'desc', language = 'hindi') => {
-  const response = await axios.get(`${BACKEND_URL}/api/radio/label`, {
+  const response = await cachedGet(`${BACKEND_URL}/api/radio/label`, {
     params: {
       token,
       p: page,
@@ -125,21 +126,21 @@ export const getDetailedLabel = async (token, page = 0, n_song = 20, n_album = 2
 // --- STATION CREATION AND FETCHING ---
 export const createStationId = async (language, radioId) => {
   try {
-    const response = await axios.get(`${BACKEND_URL}/api/radio/create-station?language=${language}&id=${radioId}`);
+    const response = await cachedGet(`${BACKEND_URL}/api/radio/create-station?language=${language}&id=${radioId}`);
     return response.data?.stationid || null;
   } catch (error) { return null; }
 };
 
 export const createArtitsStationId = async (radioId) => {
   try {
-    const response = await axios.get(`${BACKEND_URL}/api/radio/create-artist-station?id=${radioId}`);
+    const response = await cachedGet(`${BACKEND_URL}/api/radio/create-artist-station?id=${radioId}`);
     return response.data?.stationid || null;
   } catch (error) { return null; }
 };
 
 export const getSongsByStationId = async (stationId, limit = 20, next = 1) => {
   try {
-    const response = await axios.get(`${BACKEND_URL}/api/radio/station-songs?stationid=${stationId}&limit=${limit}&next=${next}`);
+    const response = await cachedGet(`${BACKEND_URL}/api/radio/station-songs?stationid=${stationId}&limit=${limit}&next=${next}`);
     
     // Convert generic object { "0": {...}, "1": {...} } to array of song IDs
     const data = response.data;
@@ -155,7 +156,7 @@ export const getSongsByStationId = async (stationId, limit = 20, next = 1) => {
     
     // FIX: Use query param format (?ids=) not path format (/ids)
     const idsParam = songIds.join(',');
-    const detailRes = await axios.get(`${API_BASE_URL}/songs?ids=${idsParam}`);
+    const detailRes = await cachedGet(`${API_BASE_URL}/songs?ids=${idsParam}`);
     const songs = detailRes.data?.data;
     return { data: Array.isArray(songs) ? songs : (songs ? [songs] : []) };
   } catch (error) {
@@ -176,4 +177,97 @@ export const fetchArtitsRadioSongs = async (radioId) => {
   if (!stationId) return { fullSongs: { data: [] } };
   const fullSongs = await getSongsByStationId(stationId, 20, 1);
   return { fullSongs, stationId };
+};
+
+// =============================================================
+// --- SMART QUEUE SYSTEM ---
+// =============================================================
+
+/**
+ * Internal: Get song suggestion IDs for a given song ID
+ */
+const _getSuggestionIds = async (songId) => {
+  try {
+    const res = await cachedGet(`${API_BASE_URL}/songs/${songId}/suggestions`);
+    const songs = res.data?.data || [];
+    return songs.map(s => s.id).filter(Boolean).slice(0, 10);
+  } catch (e) {
+    return [];
+  }
+};
+
+/**
+ * Internal: Create entity station from a list of song IDs
+ * Proxied via our backend to avoid CORS errors
+ */
+const _createEntityStation = async (songIds) => {
+  try {
+    const idsParam = songIds.join(',');
+    const res = await axios.get(`${BACKEND_URL}/api/radio/create-entity-station?ids=${encodeURIComponent(idsParam)}`);
+    return res.data?.stationid || null;
+  } catch (e) {
+    return null;
+  }
+};
+
+/**
+ * Internal: Get song IDs from a smart radio station
+ * Proxied via our backend to avoid CORS errors
+ */
+const _getStationSongIds = async (stationId, count = 20) => {
+  try {
+    const res = await axios.get(`${BACKEND_URL}/api/radio/smart-queue-songs?stationid=${stationId}&k=${count}`);
+    const data = res.data;
+    if (!data) return [];
+    return Object.keys(data)
+      .filter(key => !isNaN(key))
+      .map(key => data[key]?.song?.id)
+      .filter(Boolean);
+  } catch (e) {
+    return [];
+  }
+};
+
+/**
+ * Internal: Fetch full song details from JioSaavn formatted API
+ */
+const _getFullSongDetails = async (ids) => {
+  try {
+    if (!ids || ids.length === 0) return [];
+    const idsParam = ids.join(',');
+    const res = await cachedGet(`${API_BASE_URL}/songs?ids=${idsParam}`);
+    const songs = res.data?.data;
+    return Array.isArray(songs) ? songs : (songs ? [songs] : []);
+  } catch (e) {
+    return [];
+  }
+};
+
+/**
+ * MAIN: Build a Smart Queue for a given song.
+ * Full pipeline: suggestions → entity station → station songs → full song details
+ * Returns an array of fully-formed song objects ready to add to the queue.
+ * Returns [] if any step fails (caller should fall back to existing queue logic).
+ */
+export const buildSmartQueueForSong = async (songId) => {
+  try {
+    // Step 1: Get suggestion IDs from current song
+    const suggestionIds = await _getSuggestionIds(songId);
+    if (suggestionIds.length === 0) return [];
+
+    // Step 2: Create entity-based smart station
+    const stationId = await _createEntityStation(suggestionIds);
+    if (!stationId) return [];
+
+    // Step 3: Get song IDs from the smart station
+    const stationSongIds = await _getStationSongIds(stationId, 20);
+    if (stationSongIds.length === 0) return [];
+
+    // Step 4: Fetch full song details
+    const fullSongs = await _getFullSongDetails(stationSongIds);
+    return fullSongs;
+  } catch (e) {
+    console.error('[SmartQueue] Pipeline failed:', e);
+    return [];
+  }
 };

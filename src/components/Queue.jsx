@@ -17,6 +17,9 @@ const Queue = ({ onClose }) => {
     removeFromQueue,
     reorderQueue,
     clearQueue,
+    smartQueueEnabled,
+    setSmartQueueEnabled,
+    smartQueueLoading,
   } = usePlayer();
 
   // Drag state
@@ -63,19 +66,35 @@ const Queue = ({ onClose }) => {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700">
         <div className="flex items-center gap-3">
-          <i className="ri-play-list-2-line text-xl text-green-400"></i>
-          <h2 className="text-lg font-bold text-white">
+          <i className="ri-play-list-2-line text-xl  text-green-400"></i>
+          <h2 className="text-lg sm:text-xs font-bold text-white">
             Queue{" "}
-            <span className="text-sm font-normal text-zinc-400">
+            <span className="text-sm sm:text-xs font-normal text-zinc-400">
               ({songsList.length} songs)
             </span>
           </h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 sm:gap-1.5">
+
+          {/* Smart Queue Toggle */}
+          <Tooltip position="bottom" text={smartQueueEnabled ? "Smart Queue ON — click to turn off" : "Smart Queue OFF — click to enable Smart Recommendation Queue"}>
+            <button
+              onClick={() => setSmartQueueEnabled(prev => !prev)}
+              className={`flex items-center gap-1.5 sm:px-1 sm:py-1 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-300 ${
+                smartQueueEnabled
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/40 shadow-[0_0_12px_rgba(74,222,128,0.15)]'
+                  : 'bg-slate-700/50 text-zinc-500 border border-slate-600 hover:text-zinc-300'
+              }`}
+            >
+              <i className={`text-sm  ${smartQueueEnabled ? 'ri-magic-fill' : 'ri-magic-line'}`}></i>
+              <span className="sm:block">{smartQueueEnabled ? 'Smart Queue ON' : 'Smart Queue OFF'}</span>
+            </button>
+          </Tooltip>
+
           <p className="text-xs text-zinc-500 sm:hidden">
             <i className="ri-drag-move-line mr-1"></i>Drag to reorder
           </p>
-          <Tooltip text="Clear queue">
+          <Tooltip position="bottom" text="Clear queue">
             <button
               onClick={clearQueue}
               className="px-3 py-1 text-xs font-semibold rounded-md bg-red-500/20 text-red-400 hover:bg-red-500/40 duration-200"
@@ -83,7 +102,7 @@ const Queue = ({ onClose }) => {
               Clear
             </button>
           </Tooltip>
-          <Tooltip text="Close">
+          <Tooltip position="bottom" text="Close">
             <button
               onClick={onClose}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-700 text-zinc-400 hover:text-white duration-200"
@@ -93,6 +112,18 @@ const Queue = ({ onClose }) => {
           </Tooltip>
         </div>
       </div>
+
+      {/* Smart Queue Loading Bar */}
+      {smartQueueLoading && (
+        <div className="px-5 py-1 bg-green-500/5 border-b border-green-500/10 flex items-center gap-2">
+          <div className="flex gap-1">
+            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+          </div>
+          <p className="text-[10px] text-green-400 font-semibold tracking-wide">Building Smart Queue...</p>
+        </div>
+      )}
 
       {/* Song List */}
       <div

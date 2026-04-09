@@ -78,3 +78,32 @@ export const getLabelData = async (req, res, next) => {
     const url = `${getJioSaavnApi()}?__call=webapi.get&token=${encodeURIComponent(token)}&type=label&p=${p}&n_song=${n_song}&n_album=${n_album}&category=${category}&sort_order=${sort_order}&language=${language}&includeMetaTags=0&ctx=wap6dot0&api_version=4&_format=json&_marker=0`;
     await proxyRequest(res, next, url);
 };
+
+// --- SMART QUEUE PROXY ROUTES ---
+
+/**
+ * Create a JioSaavn entity station from a list of song IDs (for Smart Queue)
+ * Query param: ids (comma-separated)
+ */
+export const createEntityStation = async (req, res, next) => {
+    const { ids } = req.query;
+    if (!ids) return res.status(400).json({ error: "ids is required" });
+
+    const songIds = ids.split(',').map(id => id.trim()).filter(Boolean);
+    const entityIdParam = JSON.stringify(songIds);
+    const url = `${getJioSaavnApi()}?__call=webradio.createEntityStation&api_version=4&_format=json&_marker=0&ctx=android&entity_id=${encodeURIComponent(entityIdParam)}&entity_type=queue`;
+    await proxyRequest(res, next, url);
+};
+
+/**
+ * Get songs from a smart queue station by stationId
+ * Query params: stationid, k (count, default 20)
+ */
+export const getSmartQueueSongs = async (req, res, next) => {
+    const { stationid, k = 20 } = req.query;
+    if (!stationid) return res.status(400).json({ error: "stationid is required" });
+
+    const url = `${getJioSaavnApi()}?__call=webradio.getSong&api_version=4&_format=json&_marker=0&ctx=android&stationid=${stationid}&k=${k}`;
+    await proxyRequest(res, next, url);
+};
+

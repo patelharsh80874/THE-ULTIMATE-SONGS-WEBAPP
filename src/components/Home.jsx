@@ -302,7 +302,7 @@ const Home = () => {
   function seccall2() {
     const intervalId2 = setInterval(
       () => {
-        if (details.length >= 0 && page < 20) {
+        if (details.length >= 0 && page < 5) {
           setPage2(Math.floor(Math.random() * 50));
           setPage(page + 1);
           getDetails();
@@ -361,7 +361,7 @@ const Home = () => {
         setStationId(stationId);
         setHasRadioQueue(true);
         setCurrentRadioPage(1);
-        playSong(fullSongs.data[0], 0, fullSongs.data);
+        playSong(fullSongs.data[0], 0, fullSongs.data, true);
         toast.success("Ready to play!", { id: loadingToast });
       } else {
         toast.error("Station is currently offline", { id: loadingToast });
@@ -381,7 +381,7 @@ const Home = () => {
         setStationId(stationId);
         setHasRadioQueue(true);
         setCurrentRadioPage(1);
-        playSong(fullSongs.data[0], 0, fullSongs.data);
+        playSong(fullSongs.data[0], 0, fullSongs.data, true);
         toast.success("Playing now!", { id: loadingToast });
       } else {
         toast.error("Artist station unavailable", { id: loadingToast });
