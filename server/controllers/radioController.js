@@ -91,7 +91,8 @@ export const createEntityStation = async (req, res, next) => {
 
     const songIds = ids.split(',').map(id => id.trim()).filter(Boolean);
     const entityIdParam = JSON.stringify(songIds);
-    const url = `${getJioSaavnApi()}?__call=webradio.createEntityStation&api_version=4&_format=json&_marker=0&ctx=android&entity_id=${encodeURIComponent(entityIdParam)}&entity_type=queue`;
+    // const url = `${getJioSaavnApi()}?__call=webradio.createEntityStation&api_version=4&_format=json&_marker=0&ctx=android&entity_id=${encodeURIComponent(entityIdParam)}&entity_type=queue`;
+    const url = `${getJioSaavnApi()}?__call=webradio.createEntityStation&api_version=4&_format=json&_marker=0&ctx=android&entity_id=${entityIdParam}&entity_type=queue`;
     await proxyRequest(res, next, url);
 };
 
