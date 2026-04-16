@@ -68,34 +68,10 @@
 
 ---
 
-## 👨‍💻 Connect with the Developer
-
-**Developed with ❤️ by Harsh Patel**
-
-I specialize in building premium digital products that push the boundaries of performance and design.
-
-- 🌐 **Portfolio:** [patelharsh.in](https://patelharsh.in)
-- 📸 **Instagram:** [@patelharsh.in](https://instagram.com/patelharsh.in)
-- 🐙 **GitHub:** [@patelharsh80874](https://github.com/patelharsh80874)
-- 📧 **Email:** [patelharsh80874@yahoo.com](mailto:patelharsh80874@yahoo.com)
-
----
-
-## 📜 Deployment & Installation
-
-### Local Setup
-1. Clone: `git clone https://github.com/patelharsh80874/THE-ULTIMATE-SONGS-WEBAPP.git`
-2. Install: `npm install`
-3. Configure: Add `.env` with `MONGO_URI`, `JWT_SECRET`, and `GEMINI_API_KEY`.
-4. Launch: `npm run dev`
-
 ### Production
 The app is optimized for **Vercel** with a specialized `vercel.json` for serverless function handling and static asset optimization.
 
 ---
-
-## ⚖️ Legal Disclaimer
-This project is for educational and portfolio purposes only. All trademarks and copyrights belong to their respective owners. All media and songs are sourced from public search engines for demonstration.
 
 <p align="center">
   <b>Transforming the way we experience music. Give it a ⭐ on GitHub!</b>
