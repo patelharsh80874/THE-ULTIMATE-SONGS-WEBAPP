@@ -34,7 +34,6 @@ export const PlayerProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [songsList, setSongsList] = useState([]);
   const audioRef = useRef();
-  const silentAudioRef = useRef(null); // Ghost audio to keep iOS alive when paused
   
   const { partyRoom, isHost, socket, emitPlayback } = useSocket();
 
@@ -428,8 +427,7 @@ export const PlayerProvider = ({ children }) => {
     sessionHandlersRef.current = { next, previous, partyRoom, isHost };
   }, [next, previous, partyRoom, isHost]);
 
-  // Update Media Session Metadata AND Handlers when song changes
-  // iOS/Safari fix: Refreshing handlers with metadata helps force the correct UI icons (Arrows vs Skips)
+  // Final Clean Media Session Implementation
   useEffect(() => {
     if (songlink.length === 0 || !("mediaSession" in navigator)) return;
 
@@ -438,7 +436,7 @@ export const PlayerProvider = ({ children }) => {
       // 1. Update Metadata
       navigator.mediaSession.metadata = new MediaMetadata({
         title: song?.name || song?.title || "Unknown Track",
-        artist: song?.artists?.primary?.map(a => a.name).join(", ") || song?.album?.name || song?.subtitle || "Unknown Artist",
+        artist: song?.artists?.primary?.map(a => a.name).join(", ") || song?.album?.name || "Unknown Artist",
         album: song?.album?.name || song?.name || "Ultimate Songs",
         artwork: [
           {
@@ -449,8 +447,7 @@ export const PlayerProvider = ({ children }) => {
         ],
       });
 
-      // 2. Register/Refresh Action Handlers
-      // On iOS, these MUST be refreshed per track to keep the Next/Prev Arrow icons visible.
+      // 2. Register Handlers (using Ref to always have latest functions)
       navigator.mediaSession.setActionHandler("play", () => {
         const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
         if (pr && !ih) return;
@@ -475,76 +472,19 @@ export const PlayerProvider = ({ children }) => {
         if (nextFn) nextFn();
       });
 
-      // iOS/Safari Specific: Explicitly disable seek handlers to fight the skip-icons default.
+      // Disable 10s skip icons to force Next/Previous arrows on iOS
       navigator.mediaSession.setActionHandler("seekbackward", null);
       navigator.mediaSession.setActionHandler("seekforward", null);
 
     } catch (e) {
-      console.warn("MediaSession update failed:", e);
+      console.warn("MediaSession sync failed:", e);
     }
   }, [songlink]);
 
-  // Sync actual Playback State to MediaSession to prevent lockscreen drop
-  // Browsers aggressively kill background processes unless they are given explicit states.
+  // Sync actual Playback State
   useEffect(() => {
     if ("mediaSession" in navigator) {
       navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
-    }
-  }, [isPlaying]);
-
-  // iOS "Silent Ghost" Keep-Alive:
-  // When paused, Safari drops the MediaSession if it thinks no audio is playing.
-  // We play a tiny silent loop to keep the AudioSession active at the system level.
-  useEffect(() => {
-    if (!("mediaSession" in navigator)) return;
-
-    // Direct Base64 for 1 second of silence (WAV)
-    const SILENCE_B64 = "data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP7/AAD+Pw==";
-
-    if (!silentAudioRef.current) {
-      silentAudioRef.current = new Audio(SILENCE_B64);
-      silentAudioRef.current.loop = true;
-      silentAudioRef.current.volume = 0.01; // Tiny volume prevents system auto-pause
-    }
-
-    const maintainSession = async () => {
-      try {
-        if (songlink.length > 0) {
-          // Always-On Audio Anchor: Playing silence continuously prevents iOS 
-          // from ever dropping the media session, even during track changes.
-          if (silentAudioRef.current.paused) {
-            await silentAudioRef.current.play();
-          }
-        } else {
-          silentAudioRef.current.pause();
-        }
-      } catch (err) {
-        // Silent fail
-      }
-    };
-
-    maintainSession();
-  }, [songlink]);
-
-  // Keep-alive heartbeat for paused state (Prevents Chrome/Windows from dropping session)
-  // When paused, we continuously ping the position state so the OS knows the tab hasn't "abandoned" the session.
-  useEffect(() => {
-    if (!isPlaying && "mediaSession" in navigator && audioRef.current) {
-      const keepAliveInterval = setInterval(() => {
-        try {
-          if (navigator.mediaSession.playbackState === "paused") {
-            navigator.mediaSession.setPositionState({
-              duration: audioRef.current.duration || 0,
-              playbackRate: audioRef.current.playbackRate || 1,
-              position: audioRef.current.currentTime || 0
-            });
-          }
-        } catch (e) {
-          // Ignore
-        }
-      }, 800); // Heartbeat every 0.8 seconds keeps OS awake for this session
-
-      return () => clearInterval(keepAliveInterval);
     }
   }, [isPlaying]);
 
