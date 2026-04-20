@@ -34,6 +34,7 @@ export const PlayerProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [songsList, setSongsList] = useState([]);
   const audioRef = useRef();
+  const silentAudioRef = useRef(null); // Ghost audio to keep iOS alive when paused
   
   const { partyRoom, isHost, socket, emitPlayback } = useSocket();
 
@@ -427,45 +428,18 @@ export const PlayerProvider = ({ children }) => {
     sessionHandlersRef.current = { next, previous, partyRoom, isHost };
   }, [next, previous, partyRoom, isHost]);
 
-  // Register Media Session Action Handlers EXACTLY ONCE
-  useEffect(() => {
-    if (!("mediaSession" in navigator)) return;
-
-    try {
-      navigator.mediaSession.setActionHandler("play", () => {
-        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
-        if (pr && !ih) return;
-        audioRef.current?.play().catch(console.error);
-      });
-      navigator.mediaSession.setActionHandler("pause", () => {
-        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
-        if (pr && !ih) return;
-        audioRef.current?.pause();
-      });
-      navigator.mediaSession.setActionHandler("previoustrack", () => {
-        const { partyRoom: pr, isHost: ih, previous: prevFn } = sessionHandlersRef.current;
-        if (pr && !ih) return;
-        if (prevFn) prevFn();
-      });
-      navigator.mediaSession.setActionHandler("nexttrack", () => {
-        const { partyRoom: pr, isHost: ih, next: nextFn } = sessionHandlersRef.current;
-        if (pr && !ih) return;
-        if (nextFn) nextFn();
-      });
-    } catch (e) {
-      console.warn("MediaSession action handler registration failed:", e);
-    }
-  }, []);
-
-  // Update Media Session Metadata ONLY when song changes
+  // Update Media Session Metadata AND Handlers when song changes
+  // iOS/Safari fix: Refreshing handlers with metadata helps force the correct UI icons (Arrows vs Skips)
   useEffect(() => {
     if (songlink.length === 0 || !("mediaSession" in navigator)) return;
 
     const song = songlink[0];
     try {
+      // 1. Update Metadata
       navigator.mediaSession.metadata = new MediaMetadata({
         title: song?.name || song?.title || "Unknown Track",
-        artist: song?.artists?.primary?.map(a => a.name).join(", ") || song?.album?.name || "Unknown Artist",
+        artist: song?.artists?.primary?.map(a => a.name).join(", ") || song?.album?.name || song?.subtitle || "Unknown Artist",
+        album: song?.album?.name || song?.name || "Ultimate Songs",
         artwork: [
           {
             src: song?.image?.[2]?.url || song?.image?.[1]?.url || song?.image?.[0]?.url || "",
@@ -474,8 +448,39 @@ export const PlayerProvider = ({ children }) => {
           },
         ],
       });
+
+      // 2. Register/Refresh Action Handlers
+      // On iOS, these MUST be refreshed per track to keep the Next/Prev Arrow icons visible.
+      navigator.mediaSession.setActionHandler("play", () => {
+        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        audioRef.current?.play().catch(console.error);
+      });
+
+      navigator.mediaSession.setActionHandler("pause", () => {
+        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        audioRef.current?.pause();
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
+        const { partyRoom: pr, isHost: ih, previous: prevFn } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        if (prevFn) prevFn();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        const { partyRoom: pr, isHost: ih, next: nextFn } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        if (nextFn) nextFn();
+      });
+
+      // iOS/Safari Specific: Explicitly disable seek handlers to fight the skip-icons default.
+      navigator.mediaSession.setActionHandler("seekbackward", null);
+      navigator.mediaSession.setActionHandler("seekforward", null);
+
     } catch (e) {
-      console.warn("MediaSession metadata update failed:", e);
+      console.warn("MediaSession update failed:", e);
     }
   }, [songlink]);
 
@@ -486,6 +491,40 @@ export const PlayerProvider = ({ children }) => {
       navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
     }
   }, [isPlaying]);
+
+  // iOS "Silent Ghost" Keep-Alive:
+  // When paused, Safari drops the MediaSession if it thinks no audio is playing.
+  // We play a tiny silent loop to keep the AudioSession active at the system level.
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+
+    // Direct Base64 for 1 second of silence (WAV)
+    const SILENCE_B64 = "data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP7/AAD+Pw==";
+
+    if (!silentAudioRef.current) {
+      silentAudioRef.current = new Audio(SILENCE_B64);
+      silentAudioRef.current.loop = true;
+      silentAudioRef.current.volume = 0.01; // Tiny volume prevents system auto-pause
+    }
+
+    const maintainSession = async () => {
+      try {
+        if (songlink.length > 0) {
+          // Always-On Audio Anchor: Playing silence continuously prevents iOS 
+          // from ever dropping the media session, even during track changes.
+          if (silentAudioRef.current.paused) {
+            await silentAudioRef.current.play();
+          }
+        } else {
+          silentAudioRef.current.pause();
+        }
+      } catch (err) {
+        // Silent fail
+      }
+    };
+
+    maintainSession();
+  }, [songlink]);
 
   // Keep-alive heartbeat for paused state (Prevents Chrome/Windows from dropping session)
   // When paused, we continuously ping the position state so the OS knows the tab hasn't "abandoned" the session.
