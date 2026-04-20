@@ -8,14 +8,18 @@ import toast from "react-hot-toast";
 import logo from "./../../public/logo3.jpg";
 import Tooltip from "./Tooltip";
 
+const RESERVED_USERNAMES = ['admin', 'root', 'system', 'support', 'official', 'ultimate', 'moderator', 'staff', 'owner', 'developer', 'harsh', 'theultimatesongs'];
+
 const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: "Weak", color: "bg-red-500" });
   const [showPassword, setShowPassword] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState(null);
+  const [usernameError, setUsernameError] = useState("");
   
   const [registerMode, setRegisterMode] = useState("input"); // "input" | "otp"
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -33,9 +37,46 @@ const Register = () => {
   }, [user, navigate]);
 
   useEffect(() => {
+    // Reset all status on change to prevent "ghost" messages
+    setUsernameError("");
+    setUsernameAvailable(null);
+    setIsChecking(false);
+
     if (username.length < 3) {
+      if (username.length > 0) setUsernameError("Minimum 3 characters required");
       setUsernameAvailable(null);
       setIsChecking(false);
+      return;
+    }
+
+    if (RESERVED_USERNAMES.includes(username.toLowerCase())) {
+      setUsernameError("This username is reserved");
+      setUsernameAvailable(null);
+      return;
+    }
+
+    if (username.length > 20) {
+      setUsernameError("Maximum 20 characters allowed");
+      setUsernameAvailable(null);
+      return;
+    }
+
+    if (username.includes(" ")) {
+      setUsernameError("Spaces are not allowed");
+      setUsernameAvailable(null);
+      return;
+    }
+
+    if (username.includes("@")) {
+      setUsernameError("Username cannot be an email address");
+      setUsernameAvailable(null);
+      return;
+    }
+
+    const usernameRegex = /^[a-zA-Z0-9._]+$/;
+    if (!usernameRegex.test(username)) {
+      setUsernameError("Only letters, numbers, dot (.) and underscore (_) allowed");
+      setUsernameAvailable(null);
       return;
     }
 
@@ -54,6 +95,25 @@ const Register = () => {
     const timeoutId = setTimeout(check, 500);
     return () => clearTimeout(timeoutId);
   }, [username]);
+
+  useEffect(() => {
+    let score = 0;
+    if (password.length >= 6) score += 30;
+    if (password.length >= 10) score += 20;
+    if (/[0-9]/.test(password)) score += 25;
+    if (/[A-Z]/.test(password)) score += 25;
+
+    let label = "Weak";
+    let color = "bg-red-500";
+    if (score > 70) {
+      label = "Strong";
+      color = "bg-green-500";
+    } else if (score > 30) {
+      label = "Medium";
+      color = "bg-yellow-500";
+    }
+    setPasswordStrength({ score, label, color });
+  }, [password]);
 
   useEffect(() => {
     let interval;
@@ -80,7 +140,8 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (usernameAvailable === false) return;
+    if (usernameAvailable === false || usernameError) return;
+
     setIsRegistering(true);
     try {
       const { success, requiresOtp, identifier } = await register(username, email, password);
@@ -191,30 +252,37 @@ const Register = () => {
                     <Tooltip text="Pick a unique name (minimum 3 characters)" position="top" className="w-full">
                       <div className="relative w-full">
                         <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                          <i className={`ri-user-heart-fill text-sm transition-colors ${usernameAvailable === true ? 'text-green-500' : usernameAvailable === false ? 'text-red-500' : 'text-zinc-500'}`}></i>
+                          <i className={`ri-user-heart-fill text-sm transition-colors ${usernameError || usernameAvailable === false ? 'text-red-500' : usernameAvailable === true ? 'text-green-500' : 'text-zinc-500'}`}></i>
                         </div>
                         <input
                           type="text" required minLength={3} value={username} onChange={(e) => setUsername(e.target.value)}
                           autoComplete="username"
-                          className={`w-full pl-12 pr-12 py-2.5 bg-white/[0.04] border rounded-xl text-white placeholder-zinc-500 transition-all font-bold text-sm ${usernameAvailable === true ? 'border-green-500/50':'border-white/5'}`}
+                          className={`w-full pl-12 pr-12 py-2.5 bg-white/[0.04] border rounded-xl text-white placeholder-zinc-500 transition-all font-bold text-sm ${usernameError || usernameAvailable === false ? 'border-red-500/50' : usernameAvailable === true ? 'border-green-500/50' : 'border-white/5'}`}
                           placeholder="Choose a username"
                         />
-                        {usernameAvailable !== null && (
+                        {(usernameError || usernameAvailable !== null || isChecking) && (
                           <div className="absolute inset-y-0 right-0 pr-5 flex items-center">
-                            {isChecking ? <i className="ri-loader-4-line animate-spin text-zinc-500"></i> : usernameAvailable ? <i className="ri-checkbox-circle-fill text-green-500"></i> : <i className="ri-error-warning-fill text-red-500"></i>}
+                            {isChecking ? (
+                              <i className="ri-loader-4-line animate-spin text-zinc-500"></i>
+                            ) : (usernameError || usernameAvailable === false) ? (
+                              <i className="ri-error-warning-fill text-red-500"></i>
+                            ) : usernameAvailable === true ? (
+                              <i className="ri-checkbox-circle-fill text-green-500"></i>
+                            ) : null}
                           </div>
                         )}
                       </div>
                     </Tooltip>
-                    <AnimatePresence>
-                      {usernameAvailable !== null && !isChecking && (
+                    <AnimatePresence mode="wait">
+                      {(usernameError || (usernameAvailable !== null && !isChecking)) && (
                         <motion.p 
+                          key={usernameError ? "error" : "avail"}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0 }}
-                          className={`text-[9px] font-black uppercase tracking-widest ml-2 mt-1 ${usernameAvailable ? 'text-green-500' : 'text-red-500'}`}
+                          className={`text-[9px] font-black uppercase tracking-widest ml-2 mt-1 ${usernameError || !usernameAvailable ? 'text-red-500' : 'text-green-500'}`}
                         >
-                          {usernameAvailable ? 'Username Available' : 'Username Already Taken'}
+                          {usernameError || (usernameAvailable ? 'Username Available' : 'Username Already Taken')}
                         </motion.p>
                       )}
                     </AnimatePresence>
@@ -251,6 +319,21 @@ const Register = () => {
                         </button>
                       </div>
                     </Tooltip>
+                    
+                    {/* Password Strength Meter */}
+                    <div className="px-2 pt-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-zinc-500">Security Strength</span>
+                        <span className={`text-[8px] font-black uppercase tracking-widest ${passwordStrength.color.replace('bg-', 'text-')}`}>{passwordStrength.label}</span>
+                      </div>
+                      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${passwordStrength.score}%` }}
+                          className={`h-full ${passwordStrength.color} transition-all duration-500`}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="pt-2 flex flex-col gap-3">

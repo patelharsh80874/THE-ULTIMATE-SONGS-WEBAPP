@@ -62,11 +62,12 @@ export const getPlaylistById = async (req, res, next) => {
     }
 
     // Check access: public playlists are visible to all,
-    // private playlists only to the owner or collaborators
+    // private playlists only to the owner, collaborators, or administrators
     const isOwner = req.user && String(playlist.owner?._id || playlist.owner) === String(req.user._id);
     const isCollaborator = req.user && playlist.collaborators?.some(c => String(c._id || c) === String(req.user._id));
+    const isAdmin = req.user?.role === 'admin';
     
-    if (!playlist.isPublic && !isOwner && !isCollaborator) {
+    if (!playlist.isPublic && !isOwner && !isCollaborator && !isAdmin) {
       res.status(403);
       throw new Error('This playlist is private');
     }

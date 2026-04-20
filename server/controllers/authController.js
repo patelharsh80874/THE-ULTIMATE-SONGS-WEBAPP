@@ -168,12 +168,46 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
+const RESERVED_USERNAMES = new Set(['admin', 'root', 'system', 'support', 'official', 'ultimate', 'moderator', 'staff', 'owner', 'developer', 'harsh', 'theultimatesongs']);
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
+
+    // ─── Professional Username Validation (Industry Standard) ──────────
+    const lowerUsername = username?.toLowerCase();
+
+    if (RESERVED_USERNAMES.has(lowerUsername)) {
+      res.status(400); throw new Error('This username is reserved for administrative use');
+    }
+
+    if (!username || username.length < 3) {
+      res.status(400); throw new Error('Username must be at least 3 characters');
+    }
+    if (username.length > 20) {
+      res.status(400); throw new Error('Username cannot exceed 20 characters');
+    }
+    if (username.includes(' ')) {
+      res.status(400); throw new Error('Username cannot contain spaces');
+    }
+    if (username.includes('@')) {
+      res.status(400); throw new Error('Username cannot be an email address');
+    }
+    // Only allow alphanumeric, underscores, and dots.
+    const usernameRegex = /^[a-zA-Z0-9._]+$/;
+    if (!usernameRegex.test(username)) {
+      res.status(400); throw new Error('Username can only contain letters, numbers, dots, and underscores');
+    }
+
+    // ─── Pro Password Complexity Check ──────────
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+    if (!passwordRegex.test(password)) {
+      res.status(400); throw new Error('Password must be at least 6 characters and contain at least one letter and one number');
+    }
+    // ─────────────────────────────────────────────────────────────────
 
     let user = await User.findOne({ 
       $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] 
