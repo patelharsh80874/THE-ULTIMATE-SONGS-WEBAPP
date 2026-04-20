@@ -63,7 +63,10 @@ export const renderDynamicMeta = async (req, res) => {
     const profileUrl = `${frontendUrl}/profile/${username}`;
 
     // 4. Inject into index.html
-    const indexPath = path.resolve(__dirname, '..', '..', 'index.html');
+    let indexPath = path.resolve(__dirname, '..', '..', 'dist', 'index.html');
+    if (!fs.existsSync(indexPath)) {
+        indexPath = path.resolve(__dirname, '..', '..', 'index.html');
+    }
     if (!fs.existsSync(indexPath)) return res.status(404).send('index.html missing.');
 
     let html = fs.readFileSync(indexPath, 'utf8');
@@ -119,7 +122,10 @@ export const renderDynamicMeta = async (req, res) => {
 };
 
 const serveStaticIndex = (res) => {
-    const indexPath = path.resolve(__dirname, '..', '..', 'index.html');
+    let indexPath = path.resolve(__dirname, '..', '..', 'dist', 'index.html');
+    if (!fs.existsSync(indexPath)) {
+        indexPath = path.resolve(__dirname, '..', '..', 'index.html');
+    }
     if (fs.existsSync(indexPath)) res.sendFile(indexPath);
     else res.status(404).send('Not Found');
 };
