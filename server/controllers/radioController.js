@@ -92,7 +92,7 @@ export const createEntityStation = async (req, res, next) => {
     const songIds = ids.split(',').map(id => id.trim()).filter(Boolean);
     const entityIdParam = JSON.stringify(songIds);
     // const url = `${getJioSaavnApi()}?__call=webradio.createEntityStation&api_version=4&_format=json&_marker=0&ctx=android&entity_id=${encodeURIComponent(entityIdParam)}&entity_type=queue`;
-    const url = `${getJioSaavnApi()}?__call=webradio.createEntityStation&api_version=4&_format=json&_marker=0&ctx=android&entity_id=${entityIdParam}&entity_type=queue`;
+    const url = `${getJioSaavnApi()}?__call=webradio.createEntityStation&api_version=4&_format=json&_marker=0&ctx=android&entity_id=${encodeURIComponent(entityIdParam)}&entity_type=queue`;
     await proxyRequest(res, next, url);
 };
 
@@ -104,7 +104,7 @@ export const getSmartQueueSongs = async (req, res, next) => {
     const { stationid, k = 20 } = req.query;
     if (!stationid) return res.status(400).json({ error: "stationid is required" });
 
-    const url = `${getJioSaavnApi()}?__call=webradio.getSong&api_version=4&_format=json&_marker=0&ctx=android&stationid=${stationid}&k=${k}`;
+    const url = `${getJioSaavnApi()}?__call=webradio.getSong&api_version=4&_format=json&_marker=0&ctx=android&stationid=${encodeURIComponent(stationid)}&k=${k}`;
     await proxyRequest(res, next, url);
 };
 

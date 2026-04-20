@@ -257,6 +257,7 @@ export const buildSmartQueueForSong = async (songId) => {
 
     // Step 2: Create entity-based smart station
     const stationId = await _createEntityStation(suggestionIds);
+    // console.log(stationId)
     if (!stationId) return [];
 
     // Step 3: Get song IDs from the smart station

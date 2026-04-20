@@ -81,7 +81,12 @@ app.use('/api/radio', radioRoutes);
 app.get('/', renderApiDocs);
 
 // Dynamic Shared Link Previews (Metadata Injection)
-app.get('/:username/:id', renderDynamicMeta);
+app.get('/:username/:id', (req, res, next) => {
+  if (/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+    return renderDynamicMeta(req, res);
+  }
+  next();
+});
 
 /**
  * Global Error Handler
