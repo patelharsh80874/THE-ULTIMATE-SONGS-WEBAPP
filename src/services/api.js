@@ -252,21 +252,37 @@ const _getFullSongDetails = async (ids) => {
 export const buildSmartQueueForSong = async (songId) => {
   try {
     // Step 1: Get suggestion IDs from current song
-    const suggestionIds = await _getSuggestionIds(songId);
-    if (suggestionIds.length === 0) return [];
+    const allSuggestions = await _getSuggestionIds(songId);
+    if (allSuggestions.length === 0) return [];
 
-    // Step 2: Create entity-based smart station
-    const stationId = await _createEntityStation(suggestionIds);
-    // console.log(stationId)
-    if (!stationId) return [];
+    // Helper: Get a random subset from an array
+    const getSubset = (arr, size) => {
+      return [...arr].sort(() => 0.5 - Math.random()).slice(0, size);
+    };
 
-    // Step 3: Get song IDs from the smart station
-    const stationSongIds = await _getStationSongIds(stationId, 20);
+    // Step 2: Create 3 DIFFERENT stations in parallel with different seeds (for variety)
+    const stationPromises = [
+      _createEntityStation(getSubset(allSuggestions, 5)),
+      _createEntityStation(getSubset(allSuggestions, 5)),
+      _createEntityStation(getSubset(allSuggestions, 5))
+    ];
+    
+    const stationIds = (await Promise.all(stationPromises)).filter(Boolean);
+    if (stationIds.length === 0) return [];
+
+    // Step 3: Get song IDs from each unique station
+    const songPromises = stationIds.map(id => _getStationSongIds(id, 15));
+    const songResults = await Promise.all(songPromises);
+    
+    // Merge all results and remove duplicates
+    const stationSongIds = [...new Set(songResults.flat())];
     if (stationSongIds.length === 0) return [];
 
     // Step 4: Fetch full song details
     const fullSongs = await _getFullSongDetails(stationSongIds);
-    return fullSongs;
+    
+    // Step 5: Final Shuffle for maximum variety
+    return fullSongs.sort(() => 0.5 - Math.random());
   } catch (e) {
     console.error('[SmartQueue] Pipeline failed:', e);
     return [];

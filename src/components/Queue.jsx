@@ -27,6 +27,17 @@ const Queue = ({ onClose }) => {
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [playlistModalSong, setPlaylistModalSong] = useState(null);
   const dragItem = useRef(null);
+  const activeSongRef = useRef(null);
+
+  // Auto-scroll to current song when queue opens
+  React.useEffect(() => {
+    if (activeSongRef.current) {
+      activeSongRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, []);
 
   const handleDragStart = (e, index) => {
     dragItem.current = index;
@@ -139,6 +150,7 @@ const Queue = ({ onClose }) => {
           return (
             <div
               key={song.id + "-" + i}
+              ref={isCurrent ? activeSongRef : null}
               onDragOver={(e) => handleDragOver(e, i)}
               onClick={() => playFromQueue(i)}
               className={`flex items-center gap-3 sm:gap-2 p-2 rounded-lg mb-1 duration-200 group select-none cursor-pointer ${

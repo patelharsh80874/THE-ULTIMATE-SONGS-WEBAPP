@@ -138,6 +138,12 @@ export const PlayerProvider = ({ children }) => {
             duration: 2500,
           });
         }
+      } else {
+        // No smart songs found for this specific song
+        toast.error("⚠️ Smart Queue unavailable for this track (no suggestions found).", {
+          style: { borderRadius: '12px', background: '#1e293b', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)' },
+          duration: 3500,
+        });
       }
     } catch (e) {
       // Silent fail — existing queue stays intact
