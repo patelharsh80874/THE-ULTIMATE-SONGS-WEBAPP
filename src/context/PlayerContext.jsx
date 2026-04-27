@@ -493,6 +493,10 @@ export const PlayerProvider = ({ children }) => {
   // --- Core: Register ALL Media Session handlers ---
   // This is the single function that sets up the entire Media Session.
   // It MUST be called after every play event on iOS for reliability.
+
+  // Flag to prevent keepalive heartbeat from interfering during play attempts
+  const playIntentRef = useRef(false);
+
   const reinforceMediaSession = useCallback(() => {
     if (!("mediaSession" in navigator)) return;
 
@@ -510,30 +514,70 @@ export const PlayerProvider = ({ children }) => {
       const audio = audioRef.current;
       if (audio && !audio.paused) {
         navigator.mediaSession.playbackState = "playing";
-      } else {
+      } else if (!playIntentRef.current) {
+        // Only set paused if we're not in the middle of a play attempt
         navigator.mediaSession.playbackState = "paused";
       }
 
       // ── Step 3: Register action handlers ──
-      // IMPORTANT ORDER: On iOS, register nexttrack/previoustrack FIRST,
-      // then explicitly DO NOT register seekbackward/seekforward.
-      // Setting them to null tells iOS "use default" which shows 10s seek.
-      // NOT registering them at all lets iOS show next/prev buttons.
 
       navigator.mediaSession.setActionHandler("play", () => {
         const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
         if (pr && !ih) return;
         const a = audioRef.current;
-        if (a) {
-          a.play().then(() => {
+        if (!a) return;
+
+        // IMMEDIATELY signal play intent — prevents heartbeat from overriding
+        playIntentRef.current = true;
+        navigator.mediaSession.playbackState = "playing";
+
+        a.play()
+          .then(() => {
             navigator.mediaSession.playbackState = "playing";
-          }).catch(console.error);
-        }
+            playIntentRef.current = false;
+          })
+          .catch((err) => {
+            console.warn("Play failed, attempting reload:", err.message);
+            // iOS releases audio buffer after background pause.
+            // Save position, re-load, restore position, and retry.
+            const savedTime = a.currentTime || 0;
+            const savedSrc = a.src;
+
+            if (savedSrc) {
+              // Force re-load by re-setting src (triggers fresh network fetch)
+              a.src = savedSrc;
+              a.load();
+
+              const onCanPlay = () => {
+                a.removeEventListener('canplay', onCanPlay);
+                a.currentTime = savedTime;
+                a.play()
+                  .then(() => {
+                    navigator.mediaSession.playbackState = "playing";
+                    playIntentRef.current = false;
+                  })
+                  .catch((retryErr) => {
+                    console.error("Retry play also failed:", retryErr);
+                    navigator.mediaSession.playbackState = "paused";
+                    playIntentRef.current = false;
+                  });
+              };
+              a.addEventListener('canplay', onCanPlay, { once: true });
+
+              // Timeout fallback — if canplay never fires (network issue)
+              setTimeout(() => {
+                playIntentRef.current = false;
+              }, 5000);
+            } else {
+              playIntentRef.current = false;
+            }
+          });
       });
 
       navigator.mediaSession.setActionHandler("pause", () => {
         const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
         if (pr && !ih) return;
+        playIntentRef.current = false;
         const a = audioRef.current;
         if (a) {
           a.pause();
@@ -544,7 +588,6 @@ export const PlayerProvider = ({ children }) => {
       navigator.mediaSession.setActionHandler("previoustrack", () => {
         const { partyRoom: pr, isHost: ih, previous: prevFn } = sessionHandlersRef.current;
         if (pr && !ih) return;
-        // Set playing BEFORE track change so iOS doesn't see a gap
         navigator.mediaSession.playbackState = "playing";
         if (prevFn) prevFn();
       });
@@ -569,6 +612,7 @@ export const PlayerProvider = ({ children }) => {
       // ── Step 5: Handle stop to prevent abrupt session drops ──
       try {
         navigator.mediaSession.setActionHandler("stop", () => {
+          playIntentRef.current = false;
           const a = audioRef.current;
           if (a) { a.pause(); a.currentTime = 0; }
           navigator.mediaSession.playbackState = "paused";
@@ -602,26 +646,15 @@ export const PlayerProvider = ({ children }) => {
   }, []);
 
   // --- Re-register on EVERY song change ---
-  // iOS needs handlers to be re-applied when a new song loads
   useEffect(() => {
     if (songlink.length === 0) return;
-
-    // Immediate metadata update
     reinforceRef.current();
-
-    // Also reinforce after a short delay (wait for audio to start loading)
     const t1 = setTimeout(() => reinforceRef.current(), 300);
     const t2 = setTimeout(() => reinforceRef.current(), 1000);
-
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [songlink]);
 
   // --- Re-register when playback actually starts (CRITICAL for iOS) ---
-  // iOS Safari only reliably accepts Media Session handlers AFTER audio.play() resolves.
-  // We listen to the actual audio element's 'playing' and 'loadeddata' events.
-  //
-  // Since the audio element is now PERSISTENT (moved outside the .map() in PlayerBar),
-  // we only need to attach these listeners ONCE — they stay active for the entire session.
   const playingListenerAttached = useRef(false);
   useEffect(() => {
     const audio = audioRef.current;
@@ -630,20 +663,16 @@ export const PlayerProvider = ({ children }) => {
     playingListenerAttached.current = true;
 
     const onPlaying = () => {
-      // Small delay to let iOS settle the audio session
       setTimeout(() => reinforceRef.current(), 50);
     };
 
     const onLoadedData = () => {
-      // When new audio data is loaded, reinforce immediately
       reinforceRef.current();
     };
 
     audio.addEventListener('playing', onPlaying);
     audio.addEventListener('loadeddata', onLoadedData);
-
-    // No cleanup — audio element is persistent, listeners should stay forever
-  }, [songlink]); // songlink dependency ensures this runs once audio element exists
+  }, [songlink]);
 
   // --- Sync playbackState to MediaSession ---
   useEffect(() => {
@@ -658,8 +687,11 @@ export const PlayerProvider = ({ children }) => {
     if (!("mediaSession" in navigator) || !audioRef.current) return;
 
     if (!isPlaying) {
-      // Paused: aggressive heartbeat
+      // Paused: heartbeat to keep session alive
       const keepAlive = setInterval(() => {
+        // CRITICAL: Don't override playbackState if a play attempt is in progress
+        if (playIntentRef.current) return;
+
         try {
           navigator.mediaSession.playbackState = "paused";
           const audio = audioRef.current;

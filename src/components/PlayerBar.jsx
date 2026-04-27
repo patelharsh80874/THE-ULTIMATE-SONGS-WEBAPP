@@ -39,12 +39,26 @@ const PlayerBar = () => {
   const [duration, setDuration] = useState(0);
 
   const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch(err => console.error("Playback failed:", err));
-      }
+    const a = audioRef.current;
+    if (!a) return;
+
+    if (isPlaying) {
+      a.pause();
+    } else {
+      a.play().catch((err) => {
+        console.warn("togglePlay failed, retrying with reload:", err.message);
+        // iOS may have released the audio buffer — re-load and retry
+        const savedTime = a.currentTime || 0;
+        const savedSrc = a.src;
+        if (savedSrc) {
+          a.src = savedSrc;
+          a.load();
+          a.addEventListener('canplay', () => {
+            a.currentTime = savedTime;
+            a.play().catch(e => console.error("Retry also failed:", e));
+          }, { once: true });
+        }
+      });
     }
   };
 
