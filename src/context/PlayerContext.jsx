@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
 import API_BASE_URL from "../config/api";
 import { buildSmartQueueForSong } from "../services/api";
@@ -420,99 +420,280 @@ export const PlayerProvider = ({ children }) => {
     setIsPlaying(false);
   }, []);
 
-  // Store latest context details in a ref to avoid recreating MediaSession handlers,
-  // which causes iOS/Safari to drop the Lock Screen controls!
+  // ═══════════════════════════════════════════════════════════════════
+  // BULLETPROOF iOS/Safari Media Session — Lock Screen & Background Fix
+  // ═══════════════════════════════════════════════════════════════════
+  //
+  // iOS Safari is extremely finicky about Media Session. Key rules:
+  // 1. Action handlers MUST be re-registered AFTER playback starts
+  // 2. seekbackward/seekforward set to null = iOS shows DEFAULT 10s seek
+  //    → We must NOT touch these at all, only register nexttrack/previoustrack
+  // 3. A separate AudioContext oscillator creates a COMPETING audio session
+  //    → We must NOT use Web Audio API keepalive on iOS
+  // 4. Metadata + handlers must be re-applied on every song change
+  // 5. playbackState must NEVER have a gap (no brief "none" state)
+  // ═══════════════════════════════════════════════════════════════════
+
+  // Ref to always access latest next/previous without re-registering handlers
   const sessionHandlersRef = useRef({ next, previous, partyRoom, isHost });
   useEffect(() => {
     sessionHandlersRef.current = { next, previous, partyRoom, isHost };
   }, [next, previous, partyRoom, isHost]);
 
-  // Register Media Session Action Handlers EXACTLY ONCE
-  useEffect(() => {
-    if (!("mediaSession" in navigator)) return;
+  // --- Helper: Build MediaMetadata for a song ---
+  const buildMetadata = useCallback((song) => {
+    if (!song) return null;
+    const imgUrl = song?.image?.[2]?.url || song?.image?.[1]?.url || song?.image?.[0]?.url || "";
+    return new MediaMetadata({
+      title: song?.name || song?.title || "Unknown Track",
+      artist: song?.artists?.primary?.map(a => a.name).join(", ") || song?.album?.name || "Unknown Artist",
+      album: song?.album?.name || "",
+      artwork: [
+        { src: imgUrl, sizes: "96x96", type: "image/jpeg" },
+        { src: imgUrl, sizes: "128x128", type: "image/jpeg" },
+        { src: imgUrl, sizes: "192x192", type: "image/jpeg" },
+        { src: imgUrl, sizes: "256x256", type: "image/jpeg" },
+        { src: imgUrl, sizes: "384x384", type: "image/jpeg" },
+        { src: imgUrl, sizes: "512x512", type: "image/jpeg" },
+      ],
+    });
+  }, []);
 
+  // --- Throttled Position State Update ---
+  const lastPositionUpdateRef = useRef(0);
+
+  const updatePositionStateNow = useCallback(() => {
+    if (!("mediaSession" in navigator) || !("setPositionState" in navigator.mediaSession)) return;
+    const audio = audioRef.current;
+    if (!audio || !audio.duration || isNaN(audio.duration) || !isFinite(audio.duration)) return;
     try {
-      navigator.mediaSession.setActionHandler("play", () => {
-        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
-        if (pr && !ih) return;
-        audioRef.current?.play().catch(console.error);
+      const position = Math.min(audio.currentTime || 0, audio.duration);
+      navigator.mediaSession.setPositionState({
+        duration: audio.duration,
+        playbackRate: audio.playbackRate || 1,
+        position: Math.max(0, position),
       });
-      navigator.mediaSession.setActionHandler("pause", () => {
-        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
-        if (pr && !ih) return;
-        audioRef.current?.pause();
-      });
-      navigator.mediaSession.setActionHandler("previoustrack", () => {
-        const { partyRoom: pr, isHost: ih, previous: prevFn } = sessionHandlersRef.current;
-        if (pr && !ih) return;
-        if (prevFn) prevFn();
-      });
-      navigator.mediaSession.setActionHandler("nexttrack", () => {
-        const { partyRoom: pr, isHost: ih, next: nextFn } = sessionHandlersRef.current;
-        if (pr && !ih) return;
-        if (nextFn) nextFn();
-      });
-
-      // iOS Fix: Disable skip icons to force Next/Previous arrows
-      navigator.mediaSession.setActionHandler("seekbackward", null);
-      navigator.mediaSession.setActionHandler("seekforward", null);
-
+      lastPositionUpdateRef.current = Date.now();
     } catch (e) {
-      console.warn("MediaSession action handler registration failed:", e);
+      // Ignore position out-of-bounds errors
     }
   }, []);
 
-  // Update Media Session Metadata ONLY when song changes
-  useEffect(() => {
-    if (songlink.length === 0 || !("mediaSession" in navigator)) return;
+  const updatePositionStateThrottled = useCallback(() => {
+    if (Date.now() - lastPositionUpdateRef.current < 2000) return;
+    updatePositionStateNow();
+  }, [updatePositionStateNow]);
 
-    const song = songlink[0];
+  // Ref for use inside one-time useEffect closures
+  const positionStateUpdaterRef = useRef({ updatePositionStateThrottled, updatePositionStateNow });
+  useEffect(() => {
+    positionStateUpdaterRef.current = { updatePositionStateThrottled, updatePositionStateNow };
+  }, [updatePositionStateThrottled, updatePositionStateNow]);
+
+  // --- Core: Register ALL Media Session handlers ---
+  // This is the single function that sets up the entire Media Session.
+  // It MUST be called after every play event on iOS for reliability.
+  const reinforceMediaSession = useCallback(() => {
+    if (!("mediaSession" in navigator)) return;
+
     try {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: song?.name || song?.title || "Unknown Track",
-        artist: song?.artists?.primary?.map(a => a.name).join(", ") || song?.album?.name || "Unknown Artist",
-        artwork: [
-          {
-            src: song?.image?.[2]?.url || song?.image?.[1]?.url || song?.image?.[0]?.url || "",
-            sizes: "512x512",
-            type: "image/jpeg",
-          },
-        ],
+      // ── Step 1: Set metadata ──
+      const song = songlink[0];
+      if (song) {
+        const metadata = buildMetadata(song);
+        if (metadata) {
+          navigator.mediaSession.metadata = metadata;
+        }
+      }
+
+      // ── Step 2: Set playback state ──
+      const audio = audioRef.current;
+      if (audio && !audio.paused) {
+        navigator.mediaSession.playbackState = "playing";
+      } else {
+        navigator.mediaSession.playbackState = "paused";
+      }
+
+      // ── Step 3: Register action handlers ──
+      // IMPORTANT ORDER: On iOS, register nexttrack/previoustrack FIRST,
+      // then explicitly DO NOT register seekbackward/seekforward.
+      // Setting them to null tells iOS "use default" which shows 10s seek.
+      // NOT registering them at all lets iOS show next/prev buttons.
+
+      navigator.mediaSession.setActionHandler("play", () => {
+        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        const a = audioRef.current;
+        if (a) {
+          a.play().then(() => {
+            navigator.mediaSession.playbackState = "playing";
+          }).catch(console.error);
+        }
       });
+
+      navigator.mediaSession.setActionHandler("pause", () => {
+        const { partyRoom: pr, isHost: ih } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        const a = audioRef.current;
+        if (a) {
+          a.pause();
+          navigator.mediaSession.playbackState = "paused";
+        }
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
+        const { partyRoom: pr, isHost: ih, previous: prevFn } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        // Set playing BEFORE track change so iOS doesn't see a gap
+        navigator.mediaSession.playbackState = "playing";
+        if (prevFn) prevFn();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        const { partyRoom: pr, isHost: ih, next: nextFn } = sessionHandlersRef.current;
+        if (pr && !ih) return;
+        navigator.mediaSession.playbackState = "playing";
+        if (nextFn) nextFn();
+      });
+
+      // ── Step 4: Handle seekto (progress bar scrubbing on lock screen) ──
+      try {
+        navigator.mediaSession.setActionHandler("seekto", (details) => {
+          if (audioRef.current && details.seekTime != null) {
+            audioRef.current.currentTime = details.seekTime;
+            positionStateUpdaterRef.current.updatePositionStateNow();
+          }
+        });
+      } catch (e) {}
+
+      // ── Step 5: Handle stop to prevent abrupt session drops ──
+      try {
+        navigator.mediaSession.setActionHandler("stop", () => {
+          const a = audioRef.current;
+          if (a) { a.pause(); a.currentTime = 0; }
+          navigator.mediaSession.playbackState = "paused";
+        });
+      } catch (e) {}
+
+      // ── Step 6: Set position state ──
+      if (audio && audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: audio.duration,
+            playbackRate: audio.playbackRate || 1,
+            position: Math.min(audio.currentTime || 0, audio.duration),
+          });
+        } catch (e) {}
+      }
     } catch (e) {
-      console.warn("MediaSession metadata update failed:", e);
+      console.warn("reinforceMediaSession failed:", e);
     }
+  }, [songlink, buildMetadata]);
+
+  // Keep a ref so event handlers always call the latest version
+  const reinforceRef = useRef(reinforceMediaSession);
+  useEffect(() => {
+    reinforceRef.current = reinforceMediaSession;
+  }, [reinforceMediaSession]);
+
+  // --- Initial handler registration (once on mount) ---
+  useEffect(() => {
+    reinforceRef.current();
+  }, []);
+
+  // --- Re-register on EVERY song change ---
+  // iOS needs handlers to be re-applied when a new song loads
+  useEffect(() => {
+    if (songlink.length === 0) return;
+
+    // Immediate metadata update
+    reinforceRef.current();
+
+    // Also reinforce after a short delay (wait for audio to start loading)
+    const t1 = setTimeout(() => reinforceRef.current(), 300);
+    const t2 = setTimeout(() => reinforceRef.current(), 1000);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [songlink]);
 
-  // Sync actual Playback State to MediaSession to prevent lockscreen drop
-  // Browsers aggressively kill background processes unless they are given explicit states.
+  // --- Re-register when playback actually starts (CRITICAL for iOS) ---
+  // iOS Safari only reliably accepts Media Session handlers AFTER audio.play() resolves.
+  // We listen to the actual audio element's 'playing' and 'loadeddata' events.
+  //
+  // Since the audio element is now PERSISTENT (moved outside the .map() in PlayerBar),
+  // we only need to attach these listeners ONCE — they stay active for the entire session.
+  const playingListenerAttached = useRef(false);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || playingListenerAttached.current) return;
+
+    playingListenerAttached.current = true;
+
+    const onPlaying = () => {
+      // Small delay to let iOS settle the audio session
+      setTimeout(() => reinforceRef.current(), 50);
+    };
+
+    const onLoadedData = () => {
+      // When new audio data is loaded, reinforce immediately
+      reinforceRef.current();
+    };
+
+    audio.addEventListener('playing', onPlaying);
+    audio.addEventListener('loadeddata', onLoadedData);
+
+    // No cleanup — audio element is persistent, listeners should stay forever
+  }, [songlink]); // songlink dependency ensures this runs once audio element exists
+
+  // --- Sync playbackState to MediaSession ---
   useEffect(() => {
     if ("mediaSession" in navigator) {
       navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
     }
   }, [isPlaying]);
 
-  // Keep-alive heartbeat for paused state (Prevents Chrome/Windows from dropping session)
-  // When paused, we continuously ping the position state so the OS knows the tab hasn't "abandoned" the session.
+  // --- Keep-alive heartbeat ---
+  // Prevents iOS/Chrome from dropping the media session during paused state
   useEffect(() => {
-    if (!isPlaying && "mediaSession" in navigator && audioRef.current) {
-      const keepAliveInterval = setInterval(() => {
+    if (!("mediaSession" in navigator) || !audioRef.current) return;
+
+    if (!isPlaying) {
+      // Paused: aggressive heartbeat
+      const keepAlive = setInterval(() => {
         try {
-          if (navigator.mediaSession.playbackState === "paused") {
+          navigator.mediaSession.playbackState = "paused";
+          const audio = audioRef.current;
+          if (audio && audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
             navigator.mediaSession.setPositionState({
-              duration: audioRef.current.duration || 0,
-              playbackRate: audioRef.current.playbackRate || 1,
-              position: audioRef.current.currentTime || 0
+              duration: audio.duration,
+              playbackRate: audio.playbackRate || 1,
+              position: Math.min(audio.currentTime || 0, audio.duration),
             });
           }
-        } catch (e) {
-          // Ignore
-        }
-      }, 800); // Heartbeat every 0.8 seconds keeps OS awake for this session
-
-      return () => clearInterval(keepAliveInterval);
+        } catch (e) {}
+      }, 500);
+      return () => clearInterval(keepAlive);
+    } else {
+      // Playing: periodic position sync
+      const sync = setInterval(() => {
+        updatePositionStateNow();
+      }, 5000);
+      return () => clearInterval(sync);
     }
-  }, [isPlaying]);
+  }, [isPlaying, updatePositionStateNow]);
+
+  // --- Visibility Change Handler ---
+  // Re-affirm everything when screen locks/unlocks or tab switches
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!("mediaSession" in navigator)) return;
+      // Always reinforce on visibility change — both directions
+      reinforceRef.current();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   // Auto-play when songlink changes (but not when just isPlaying status changes via syncHostState)
   const lastPlayedId = useRef(null);
@@ -525,9 +706,22 @@ export const PlayerProvider = ({ children }) => {
       if (currentId !== lastPlayedId.current) {
         lastPlayedId.current = currentId;
         setIsPlaying(true);
+
+        // CRITICAL: Set playbackState BEFORE play() — prevents iOS "none" gap
+        if ("mediaSession" in navigator) {
+          navigator.mediaSession.playbackState = "playing";
+        }
+
         audioRef.current.play().then(() => {
           if (isHost) syncHostState(true);
+          // Reinforce session after playback starts — iOS only accepts handlers reliably here
+          reinforceRef.current();
         }).catch((err) => console.warn("Autoplay error:", err));
+
+        // Additional reinforcements at staggered intervals for iOS reliability
+        const t1 = setTimeout(() => reinforceRef.current(), 100);
+        const t2 = setTimeout(() => reinforceRef.current(), 500);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
       }
     } else if (songlink.length === 0) {
       lastPlayedId.current = null;

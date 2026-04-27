@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Circ } from "gsap/all";
@@ -48,21 +48,31 @@ const PlayerBar = () => {
     }
   };
 
+  // Throttled position state update — iOS thrashes if called on every timeupdate (~4x/sec)
+  const lastPosUpdate = useRef(0);
   const handleTimeUpdate = () => {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
       setDuration(audioRef.current.duration);
       
-      // Keep iOS Media Session alive and strictly synced
-      if ("mediaSession" in navigator && "setPositionState" in navigator.mediaSession) {
-        try {
-          navigator.mediaSession.setPositionState({
-            duration: audioRef.current.duration || 0,
-            playbackRate: audioRef.current.playbackRate || 1,
-            position: audioRef.current.currentTime || 0
-          });
-        } catch (e) {
-          // Ignore if position out of bounds error
+      // Throttle MediaSession position updates to once every 2 seconds
+      // PlayerContext handles the aggressive heartbeat for paused state
+      const now = Date.now();
+      if (now - lastPosUpdate.current >= 2000) {
+        lastPosUpdate.current = now;
+        if ("mediaSession" in navigator && "setPositionState" in navigator.mediaSession) {
+          try {
+            const dur = audioRef.current.duration;
+            if (dur && !isNaN(dur) && isFinite(dur)) {
+              navigator.mediaSession.setPositionState({
+                duration: dur,
+                playbackRate: audioRef.current.playbackRate || 1,
+                position: Math.min(audioRef.current.currentTime || 0, dur),
+              });
+            }
+          } catch (e) {
+            // Ignore if position out of bounds error
+          }
         }
       }
     }
@@ -119,6 +129,47 @@ const PlayerBar = () => {
       <AnimatePresence>
         {showLyrics && <LyricsOverlay onClose={() => setShowLyrics(false)} />}
       </AnimatePresence>
+
+      {/* ═══ PERSISTENT AUDIO ELEMENT ═══
+           This MUST live outside the songlink.map() loop.
+           Inside the map, the key={e?.id} changes on every song,
+           causing React to DESTROY and RECREATE the audio element.
+           That instantly kills the iOS Media Session.
+           By placing it here, the audio element is NEVER unmounted. */}
+      <audio
+        ref={audioRef}
+        onPause={() => setIsPlaying(false)}
+        onPlay={() => {
+          setIsPlaying(true);
+          if ("mediaSession" in navigator) {
+            navigator.mediaSession.playbackState = "playing";
+          }
+        }}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={(ev) => {
+          handleTimeUpdate();
+          if (partyRoom && !isHost) syncJoinTime();
+          if ("mediaSession" in navigator && "setPositionState" in navigator.mediaSession) {
+            try {
+              const dur = ev.target.duration;
+              if (dur && !isNaN(dur) && isFinite(dur)) {
+                navigator.mediaSession.setPositionState({
+                  duration: dur,
+                  playbackRate: 1,
+                  position: 0,
+                });
+              }
+            } catch (e) {}
+          }
+        }}
+        autoPlay
+        playsInline
+        webkit-playsinline="true"
+        preload="auto"
+        onEnded={next}
+        src={songlink[0]?.downloadUrl?.[4]?.url}
+        className="absolute opacity-0 pointer-events-none w-0 h-0"
+      />
 
       <motion.div
         initial={{ y: 100 }}
@@ -252,22 +303,6 @@ const PlayerBar = () => {
                 </div>
 
                 <span className="text-[10px] text-zinc-400 font-medium w-8 tabular-nums">{formatTime(duration)}</span>
-                
-                {/* Hidden Audio Backend */}
-                <audio
-                  ref={audioRef}
-                  onPause={() => setIsPlaying(false)}
-                  onPlay={() => setIsPlaying(true)}
-                  onTimeUpdate={handleTimeUpdate}
-                  onLoadedMetadata={(ev) => { 
-                    handleTimeUpdate();
-                    if(partyRoom && !isHost) syncJoinTime(); 
-                  }}
-                  autoPlay
-                  onEnded={next}
-                  src={e?.downloadUrl?.[4]?.url}
-                  className="absolute opacity-0 pointer-events-none w-0 h-0"
-                ></audio>
               </div>
             </div>
 
