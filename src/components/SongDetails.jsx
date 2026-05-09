@@ -37,10 +37,9 @@ const SongDetails = () => {
       setSuggestions(suggestRes.data?.data);
 
       // Fetch lyrics concurrently
-      if (song) {
+      if (song?.id) {
         try {
-          const artistName = song.artists?.primary?.[0]?.name || "";
-          const lyricsRes = await fetchLyrics(artistName, song.name, song.duration);
+          const lyricsRes = await fetchLyrics(song.id);
           setLyrics(lyricsRes);
         } catch (lErr) {
           console.warn("Lyrics fetch failed:", lErr);

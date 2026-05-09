@@ -6,13 +6,17 @@
  * Version: 2.0.0
  */
 
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import wasm from 'vite-plugin-wasm';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const lyricsApiUrl = env.VITE_LYRICS_API_URL;
+
+  return ({
   plugins: [
     react(), 
     wasm(),
@@ -55,4 +59,16 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
+  server: {
+    proxy: {
+      // Proxy lyrics API to avoid CORS issues (the external API doesn't send CORS headers)
+      '/lyrics-api': {
+        target: lyricsApiUrl,
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/lyrics-api/, '/api/lyrics'),
+      },
+    },
+  },
+});
 });
