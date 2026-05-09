@@ -28,17 +28,32 @@ export const AuthProvider = ({ children }) => {
     const checkUser = async () => {
       try {
         const { data } = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-
           withCredentials: true
         });
         setUser(data);
       } catch (error) {
+        if (error.response?.status === 403 && error.response?.data?.message?.includes('suspended')) {
+          toast.error('🚫 Your account has been suspended.', { duration: 5000, style: { borderRadius: '10px', background: '#333', color: '#fff' } });
+        }
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
     checkUser();
+
+    // Global interceptor: auto-logout banned users on any 403
+    const interceptor = axios.interceptors.response.use(
+      res => res,
+      error => {
+        if (error.response?.status === 403 && error.response?.data?.message?.includes('suspended')) {
+          setUser(null);
+          toast.error('🚫 Your account has been suspended.', { id: 'banned', duration: 5000, style: { borderRadius: '10px', background: '#333', color: '#fff' } });
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
   const login = async (identifier, password, rememberMe = true) => {

@@ -14,6 +14,11 @@ export const protect = async (req, res, next) => {
 
       req.user = await User.findById(decoded.userId).select('-password');
 
+      if (req.user?.isBanned) {
+        res.cookie('jwt', '', { httpOnly: true, expires: new Date(0) });
+        return res.status(403).json({ message: 'Your account has been suspended. Contact admin for assistance.' });
+      }
+
       next();
     } catch (error) {
       return res.status(401).json({ message: 'Not authorized, token failed' });

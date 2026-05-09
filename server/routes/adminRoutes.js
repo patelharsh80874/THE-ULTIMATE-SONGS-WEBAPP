@@ -4,6 +4,11 @@ import {
   getAllPlaylists,
   deletePlaylistAdmin,
   updateUserPasswordAdmin,
+  toggleBanUser,
+  toggleVerifyUser,
+  bulkUserAction,
+  sendAnnouncement,
+  sendEmailToUser,
 } from '../controllers/adminController.js';
 import { protect, admin } from '../middlewares/authMiddleware.js';
 
@@ -17,5 +22,10 @@ router.get('/stats', getAdminStats);
 router.get('/playlists', getAllPlaylists);
 router.delete('/playlists/:id', deletePlaylistAdmin);
 router.put('/users/:id/password', updateUserPasswordAdmin);
+router.put('/users/:id/ban', toggleBanUser);
+router.put('/users/:id/verify', toggleVerifyUser);
+router.post('/users/bulk', bulkUserAction);
+router.post('/announce', sendAnnouncement);
+router.post('/email-user', sendEmailToUser);
 
 export default router;

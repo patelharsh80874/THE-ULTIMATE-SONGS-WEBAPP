@@ -112,6 +112,11 @@ export const loginUser = async (req, res, next) => {
       throw new Error('Invalid Email/Username or Password');
     }
 
+    if (user.isBanned) {
+      res.status(403);
+      throw new Error('Your account has been suspended. Contact admin for assistance.');
+    }
+
     // Security enforcement: check if explicitly verified
     if (user.isVerified !== true) {
       const otp = user.generateOTP();
@@ -357,6 +362,11 @@ export const verifyRegisterOtp = async (req, res, next) => {
       throw new Error('Invalid or expired OTP');
     }
 
+    if (user.isBanned) {
+      res.status(403);
+      throw new Error('Your account has been suspended. Contact admin for assistance.');
+    }
+
     user.isVerified = true;
     user.otpToken = undefined;
     user.otpExpire = undefined;
@@ -399,6 +409,11 @@ export const sendLoginOtp = async (req, res, next) => {
     if (!user) {
       res.status(404);
       throw new Error('User not found');
+    }
+
+    if (user.isBanned) {
+      res.status(403);
+      throw new Error('Your account has been suspended. Contact admin for assistance.');
     }
 
     // We allow unverified users to request an OTP. Verifying this OTP will double as their registration verification.
@@ -467,6 +482,11 @@ export const verifyLoginOtp = async (req, res, next) => {
     if (!user) {
       res.status(400);
       throw new Error('Invalid or expired OTP');
+    }
+
+    if (user.isBanned) {
+      res.status(403);
+      throw new Error('Your account has been suspended. Contact admin for assistance.');
     }
 
     if (!user.isVerified) {

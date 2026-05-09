@@ -199,6 +199,7 @@ const Home = () => {
   const [suggSong, setSuggSong] = useState([]);
   let [page, setPage] = useState(1);
   let [page2, setPage2] = useState(Math.floor(Math.random() * 50));
+  const pageRef = useRef(1);
 
   const [radioStations, setRadioStations] = useState([]);
   const [artistRadioStations, setArtistRadioStations] = useState([]);
@@ -286,13 +287,17 @@ const Home = () => {
 
   function resetState() {
     setPage(1);
+    pageRef.current = 1;
     setDetails([]);
     setSuggSong([]);
   }
 
+  const homeRef = useRef(home);
+  homeRef.current = home;
+
   function seccall() {
     const intervalId = setInterval(() => {
-      if (home === null) {
+      if (homeRef.current === null) {
         getHome();
       }
     }, 1000);
@@ -302,13 +307,14 @@ const Home = () => {
   function seccall2() {
     const intervalId2 = setInterval(
       () => {
-        if (details.length >= 0 && page < 5) {
+        if (pageRef.current < 5) {
           setPage2(Math.floor(Math.random() * 50));
-          setPage(page + 1);
+          pageRef.current += 1;
+          setPage(pageRef.current);
           getDetails();
         }
       },
-      page <= 2 ? 500 : 2000
+      pageRef.current <= 2 ? 500 : 2000
     );
     return intervalId2;
   }
@@ -316,7 +322,7 @@ const Home = () => {
   useEffect(() => {
     const interval = seccall();
     return () => clearInterval(interval);
-  }, [language, home]);
+  }, [language]);
 
   useEffect(() => {
     getHome();
@@ -325,7 +331,7 @@ const Home = () => {
   useEffect(() => {
     const interval2 = seccall2();
     return () => clearInterval(interval2);
-  }, [details, page, language]);
+  }, [language]);
 
   useEffect(() => {
     processLikedSongIds();
