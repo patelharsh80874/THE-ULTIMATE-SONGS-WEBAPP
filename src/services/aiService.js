@@ -22,7 +22,12 @@ export const generateAIPlaylist = async (prompt) => {
   } catch (error) {
     console.error('Error in generateAIPlaylist:', error);
     
-    // More specific error messages
+    // Extract actual server error message if available
+    const serverMessage = error.response?.data?.message;
+    if (serverMessage) {
+      throw { message: serverMessage };
+    }
+    
     if (error.code === 'ECONNABORTED') {
       throw { message: 'Request timed out. The AI is taking too long, please try again.' };
     }
@@ -30,6 +35,6 @@ export const generateAIPlaylist = async (prompt) => {
       throw { message: 'Network error occurred while connecting to the server. Please try again.' };
     }
     
-    throw error.response?.data || { message: 'Failed to generate playlist. Please try again.' };
+    throw { message: error.message || 'Failed to generate playlist. Please try again.' };
   }
 };

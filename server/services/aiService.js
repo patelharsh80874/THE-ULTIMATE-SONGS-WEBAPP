@@ -47,7 +47,7 @@ const searchTrack = async (query) => {
 
 export const generateAISmartPlaylist = async (prompt) => {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("API Key configuration error. GEMINI_API_KEY is missing.");
+  if (!apiKey) throw new Error("GEMINI_API_KEY environment variable is not configured. Please add it to your deployment settings.");
 
   const ai = new GoogleGenAI({ apiKey });
 
@@ -78,8 +78,9 @@ Return ONLY a valid JSON object without markdown fences or additional text:
         contents: `Theme: "${prompt}"`,
         config: {
           systemInstruction: systemPrompt,
+          responseMimeType: "application/json",
           temperature: 0.7,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
         }
       });
 
@@ -100,27 +101,36 @@ Return ONLY a valid JSON object without markdown fences or additional text:
     throw new Error("AI service is currently busy. Please try again in a moment.");
   }
 
-  // Parse the AI response
+  // Parse the AI response with multi-layer resilience
   let suggestions = [];
-  let generatedTitle = "";
-  let generatedDescription = "";
+  let generatedTitle = `Playlist: ${prompt.substring(0, 20)}`;
+  let generatedDescription = `AI curated collection for "${prompt}"`;
 
   try {
     let cleanedText = aiResponseText.trim();
     cleanedText = cleanedText.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
     
-    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : cleanedText);
+    // Remove trailing commas if any before parsing
+    const sanitized = cleanedText.replace(/,\s*([\]}])/g, '$1');
+    const jsonMatch = sanitized.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : sanitized);
+    
     suggestions = parsed.songs || [];
-    generatedTitle = parsed.title || `Playlist: ${prompt.substring(0, 20)}`;
-    generatedDescription = parsed.description || `AI curated collection for "${prompt}"`;
+    if (parsed.title) generatedTitle = parsed.title;
+    if (parsed.description) generatedDescription = parsed.description;
   } catch (parseError) {
-    console.error('[AI SERVICE] JSON Parse Error:', parseError.message);
-    throw new Error("AI returned an invalid format. Please try again.");
+    console.warn('[AI SERVICE] JSON parse failed, attempting regex extraction:', parseError.message);
+    
+    // Regex extraction fallback: find all {"name": "...", "artist": "..."} objects
+    const songRegex = /\{\s*"name"\s*:\s*"([^"]+)"\s*,\s*"artist"\s*:\s*"([^"]+)"\s*\}/g;
+    let match;
+    while ((match = songRegex.exec(aiResponseText)) !== null) {
+      suggestions.push({ name: match[1], artist: match[2] });
+    }
   }
 
   if (!Array.isArray(suggestions) || suggestions.length === 0) {
-    throw new Error("AI did not return any songs for this prompt.");
+    console.warn("[AI SERVICE] No songs extracted from AI response, falling back to direct search.");
   }
 
   // Verify tracks in parallel with fallback queries
