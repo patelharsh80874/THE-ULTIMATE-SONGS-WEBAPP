@@ -5,7 +5,7 @@ const router = express.Router();
 
 /**
  * @route   POST /api/ai/generate-playlist
- * @desc    Generate a smart AI playlist using Gemini 3 Flash
+ * @desc    Generate a smart AI playlist using Gemini 3.7 Flash
  * @access  Public (or semi-private if auth is added)
  */
 router.post('/generate-playlist', async (req, res) => {

@@ -1,91 +1,93 @@
+import { GoogleGenAI } from '@google/genai';
 import fetch from 'node-fetch';
 
 /**
  * AI Music Curation Service
- * Handles Gemini API interaction and JioSaavn track verification
+ * Uses Google Gemini API (via @google/genai SDK) + JioSaavn track verification
+ * 
+ * Model priority (latest free-tier eligible, Aug 2026):
+ *   1. gemini-3.7-flash  (latest, released Aug 13 2026)
+ *   2. gemini-3.6-flash  (released Jul 2026)
+ *   3. gemini-2.5-flash  (stable fallback)
  */
+
+// JioSaavn API base URL from .env (server/.env or root/.env)
+const JIOSAAVN_API_URL = process.env.JIOSAAVN_API_URL || process.env.VITE_API_BASE_URL;
+
 export const generateAISmartPlaylist = async (prompt) => {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("API Key configuration error.");
+  if (!apiKey) throw new Error("API Key configuration error. GEMINI_API_KEY is missing.");
 
-  // Prioritize Gemini 3 Flash for 2026 real-time data
+  const ai = new GoogleGenAI({ apiKey });
+
+  // Models to try in order — latest first (all free-tier eligible)
   const modelsToTry = [
-    "gemini-3-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-flash-latest",
-    "gemini-pro-latest"
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-2.5-flash",
   ];
 
-  let aiResult = null;
+  const systemPrompt = `You are a world-class music curator in August 2026. For the given theme, generate 30 high-quality song recommendations.
+VERY IMPORTANT: Prioritize the absolute latest trending hits from 2024, 2025, and 2026.
+Also, create a short, catchy, creative name for the playlist (max 4-5 words) and a short 1-sentence description.
+Return ONLY a valid JSON object with NO extra text, no markdown, no code fences:
+{"title": "Playlist Name", "description": "Description here", "songs": [{"name": "Song Name", "artist": "Artist Name"}]}`;
+
+  let aiResponseText = null;
   let workingModel = "";
 
   console.log(`[AI SERVICE] Generating for: "${prompt}"`);
 
   for (const modelName of modelsToTry) {
     try {
-      // Try v1beta first
-      const v1betaUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-      const promptBody = {
-        contents: [{
-          parts: [{
-            text: `You are a world-class music curator in April 2026. For the theme: "${prompt}", generate 30 high-quality song recommendations. 
-            VERY IMPORTANT: Prioritize the absolute latest trending hits from 2024, 2025, and early 2026. 
-            Also, create a short, catchy, creative name for the playlist (max 4-5 words) and a short 1-sentence description. 
-            Return ONLY a JSON object: {"title": "Playlist Name", "description": "Description here", "songs": [{"name": "Song Name", "artist": "Artist Name"}]}. No intro text.`
-          }]
-        }]
-      };
-
-      const aiResponse = await fetch(v1betaUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(promptBody)
+      console.log(`[AI SERVICE] Trying model: ${modelName}...`);
+      
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: `Theme: "${prompt}"`,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.9,
+          topP: 0.95,
+          maxOutputTokens: 4096,
+        }
       });
 
-      if (aiResponse.ok) {
-        aiResult = await aiResponse.json();
+      aiResponseText = response.text;
+      
+      if (aiResponseText && aiResponseText.trim().length > 0) {
         workingModel = modelName;
+        console.log(`[AI SERVICE] SUCCESS with model: ${workingModel}`);
         break;
-      } else {
-        // Fallback to v1
-        const v1Url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
-        const aiResponseV1 = await fetch(v1Url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(promptBody)
-        });
-
-        if (aiResponseV1.ok) {
-          aiResult = await aiResponseV1.json();
-          workingModel = modelName;
-          break;
-        }
       }
     } catch (e) {
+      console.warn(`[AI SERVICE] Model ${modelName} failed:`, e.message || e);
       continue;
     }
   }
 
-  if (!aiResult) {
-    throw new Error("None of the standard models (Gemini 3, 2, 1.5) responded. Check API status.");
+  if (!aiResponseText) {
+    throw new Error("All AI models failed to respond. Please check your GEMINI_API_KEY and try again.");
   }
 
-  console.log(`[AI SERVICE] SUCCESS. Working model: ${workingModel}`);
-  const responseText = aiResult.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-  
+  // Parse the AI response
   let suggestions = [];
   let generatedTitle = "";
   let generatedDescription = "";
 
   try {
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
+    // Clean the response - remove markdown code fences if present
+    let cleanedText = aiResponseText.trim();
+    cleanedText = cleanedText.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
+    
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : cleanedText);
     suggestions = parsed.songs || [];
     generatedTitle = parsed.title || "";
     generatedDescription = parsed.description || "";
   } catch (parseError) {
-    console.error('[AI SERVICE] JSON Parse Error:', parseError);
+    console.error('[AI SERVICE] JSON Parse Error:', parseError.message);
+    console.error('[AI SERVICE] Raw response:', aiResponseText.substring(0, 500));
     throw new Error("AI returned an invalid format. Please try again.");
   }
 
@@ -94,15 +96,18 @@ export const generateAISmartPlaylist = async (prompt) => {
   }
 
   // Verify tracks against JioSaavn API
-  console.log(`[AI SERVICE] Verifying ${suggestions.length} suggestions...`);
+  console.log(`[AI SERVICE] Verifying ${suggestions.length} suggestions against JioSaavn...`);
   const limitedSuggestions = suggestions.slice(0, 30);
 
   const verifiedTracks = await Promise.all(
     limitedSuggestions.map(async (item) => {
       try {
         const searchQuery = encodeURIComponent(`${item.name} ${item.artist}`);
-        const searchUrl = `${process.env.VITE_API_BASE_URL}/search/songs?query=${searchQuery}&limit=1;`;
+        const searchUrl = `${JIOSAAVN_API_URL}/search/songs?query=${searchQuery}&limit=1`;
         const response = await fetch(searchUrl);
+        
+        if (!response.ok) return null;
+        
         const data = await response.json();
         return data?.data?.results?.[0] || null;
       } catch (e) {
@@ -113,6 +118,8 @@ export const generateAISmartPlaylist = async (prompt) => {
 
   const finalPlaylist = verifiedTracks.filter(track => track !== null);
   
+  console.log(`[AI SERVICE] Verified ${finalPlaylist.length}/${limitedSuggestions.length} tracks successfully.`);
+
   return {
     playlist: finalPlaylist,
     title: generatedTitle,
