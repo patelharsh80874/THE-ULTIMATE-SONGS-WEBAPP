@@ -3,16 +3,47 @@ import fetch from 'node-fetch';
 
 /**
  * AI Music Curation Service
- * Uses Google Gemini API (via @google/genai SDK) + JioSaavn track verification
- * 
- * Model priority (latest free-tier eligible, Aug 2026):
- *   1. gemini-3.7-flash  (latest, released Aug 13 2026)
- *   2. gemini-3.6-flash  (released Jul 2026)
- *   3. gemini-2.5-flash  (stable fallback)
+ * Uses Google Gemini API (via @google/genai SDK) + Multi-endpoint JioSaavn track verification
  */
 
-// JioSaavn API base URL from .env (server/.env or root/.env) with fallback
-const JIOSAAVN_API_URL = process.env.JIOSAAVN_API_URL || process.env.VITE_API_BASE_URL || 'https://jiosaavn-roan.vercel.app/api';
+// Available JioSaavn API endpoints for high reliability
+const JIOSAAVN_ENDPOINTS = [
+  process.env.JIOSAAVN_API_URL,
+  process.env.VITE_API_BASE_URL,
+  'https://jiosaavn-roan.vercel.app/api',
+  'https://jio-saavan-api.vercel.app/api',
+  'https://saavn.dev/api'
+].filter(Boolean);
+
+/**
+ * Search a track across available JioSaavn endpoints with timeout
+ */
+const searchTrack = async (query) => {
+  const encodedQuery = encodeURIComponent(query);
+  
+  for (const endpoint of JIOSAAVN_ENDPOINTS) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      
+      const searchUrl = `${endpoint}/search/songs?query=${encodedQuery}&limit=1`;
+      const response = await fetch(searchUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) continue;
+      
+      const data = await response.json();
+      const track = data?.data?.results?.[0] || (Array.isArray(data?.data) ? data?.data[0] : null);
+      if (track && track.id) {
+        return track;
+      }
+    } catch (e) {
+      // Continue to next endpoint if this one fails/times out
+      continue;
+    }
+  }
+  return null;
+};
 
 export const generateAISmartPlaylist = async (prompt) => {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -20,18 +51,18 @@ export const generateAISmartPlaylist = async (prompt) => {
 
   const ai = new GoogleGenAI({ apiKey });
 
-  // Models to try in order — latest first (all free-tier eligible)
+  // Priority order: fastest & most available first to avoid 503 load spikes
   const modelsToTry = [
+    "gemini-2.5-flash",
     "gemini-3.7-flash",
     "gemini-3.6-flash",
-    "gemini-2.5-flash",
   ];
 
-  const systemPrompt = `You are a world-class music curator in August 2026. For the given theme, generate 30 high-quality song recommendations.
-VERY IMPORTANT: Prioritize the absolute latest trending hits from 2024, 2025, and 2026.
-Also, create a short, catchy, creative name for the playlist (max 4-5 words) and a short 1-sentence description.
-Return ONLY a valid JSON object with NO extra text, no markdown, no code fences:
-{"title": "Playlist Name", "description": "Description here", "songs": [{"name": "Song Name", "artist": "Artist Name"}]}`;
+  const systemPrompt = `You are a world-class music curator in August 2026. For the given theme, generate 20 top-tier song recommendations.
+Prioritize popular, trending, and highly recognized songs from 2023 to 2026.
+Also create a short, catchy playlist title (max 4-5 words) and a 1-sentence description.
+Return ONLY a valid JSON object without markdown fences or additional text:
+{"title": "Playlist Name", "description": "Description here", "songs": [{"name": "Song Name", "artist": "Primary Artist"}]}`;
 
   let aiResponseText = null;
   let workingModel = "";
@@ -47,9 +78,8 @@ Return ONLY a valid JSON object with NO extra text, no markdown, no code fences:
         contents: `Theme: "${prompt}"`,
         config: {
           systemInstruction: systemPrompt,
-          temperature: 0.9,
-          topP: 0.95,
-          maxOutputTokens: 4096,
+          temperature: 0.7,
+          maxOutputTokens: 2048,
         }
       });
 
@@ -67,7 +97,7 @@ Return ONLY a valid JSON object with NO extra text, no markdown, no code fences:
   }
 
   if (!aiResponseText) {
-    throw new Error("All AI models failed to respond. Please check your GEMINI_API_KEY and try again.");
+    throw new Error("AI service is currently busy. Please try again in a moment.");
   }
 
   // Parse the AI response
@@ -76,49 +106,75 @@ Return ONLY a valid JSON object with NO extra text, no markdown, no code fences:
   let generatedDescription = "";
 
   try {
-    // Clean the response - remove markdown code fences if present
     let cleanedText = aiResponseText.trim();
     cleanedText = cleanedText.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
     
     const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
     const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : cleanedText);
     suggestions = parsed.songs || [];
-    generatedTitle = parsed.title || "";
-    generatedDescription = parsed.description || "";
+    generatedTitle = parsed.title || `Playlist: ${prompt.substring(0, 20)}`;
+    generatedDescription = parsed.description || `AI curated collection for "${prompt}"`;
   } catch (parseError) {
     console.error('[AI SERVICE] JSON Parse Error:', parseError.message);
-    console.error('[AI SERVICE] Raw response:', aiResponseText.substring(0, 500));
     throw new Error("AI returned an invalid format. Please try again.");
   }
 
   if (!Array.isArray(suggestions) || suggestions.length === 0) {
-    throw new Error("AI did not return a list of songs.");
+    throw new Error("AI did not return any songs for this prompt.");
   }
 
-  // Verify tracks against JioSaavn API
-  console.log(`[AI SERVICE] Verifying ${suggestions.length} suggestions against JioSaavn...`);
-  const limitedSuggestions = suggestions.slice(0, 30);
+  // Verify tracks in parallel with fallback queries
+  console.log(`[AI SERVICE] Verifying ${suggestions.length} suggestions...`);
+  const limitedSuggestions = suggestions.slice(0, 20);
 
   const verifiedTracks = await Promise.all(
     limitedSuggestions.map(async (item) => {
       try {
-        const searchQuery = encodeURIComponent(`${item.name} ${item.artist}`);
-        const searchUrl = `${JIOSAAVN_API_URL}/search/songs?query=${searchQuery}&limit=1`;
-        const response = await fetch(searchUrl);
+        // 1. First attempt: Song name + Primary artist
+        const primaryArtist = item.artist ? item.artist.split(/[,&/]/)[0].trim() : '';
+        let track = await searchTrack(`${item.name} ${primaryArtist}`.trim());
         
-        if (!response.ok) return null;
+        // 2. Fallback attempt: Just song name
+        if (!track && item.name) {
+          track = await searchTrack(item.name.trim());
+        }
         
-        const data = await response.json();
-        return data?.data?.results?.[0] || null;
+        return track;
       } catch (e) {
         return null;
       }
     })
   );
 
-  const finalPlaylist = verifiedTracks.filter(track => track !== null);
-  
-  console.log(`[AI SERVICE] Verified ${finalPlaylist.length}/${limitedSuggestions.length} tracks successfully.`);
+  // Filter out nulls and remove duplicate songs by ID
+  const seenIds = new Set();
+  let finalPlaylist = [];
+  for (const track of verifiedTracks) {
+    if (track && track.id && !seenIds.has(track.id)) {
+      seenIds.add(track.id);
+      finalPlaylist.push(track);
+    }
+  }
+
+  // Fallback: If verification yielded 0 tracks, perform a direct keyword search on JioSaavn for the prompt
+  if (finalPlaylist.length === 0) {
+    console.log(`[AI SERVICE] Direct search fallback for prompt: "${prompt}"`);
+    for (const endpoint of JIOSAAVN_ENDPOINTS) {
+      try {
+        const fallbackRes = await fetch(`${endpoint}/search/songs?query=${encodeURIComponent(prompt)}&limit=15`);
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          const results = fallbackData?.data?.results || (Array.isArray(fallbackData?.data) ? fallbackData?.data : []);
+          if (results.length > 0) {
+            finalPlaylist = results;
+            break;
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
+  console.log(`[AI SERVICE] Final playlist: ${finalPlaylist.length} tracks.`);
 
   return {
     playlist: finalPlaylist,
