@@ -21,6 +21,7 @@
     "@ffmpeg/core": "^0.12.8",
     "@ffmpeg/ffmpeg": "^0.12.13",
     "@ffmpeg/util": "^0.12.1",
+    "@google/genai": "^0.1.2",
     "@google/generative-ai": "^0.24.1",
     "@gsap/react": "^2.1.0",
     "adm-zip": "^0.5.12",

@@ -11,8 +11,8 @@ import fetch from 'node-fetch';
  *   3. gemini-2.5-flash  (stable fallback)
  */
 
-// JioSaavn API base URL from .env (server/.env or root/.env)
-const JIOSAAVN_API_URL = process.env.JIOSAAVN_API_URL || process.env.VITE_API_BASE_URL;
+// JioSaavn API base URL from .env (server/.env or root/.env) with fallback
+const JIOSAAVN_API_URL = process.env.JIOSAAVN_API_URL || process.env.VITE_API_BASE_URL || 'https://jiosaavn-roan.vercel.app/api';
 
 export const generateAISmartPlaylist = async (prompt) => {
   const apiKey = process.env.GEMINI_API_KEY;

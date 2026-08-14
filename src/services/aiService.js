@@ -1,6 +1,7 @@
 import axios from 'axios';
+import BACKEND_URL from '../config/api';
 
-export const API_BASE_URL = 'http://localhost:5000/api';
+export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 /**
  * Generates an AI-powered smart playlist based on a user prompt.
@@ -26,7 +27,7 @@ export const generateAIPlaylist = async (prompt) => {
       throw { message: 'Request timed out. The AI is taking too long, please try again.' };
     }
     if (error.code === 'ERR_NETWORK' || !error.response) {
-      throw { message: 'Cannot connect to the server. Make sure the backend server is running on port 5000.' };
+      throw { message: 'Network error occurred while connecting to the server. Please try again.' };
     }
     
     throw error.response?.data || { message: 'Failed to generate playlist. Please try again.' };
